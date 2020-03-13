@@ -3,6 +3,7 @@ from dv import AedatFile
 import numpy as np
 from numba import jit
 import matplotlib.pyplot as plt
+import os
 
 receptive_field = (346, 260) # px
 file_name = "/home/thomas/Vidéos/DVS_Recordings/test/hand_slow.aedat4"
@@ -111,3 +112,13 @@ for tau in bins:
     cross_corr.append(np.correlate(xoff, xoff, "full"))
     cross_corr = np.array(cross_corr)[:, cross_corr[0].size//2:]
     np.save(folder + "cross_corr_"+ str(tau), cross_corr)
+    
+#%% Entropy metric
+
+directory = "/home/thomas/neuvisys-analysis/results/metric/"
+
+for i in range(5):
+    sizes = [os.path.getsize(file) for file in os.scandir(directory+"weights_"+str(i))]
+    plt.hist(sizes, 20, alpha=0.5, label=str(i)+": "+str(np.mean(sizes))[0:5])
+    plt.legend()
+plt.show()

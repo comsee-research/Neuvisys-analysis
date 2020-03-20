@@ -13,6 +13,7 @@ import os
 import numpy as np
 from PIL import Image
 from natsort import natsorted
+from scipy.stats import norm
 
 param_grid = {"NEURON_WIDTH": [10],
               "NEURON_HEIGHT": [10],
@@ -23,21 +24,21 @@ param_grid = {"NEURON_WIDTH": [10],
               "NETWORK_HEIGHT": [18],
               "NETWORK_DEPTH": [4],
               
-              "DELTA_VP": [0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08],
-              "DELTA_VD": [0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08],
-              "TAU_LTP": [5000, 10000, 15000, 20000],
-              "TAU_LTD": [5000, 10000, 15000, 20000],
-              "VTHRESH": [10, 20, 30],
-              "VRESET": [-10, -20, -30],
-              "TAU_M": [5000, 10000, 15000, 20000],
-              "TAU_INHIB": [5000, 10000, 15000, 20000],
+              "DELTA_VP": norm(loc=0.065, scale=0.015),
+              "DELTA_VD": norm(loc=0.025, scale=0.015),
+              "TAU_LTP": norm(loc=10000, scale=5000),
+              "TAU_LTD": norm(loc=15000, scale=5000),
+              "VTHRESH": norm(loc=17, scale=4.5),
+              "VRESET": [-20],
+              "TAU_M": norm(loc=12000, scale=6000),
+              "TAU_INHIB": norm(loc=8500, scale=3500),
               "NORM_FACTOR": [4],
               "NORM_THRESHOLD": [10]}
 
 n_iter = 100
 sampler = list(ParameterSampler(param_grid, n_iter))
-for i in range(n_iter):
-    with open("config_files/conf_"+str(i)+".json", "w") as file:
+for i in range(50, n_iter+50):
+    with open("results/config_files/conf_"+str(i)+".json", "w") as file:
         json.dump(sampler[i], file)
         
     try:
@@ -51,7 +52,7 @@ for i in range(n_iter):
     with open("/home/thomas/neuvisys-dv/configs/conf.json", "w") as conf:
         json.dump({"SAVE_DATA": True,
                    "SAVE_DATA_LOCATION": "/home/thomas/neuvisys-analysis/results/weights/"+str(i)+"/",
-                   "CONF_FILES_LOCATION": "/home/thomas/neuvisys-analysis/config_files/conf_"+str(i)+".json"}, conf)
+                   "CONF_FILES_LOCATION": "/home/thomas/neuvisys-analysis/results/config_files/conf_"+str(i)+".json"}, conf)
 
     try:
         subprocess.run(["dv-runtime", "-b0"], timeout=400)

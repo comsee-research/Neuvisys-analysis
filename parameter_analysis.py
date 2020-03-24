@@ -22,47 +22,50 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 #%%
-# synapse = 1
+directory = "/home/thomas/neuvisys-analysis/results/batch_5/"
+nb_synapse = 1
+nb_layer = 1
 
 def create_plots(config):
-    with open("/home/thomas/neuvisys-analysis/results/config_files/conf_"+str(config)+".json") as file:
-        params = json.load(file)
-    
-    directory = "/home/thomas/neuvisys-analysis/results/weights/" + str(config) + "/"
-    files = natsorted([f for f in os.listdir(directory) if f.endswith(".npy")])
-    correlations = [np.moveaxis(np.concatenate((np.load(directory + file), np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
-    # correlations = [np.moveaxis(np.concatenate((np.load(directory + file)[:, synapse], np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
-    
-    xaxis_title= "pixels"
-    yaxis_title= "pixels"
-    
-    for k in range(1):
-        annot = str(params)
-        title = annot[:len(annot)//2] + "<br>" + annot[len(annot)//2:]
-        data = correlations[k::params["NETWORK_DEPTH"]]
-        data = [dat/dat.max() for dat in data]
+    for synapse in range(nb_synapse):
+        with open(directory+"configs/"+str(config)+".json") as file:
+            params = json.load(file)
         
-        fig = make_subplots(rows=params["NETWORK_HEIGHT"], cols=params["NETWORK_WIDTH"], x_title=xaxis_title, y_title=yaxis_title, vertical_spacing=0.015, horizontal_spacing=0.005)
-        fig.update_xaxes(showticklabels=False).update_yaxes(showticklabels=False)
+        files = natsorted([f for f in os.listdir(directory+"weights/"+str(config)+"/") if f.endswith(".npy")])
+        correlations = [np.moveaxis(np.concatenate((np.load(directory+"weights/"+str(config)+"/"+file), np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
+        # correlations = [np.moveaxis(np.concatenate((np.load(directory+"weights/"+str(config)+"/"+file)[:, synapse], np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
         
-        fig.update_layout(
-            font=dict(
-                family="Courier New, monospace",
-                size=13,
-                color="#7f7f7f"),
-            height=2700,
-            width=1800,
-            title_text=title)
+        xaxis_title= "pixels"
+        yaxis_title= "pixels"
         
-        for i in range(params["NETWORK_HEIGHT"]):
-            for j in range(params["NETWORK_WIDTH"]):
-                fig.add_trace(px.imshow(data[i*params["NETWORK_WIDTH"]+j])['data'][0], i+1, j+1)
-        
-        fig.write_html("results/figures/fig_"+str(config)+".html")
+        for layer in range(nb_layer):
+            annot = str(params)
+            title = annot[:len(annot)//2] + "<br>" + annot[len(annot)//2:]
+            data = correlations[layer::params["NETWORK_DEPTH"]]
+            data = [dat/dat.max() for dat in data]
 
+            fig = make_subplots(rows=params["NETWORK_HEIGHT"], cols=params["NETWORK_WIDTH"], x_title=xaxis_title, y_title=yaxis_title, vertical_spacing=0.015, horizontal_spacing=0.005)
+            fig.update_xaxes(showticklabels=False).update_yaxes(showticklabels=False)
+            
+            fig.update_layout(
+                font=dict(
+                    family="Courier New, monospace",
+                    size=13,
+                    color="#7f7f7f"),
+                height=2700,
+                width=1800,
+                title_text=title)
+            
+            for i in range(params["NETWORK_HEIGHT"]):
+                for j in range(params["NETWORK_WIDTH"]):
+                    fig.add_trace(px.imshow(data[i*params["NETWORK_WIDTH"]+j])['data'][0], i+1, j+1)
+            
+            fig.write_html(directory+"figures/"+str(config)+"_lay"+str(layer)+"_syn"+str(synapse)+".html")
+
+count = len(os.listdir(directory+"/weights"))
 with Pool(8) as p:
-    p.map(create_plots, range(50, 100))
-        
+    p.map(create_plots, np.arange(count))
+
 #%%
 
 df = pd.read_csv("/home/thomas/neuvisys-analysis/results/data2.csv")

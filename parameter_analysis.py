@@ -21,50 +21,73 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#%%
-directory = "/home/thomas/neuvisys-analysis/results/batch_5/"
-nb_synapse = 1
-nb_layer = 1
+def create_weight_figure(layer, synapse, weights, params, infos):
+    xaxis_title= "pixels"
+    yaxis_title= "pixels"
+    annot = str(params)
+    title = annot[:len(annot)//3] + "<br>" + annot[len(annot)//3:2*len(annot)//3] + "<br>" + annot[2*len(annot)//3:]
+    data = weights[layer::params["NETWORK_DEPTH"]]
+    data = [dat/dat.max() for dat in data]
+
+    fig = make_subplots(rows=params["NETWORK_HEIGHT"], cols=params["NETWORK_WIDTH"], subplot_titles=infos, x_title=xaxis_title, y_title=yaxis_title, vertical_spacing=0.015, horizontal_spacing=0.005)
+    fig.update_xaxes(showticklabels=False).update_yaxes(showticklabels=False)
+    
+    fig.update_layout(
+        font=dict(
+            family="Courier New, monospace",
+            size=10,
+            color="#7f7f7f"),
+        height=2700,
+        width=1800,
+        title_text=title)
+    
+    for i in fig['layout']['annotations']:
+        i['font'] = dict(size=9, color='#cd5c5c')
+    
+    for i in range(params["NETWORK_WIDTH"]):
+        for j in range(params["NETWORK_HEIGHT"]):
+            fig.add_trace(px.imshow(data[i*params["NETWORK_HEIGHT"]+j])['data'][0], j+1, i+1)
+    return fig
+        
+def load_params(param_path):
+    with open(param_path) as file:
+        return json.load(file)
+    
+def load_neurons_infos(neuron_path):
+    files = natsorted([neuron_path+f for f in os.listdir(neuron_path) if f.endswith(".json")])
+    infos = []
+    for file in files:
+        with open(file) as f:
+            jayson = json.load(f)
+        infos.append({"threshold": jayson["threshold"], "spiking_rate": jayson["spiking_rate"]})
+    return infos
 
 def create_plots(config):
+    params = load_params(directory+"configs/"+str(config)+".json")
+    
+    neurons_info = load_neurons_infos(directory+"weights/" + str(config) + "/")
+    neurons_info = [str(int(info["threshold"])) + "|" + str(round(info["spiking_rate"], 1)) for info in neurons_info]
+        
     for synapse in range(nb_synapse):
-        with open(directory+"configs/"+str(config)+".json") as file:
-            params = json.load(file)
-        
-        files = natsorted([f for f in os.listdir(directory+"weights/"+str(config)+"/") if f.endswith(".npy")])
-        correlations = [np.moveaxis(np.concatenate((np.load(directory+"weights/"+str(config)+"/"+file), np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
-        # correlations = [np.moveaxis(np.concatenate((np.load(directory+"weights/"+str(config)+"/"+file)[:, synapse], np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
-        
-        xaxis_title= "pixels"
-        yaxis_title= "pixels"
+        files = natsorted([directory+"weights/"+str(config)+"/"+f for f in os.listdir(directory+"weights/"+str(config)+"/") if f.endswith(".npy")])
+        # weights = [np.moveaxis(np.concatenate((np.load(file), np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
+        weights = [np.moveaxis(np.concatenate((np.load(file)[:, synapse], np.zeros((1, params["NEURON_WIDTH"], params["NEURON_HEIGHT"]))), axis=0), 0, 2) for file in files]
         
         for layer in range(nb_layer):
-            annot = str(params)
-            title = annot[:len(annot)//2] + "<br>" + annot[len(annot)//2:]
-            data = correlations[layer::params["NETWORK_DEPTH"]]
-            data = [dat/dat.max() for dat in data]
-
-            fig = make_subplots(rows=params["NETWORK_HEIGHT"], cols=params["NETWORK_WIDTH"], x_title=xaxis_title, y_title=yaxis_title, vertical_spacing=0.015, horizontal_spacing=0.005)
-            fig.update_xaxes(showticklabels=False).update_yaxes(showticklabels=False)
-            
-            fig.update_layout(
-                font=dict(
-                    family="Courier New, monospace",
-                    size=13,
-                    color="#7f7f7f"),
-                height=2700,
-                width=1800,
-                title_text=title)
-            
-            for i in range(params["NETWORK_HEIGHT"]):
-                for j in range(params["NETWORK_WIDTH"]):
-                    fig.add_trace(px.imshow(data[i*params["NETWORK_WIDTH"]+j])['data'][0], i+1, j+1)
-            
+            infos = neurons_info[layer::params["NETWORK_DEPTH"]]
+            fig = create_weight_figure(layer, synapse, weights, params, infos)
             fig.write_html(directory+"figures/"+str(config)+"_lay"+str(layer)+"_syn"+str(synapse)+".html")
 
-count = len(os.listdir(directory+"/weights"))
-with Pool(8) as p:
-    p.map(create_plots, np.arange(count))
+#%%
+directory = "/home/thomas/neuvisys-analysis/results/control_st/"
+nb_synapse = 2
+nb_layer = 1
+
+create_plots(3)
+
+# count = len(os.listdir(directory+"/weights"))
+# with Pool(8) as p:
+#     p.map(create_plots, np.arange(0, 1))
 
 #%%
 

@@ -99,11 +99,11 @@ def generate_multiple_configurations(directory, sampler, n_iter):
 
 param_grid = {"NEURON_WIDTH": [10], "NEURON_HEIGHT": [10], "NEURON_SYNAPSES": [2, 3], "SYNAPSE_DELAY": [5000, 10000, 15000, 20000, 25000], "X_ANCHOR_POINT": [0], "Y_ANCHOR_POINT": [0], "NETWORK_WIDTH": [34], "NETWORK_HEIGHT": [26], "NETWORK_DEPTH": [1], "DELTA_VP": [0.06], "DELTA_VD": [0.02], "DELTA_SR": [0.1], "TAU_LTP": [10000], "TAU_LTD": [20000], "VTHRESH": [20, 40, 60, 80], "VRESET": [-10], "TAU_M": [10000], "TAU_INHIB": [5000], "NORM_FACTOR": [4], "NORM_THRESHOLD": [4], "TARGET_SPIKE_RATE": [0.5]}
     
-directory = "/home/thomas/neuvisys-analysis/results/spatio_temporal_pendulum/"
+directory = "/home/thomas/neuvisys-dv/configuration/"
 sampler = list(ParameterGrid(param_grid))
 n_iter = len(sampler)
 
-for network_id in range(n_iter):
+for network_id in range(1):
     network_params = plot_network(directory, network_id)
     pdf = generate_pdf(directory+"/images/"+str(network_id)+"/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"])
     pdf.output(directory+"/figures/"+str(network_id)+".pdf", "F")

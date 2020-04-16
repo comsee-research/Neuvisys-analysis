@@ -73,10 +73,15 @@ def plot_network(directory, network_id):
         pass
     
     for i, file in enumerate(files):
-        for synapse in range(network_params["NEURON_SYNAPSES"]):
-            weights = np.moveaxis(np.concatenate((np.load(file)[:, synapse], np.zeros((1, network_params["NEURON_WIDTH"], network_params["NEURON_HEIGHT"]))), axis=0), 0, 2)
-            weights = np.kron(weights, np.ones((3, 3, 1)))
-            compress_weight(weights, directory+"images/"+str(network_id)+"/"+str(i)+"_syn"+str(synapse)+".png")
+        if i % network_params["NETWORK_DEPTH"] == 0:
+            for synapse in range(network_params["NEURON_SYNAPSES"]):
+                if network_params["NEURON_SYNAPSES"] < 2:
+                    weights = np.moveaxis(np.concatenate((np.load(file), np.zeros((1, network_params["NEURON_WIDTH"], network_params["NEURON_HEIGHT"]))), axis=0), 0, 2)
+                else:
+                    weights = np.moveaxis(np.concatenate((np.load(file)[:, synapse], np.zeros((1, network_params["NEURON_WIDTH"], network_params["NEURON_HEIGHT"]))), axis=0), 0, 2)     
+                    
+                weights = np.kron(weights, np.ones((3, 3, 1)))
+                compress_weight(weights, directory+"images/"+str(network_id)+"/"+str(i)+"_syn"+str(synapse)+".png")
     return network_params
 
     # sizes = [os.path.getsize(directory+"images/"+str(network_id)+"/"+file) for file in natsorted(os.listdir(directory+"images/"+str(network_id))) if file.find("syn"+str(synapse)) != -1]

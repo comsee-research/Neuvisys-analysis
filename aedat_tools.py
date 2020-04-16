@@ -31,44 +31,50 @@ def write_aedat_header(aedat_file):
     aedat_file.write(b'# Timestamps tick is 1 us\r\n')
     aedat_file.write(b'# End of ASCII Header\r\n')
     
-def format_aedat2(timestamp, x, y, polarity):
+def format_address_aedat2(x, y, polarity):
     y = format(y, "09b")
     x = format(x, "010b")
     p = "10" if polarity else "00"
-    address = bitarray("0" + y + x + p + "0000000000")
-    timestamp = bitarray(format(timestamp, "032b"))
-    return address, timestamp
+    return bitarray("0" + y + x + p + "0000000000")
 
-def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size):
+def format_timestamp_aedat2(timestamp):
+    return bitarray(format(timestamp, "032b"))
+
+def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
     print("\nFormatting: .rosbag -> .aedat\n")
     
     # open the file and write the headers
     with open(aedat_file, "wb") as file:
         write_aedat_header(file)
-        
         bag = rosbag.Bag(bag_file)
-        
-        # setup the camera width and height by adding one event
-        for topic, msg, t in bag.read_messages(topics=['/cam0/events']):
-            for e in msg.events:
-                address, timestamp = format_aedat2(int(e.ts.to_nsec() / 1000.0), x_size-1, y_size-1, 1)
-                
-                file.write(address.tobytes())
-                file.write(timestamp.tobytes())
-                break
-            break
 
         # format and write the bag content to the aedat file
+        addresses = []
+        timestamps = []
         for topic, msg, t in bag.read_messages(topics=['/cam0/events']):
-            for e in msg.events:
-                address, timestamp = format_aedat2(int(e.ts.to_nsec() / 1000.0), x_size-1-e.x, y_size-1-e.y, e.polarity)
-                
-                file.write(address.tobytes())
-                file.write(timestamp.tobytes())
+            for n, e in enumerate(msg.events):
+                if n == 0:
+                    file.write(format_address_aedat2(x_size-1, y_size-1, 1).tobytes())
+                    file.write(format_timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
+                    
+                file.write(format_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity).tobytes())
+                file.write(format_timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
+                # addresses.append(format_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity))
+                # timestamps.append(int(e.ts.to_nsec() / 1000.0))
         bag.close()
         
+        # duration = timestamps[-1] - timestamps[0]
+        # print(duration)
+        
+        # for i in range(n_concat):
+        #     for address, timestamp in zip(addresses, timestamps):
+        #         print(address)
+        #         print(timestamp)
+        #         file.write(address.tobytes())
+        #         file.write(format_timestamp_aedat2(timestamp+i*duration).tobytes())
+
 def concatenate_file(n_concat, aedat4_file, new_file, x_size, y_size):
-    events = load_aedat4(aedat4)
+    events = load_aedat4(aedat4_file)
     
     first_timestamp = events[0]["timestamp"]
     duration = events[-1]["timestamp"] - first_timestamp
@@ -76,23 +82,18 @@ def concatenate_file(n_concat, aedat4_file, new_file, x_size, y_size):
     with open(new_file, "wb") as file:
         write_aedat_header(file)
         
-        address, timestamp = format_aedat2(first_timestamp, x_size-1, y_size-1, 1)
-        file.write(address.tobytes())
-        file.write(timestamp.tobytes())
+        file.write(format_address_aedat2(x_size-1, y_size-1, 1).tobytes())
+        file.write(format_timestamp_aedat2(first_timestamp).tobytes())
         
         for i in range(n_concat):
             for event in events:
-                address, timestamp = format_aedat2(event["timestamp"]+i*duration, x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
-                
-                file.write(address.tobytes())
-                file.write(timestamp.tobytes())
+                file.write(format_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"]).tobytes())
+                file.write(format_timestamp_aedat2(event["timestamp"]+i*duration).tobytes())
         
-bag_file = "/home/thomas/Desktop/Event/files/out.bag"
-aedat_file = "/home/thomas/Desktop/Event/files/out.aedat"
-# convert_ros_to_aedat(bag_file, aedat_file, 240, 180)
+bag_file = "/home/thomas/neuvisys-analysis/events/files/out.bag"
+aedat_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
+# convert_ros_to_aedat(bag_file, aedat_file, 346, 260, 1)
 
-aedat4 = "/home/thomas/neuvisys-analysis/events/files/9_speed.aedat4"
-new_file = "/home/thomas/neuvisys-analysis/events/files/9_speed_2.aedat"
-aedat = "/home/thomas/Desktop/Event/out.aedat"
-
-event = concatenate_file(10, aedat4, new_file, 240, 180)
+aedat_4 = "/home/thomas/neuvisys-analysis/events/files/temp.aedat4"
+new_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
+concatenate_file(20, aedat_4, new_file, 346, 260)

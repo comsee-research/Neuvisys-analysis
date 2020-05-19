@@ -6,20 +6,9 @@ Created on Wed Apr  8 03:46:47 2020
 @author: thomas
 """
 
-from dv import AedatFile
-from dv import LegacyAedatFile
-
 import numpy as np
 
-def load_aedat4(file_path):
-    with AedatFile(file_path) as f:
-        events = np.hstack([packet for packet in f['events'].numpy()])
-    return events
-
-def load_aedat(file_path):
-    with LegacyAedatFile(file_path) as f:
-        for e in f:
-            print(e.x, e.y)
+from utils.utils import load_aedat4
 
 import rosbag
 from bitarray import bitarray
@@ -31,14 +20,20 @@ def write_aedat_header(aedat_file):
     aedat_file.write(b'# Timestamps tick is 1 us\r\n')
     aedat_file.write(b'# End of ASCII Header\r\n')
     
-def format_address_aedat2(x, y, polarity):
+def event_address_aedat2(x, y, polarity):
     y = format(y, "09b")
     x = format(x, "010b")
     p = "10" if polarity else "00"
     return bitarray("0" + y + x + p + "0000000000")
 
-def format_timestamp_aedat2(timestamp):
+def timestamp_aedat2(timestamp):
     return bitarray(format(timestamp, "032b"))
+
+def frame_address_aedat2(x, y, intensity):
+    y = format(y, "09b")
+    x = format(x, "010b")
+    intensity = format(intensity, "010b")
+    return bitarray("1" + y + x + "10" + intensity)
 
 def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
     print("\nFormatting: .rosbag -> .aedat\n")
@@ -49,16 +44,16 @@ def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
         bag = rosbag.Bag(bag_file)
 
         # format and write the bag content to the aedat file
-        addresses = []
-        timestamps = []
+        # addresses = []
+        # timestamps = []
         for topic, msg, t in bag.read_messages(topics=['/cam0/events']):
             for n, e in enumerate(msg.events):
                 if n == 0:
-                    file.write(format_address_aedat2(x_size-1, y_size-1, 1).tobytes())
-                    file.write(format_timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
+                    file.write(event_address_aedat2(x_size-1, y_size-1, 1).tobytes())
+                    file.write(timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
                     
-                file.write(format_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity).tobytes())
-                file.write(format_timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
+                file.write(event_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity).tobytes())
+                file.write(timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
                 # addresses.append(format_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity))
                 # timestamps.append(int(e.ts.to_nsec() / 1000.0))
         bag.close()
@@ -82,13 +77,13 @@ def concatenate_file(n_concat, aedat4_file, new_file, x_size, y_size):
     with open(new_file, "wb") as file:
         write_aedat_header(file)
         
-        file.write(format_address_aedat2(x_size-1, y_size-1, 1).tobytes())
-        file.write(format_timestamp_aedat2(first_timestamp).tobytes())
+        file.write(event_address_aedat2(x_size-1, y_size-1, 1).tobytes())
+        file.write(timestamp_aedat2(first_timestamp).tobytes())
         
         for i in range(n_concat):
             for event in events:
-                file.write(format_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"]).tobytes())
-                file.write(format_timestamp_aedat2(event["timestamp"]+i*duration).tobytes())
+                file.write(event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"]).tobytes())
+                file.write(timestamp_aedat2(event["timestamp"]+i*duration).tobytes())
         
 bag_file = "/home/thomas/neuvisys-analysis/events/files/out.bag"
 aedat_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
@@ -96,4 +91,4 @@ aedat_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
 
 aedat_4 = "/home/thomas/neuvisys-analysis/events/files/temp.aedat4"
 new_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
-concatenate_file(20, aedat_4, new_file, 346, 260)
+# concatenate_file(20, aedat_4, new_file, 346, 260)

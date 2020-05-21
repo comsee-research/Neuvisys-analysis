@@ -7,15 +7,12 @@ Created on Tue Apr 28 20:10:06 2020
 """
 
 import os
-import json
 import scipy.io as sio
 import numpy as np
 from PIL import Image
 from natsort import natsorted
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import cv2 as cv
-from PIL import Image
 from itertools import combinations
 
 from utils import load_params

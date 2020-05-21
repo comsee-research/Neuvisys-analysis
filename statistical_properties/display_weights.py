@@ -6,17 +6,11 @@ Created on Tue May 19 02:47:43 2020
 @author: thomas
 """
 
-from sklearn.model_selection import ParameterSampler, ParameterGrid
 import json
-import subprocess
 import os
 import numpy as np
 from PIL import Image
 from natsort import natsorted
-from scipy.stats import norm
-from itertools import combinations
-
-import matplotlib.pyplot as plt
 
 from fpdf import FPDF
 

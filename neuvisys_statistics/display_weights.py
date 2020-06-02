@@ -33,7 +33,7 @@ def load_neurons_infos(neuron_path):
 
 def plot_network(directory):
     files = natsorted([directory+"weights/"+f for f in os.listdir(directory+"weights/") if f.endswith(".npy")])
-    network_params = load_params(directory+"configs/0.json")
+    network_params = load_params(directory+"configs/config.json")
     
     neurons_info = load_neurons_infos(directory+"weights/")
     neurons_info = [str(int(info["threshold"])) + "|" + str(round(info["spiking_rate"], 1)) for info in neurons_info]
@@ -81,12 +81,13 @@ def generate_pdf_layers(directory, title, rows, cols, nb_synapses, nb_layers):
                 count += nb_synapses
     return pdf
 
-directory = "/home/thomas/neuvisys-dv/configuration/network/"
-
-network_params = plot_network(directory)
-for layer in range(network_params["NETWORK_DEPTH"]):
-    pdf = generate_pdf(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"], layer)
-    pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+for i in range(10):
+    directory = "/home/thomas/neuvisys-dv/configuration/Run3/network_"+str(i)+"/"
     
-pdf = generate_pdf_layers(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"])
-pdf.output(directory+"figures/multi_layer.pdf", "F")
+    network_params = plot_network(directory)
+    for layer in range(network_params["NETWORK_DEPTH"]):
+        pdf = generate_pdf(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"], layer)
+        pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+        
+    pdf = generate_pdf_layers(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"])
+    pdf.output(directory+"figures/multi_layer.pdf", "F")

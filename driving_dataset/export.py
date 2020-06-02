@@ -94,14 +94,14 @@ parser.add_argument('--export_dvs', type=int, default=1)
 parser.add_argument('--out_file', default='')
 args = parser.parse_args()
 
-filename = "/home/thomas/Videos/run2/rec1487326422.hdf5"
+filename = "/home/thomas/Videos/driving/rec1487846842.hdf5"
 f_in = HDF5Stream(filename, export_data_vi.union({'dvs'}))
 m = MergedStream(f_in)
 
 x_size, y_size = 346, 260
 first = 1
 
-aedat_file = "/home/thomas/Desktop/driving.aedat"
+aedat_file = "/home/thomas/Desktop/freeway_night_40.aedat"
 with open(aedat_file, "wb") as file:
     write_aedat_header(file)
 
@@ -118,13 +118,13 @@ with open(aedat_file, "wb") as file:
             continue
         if not d:
             continue
-        if d['etype'] == 'frame_event' and args.export_aps:
-            frame = filter_frame(unpack_data(d))
-            for y in range(y_size):
-                for x in range(x_size):
-                    file.write(frame_address_aedat2(x, y, frame[y, x]).tobytes())
-                    file.write(timestamp_aedat2(int(1e6 * d["timestamp"])).tobytes())
-            continue
+        # if d['etype'] == 'frame_event' and args.export_aps:
+        #     frame = filter_frame(unpack_data(d))
+        #     for y in range(y_size):
+        #         for x in range(x_size):
+        #             file.write(frame_address_aedat2(x, y, frame[y, x]).tobytes())
+        #             file.write(timestamp_aedat2(int(1e6 * d["timestamp"])).tobytes())
+        #     continue
         if d['etype'] == 'polarity_event' and args.export_dvs:
             unpack_data(d)
             if (first):

@@ -7,13 +7,14 @@ Created on Wed Apr  8 03:46:47 2020
 """
 
 import numpy as np
+import random
 
 from utils.utils import load_aedat4
 
 import rosbag
 from bitarray import bitarray
 
-def write_aedat_header(aedat_file):
+def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
     aedat_file.write(b'# This is a raw AE data file created by saveaerdat.m\r\n')
     aedat_file.write(b'# Data format is int32 address, int32 timestamp (8 bytes total), repeated for each event\r\n')
@@ -35,17 +36,31 @@ def frame_address_aedat2(x, y, intensity):
     intensity = format(intensity, "010b")
     return bitarray("1" + y + x + "10" + intensity)
 
+def write_aedat2_file(events, outfile, x_size, y_size, new=False):
+    print("writing file " + outfile)
+    bits = bitarray()
+    
+    if new:
+        first_timestamp = events[0]["timestamp"]
+        bits += event_address_aedat2(x_size-1, y_size-1, 1)
+        bits += timestamp_aedat2(first_timestamp)
+    
+    for event in events:
+        bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
+        bits += timestamp_aedat2(event["timestamp"])
+        
+    with open(outfile, "wb") as out:
+        write_aedat2_header(out)
+        out.write(bits.tobytes())
+    
 def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
     print("\nFormatting: .rosbag -> .aedat\n")
     
     # open the file and write the headers
     with open(aedat_file, "wb") as file:
-        write_aedat_header(file)
+        write_aedat2_header(file)
         bag = rosbag.Bag(bag_file)
 
-        # format and write the bag content to the aedat file
-        # addresses = []
-        # timestamps = []
         for topic, msg, t in bag.read_messages(topics=['/cam0/events']):
             for n, e in enumerate(msg.events):
                 if n == 0:
@@ -54,19 +69,17 @@ def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
                     
                 file.write(event_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity).tobytes())
                 file.write(timestamp_aedat2(int(e.ts.to_nsec() / 1000.0)).tobytes())
-                # addresses.append(format_address_aedat2(x_size-1-e.x, y_size-1-e.y, e.polarity))
-                # timestamps.append(int(e.ts.to_nsec() / 1000.0))
         bag.close()
         
-        # duration = timestamps[-1] - timestamps[0]
-        # print(duration)
-        
-        # for i in range(n_concat):
-        #     for address, timestamp in zip(addresses, timestamps):
-        #         print(address)
-        #         print(timestamp)
-        #         file.write(address.tobytes())
-        #         file.write(format_timestamp_aedat2(timestamp+i*duration).tobytes())
+def remove_blank_space(aedat4_file, outfile, x_size, y_size):
+    events = load_aedat4(aedat4_file)
+    times = events["timestamp"]
+    
+    diff = np.diff(times)
+    arg = np.argwhere(diff > 1000000)[0][0]
+    times[arg+1:] -= diff[arg]
+    
+    write_aedat2_file(events, outfile, x_size, y_size)
 
 def concatenate_file(n_concat, aedat4_file, new_file, x_size, y_size):
     events = load_aedat4(aedat4_file)
@@ -75,20 +88,41 @@ def concatenate_file(n_concat, aedat4_file, new_file, x_size, y_size):
     duration = events[-1]["timestamp"] - first_timestamp
     
     with open(new_file, "wb") as file:
-        write_aedat_header(file)
+        write_aedat2_header(file)
         
         file.write(event_address_aedat2(x_size-1, y_size-1, 1).tobytes())
         file.write(timestamp_aedat2(first_timestamp).tobytes())
         
         for i in range(n_concat):
-            for event in events:
+            for event in events:                
                 file.write(event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"]).tobytes())
                 file.write(timestamp_aedat2(event["timestamp"]+i*duration).tobytes())
-        
-bag_file = "/home/thomas/neuvisys-analysis/events/files/out.bag"
-aedat_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
-# convert_ros_to_aedat(bag_file, aedat_file, 346, 260, 1)
 
-aedat_4 = "/home/thomas/neuvisys-analysis/events/files/temp.aedat4"
-new_file = "/home/thomas/neuvisys-analysis/events/files/out.aedat"
-# concatenate_file(20, aedat_4, new_file, 346, 260)
+def divide_events(events, chunk_size):
+    events["timestamp"] -= events["timestamp"][0]
+    chunk = np.arange(0, events["timestamp"][-1], chunk_size)
+    splits = [events[(events["timestamp"] > chunk[i]) & (events["timestamp"] < chunk[i+1])] for i in range(chunk.size-1)]
+    
+    for split in splits:
+        split["timestamp"] -= split["timestamp"][0]
+    return splits
+
+def build_mixed_file(files, chunk_size):
+    splits = []
+    
+    for file in files:
+        splits += divide_events(load_aedat4(file), chunk_size)     
+    random.shuffle(splits)
+    
+    for i, split in enumerate(splits):
+        split["timestamp"] += i * chunk_size
+        
+    return np.hstack(splits)
+
+## Script
+
+files = ["/home/thomas/Videos/driving/city_6.aedat4", "/home/thomas/Videos/driving/freeway_7.aedat4"]
+chunk_size = 5000000
+
+splits = build_mixed_file(files, chunk_size)
+write_aedat2_file(splits, "/home/thomas/Desktop/split_test.aedat", 346, 260, True)

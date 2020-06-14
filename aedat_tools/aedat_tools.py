@@ -44,14 +44,17 @@ def write_aedat2_file(events, outfile, x_size, y_size, new=False):
         first_timestamp = events[0]["timestamp"]
         bits += event_address_aedat2(x_size-1, y_size-1, 1)
         bits += timestamp_aedat2(first_timestamp)
-    
-    for event in events:
-        bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
-        bits += timestamp_aedat2(event["timestamp"])
         
-    with open(outfile, "wb") as out:
-        write_aedat2_header(out)
-        out.write(bits.tobytes())
+        for i in range(events.size):
+            event = events[i]
+            bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
+            bits += timestamp_aedat2(event["timestamp"])
+            
+        # buffer system
+        with open(outfile, "wb") as out:
+            write_aedat2_header(out)
+            out.write(bits.tobytes())
+            bits = bitarray()
     
 def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
     print("\nFormatting: .rosbag -> .aedat\n")
@@ -99,23 +102,27 @@ def concatenate_file(n_concat, aedat4_file, new_file, x_size, y_size):
                 file.write(timestamp_aedat2(event["timestamp"]+i*duration).tobytes())
 
 def divide_events(events, chunk_size):
-    events["timestamp"] -= events["timestamp"][0]
+    first_timestamp = events["timestamp"][0]
+    events["timestamp"] -= first_timestamp
     chunk = np.arange(0, events["timestamp"][-1], chunk_size)
     splits = [events[(events["timestamp"] > chunk[i]) & (events["timestamp"] < chunk[i+1])] for i in range(chunk.size-1)]
     
     for split in splits:
         split["timestamp"] -= split["timestamp"][0]
-    return splits
+    return splits, first_timestamp
 
 def build_mixed_file(files, chunk_size):
     splits = []
+    f_timestamps = []
     
     for file in files:
-        splits += divide_events(load_aedat4(file), chunk_size)     
+        div, first_timestamp = divide_events(load_aedat4(file), chunk_size)
+        splits += div
+        f_timestamps.append(first_timestamp)
     random.shuffle(splits)
     
     for i, split in enumerate(splits):
-        split["timestamp"] += i * chunk_size
+        split["timestamp"] += i * chunk_size + f_timestamps[0]
         
     return np.hstack(splits)
 
@@ -124,5 +131,5 @@ def build_mixed_file(files, chunk_size):
 files = ["/home/thomas/Videos/driving/city_6.aedat4", "/home/thomas/Videos/driving/freeway_7.aedat4"]
 chunk_size = 5000000
 
-splits = build_mixed_file(files, chunk_size)
-write_aedat2_file(splits, "/home/thomas/Desktop/split_test.aedat", 346, 260, True)
+events = build_mixed_file(files, chunk_size)
+write_aedat2_file(events, "/home/thomas/Desktop/split_test.aedat", 346, 260, True)

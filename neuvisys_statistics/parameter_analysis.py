@@ -14,50 +14,20 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#%%
+# df_viz["Dist_VP-VD"] = df_viz["DeltaVP"] - df_viz["DeltaVD"]
+# df_viz["Dist_LTP-LTD"] = df_viz["TauLTP"] - df_viz["TauLTD"]
 
-df = pd.read_csv("/home/thomas/neuvisys-analysis/results/data2.csv")
+# features = (features - features.mean()) / features.std()
+# df = pd.concat([df, features], axis=1)
 
-features = {"Spikes": [], "MeanSize": [], "StdSize": [], "Vthresh": [], "Vreset": [], "DeltaVP": [], "DeltaVD": [], "TauLTP": [], "TauLTD": [], "TauM": [], "TauInhib": []}
-for config in range(50, 100):
-    with open("/home/thomas/neuvisys-analysis/results/config_files/conf_"+str(config)+".json") as file:
-        params = json.load(file)
-    features["Vthresh"].append(params["VTHRESH"])
-    features["Vreset"].append(params["VRESET"])
-    features["DeltaVP"].append(params["DELTA_VP"])
-    features["DeltaVD"].append(params["DELTA_VD"])
-    features["TauLTP"].append(params["TAU_LTP"])
-    features["TauLTD"].append(params["TAU_LTD"])
-    features["TauM"].append(params["TAU_M"])
-    features["TauInhib"].append(params["TAU_INHIB"])
-    
-    nb_spikes = 0
-    for entry in os.scandir("/home/thomas/neuvisys-analysis/results/weights/" + str(config) + "/"):
-        if entry.path.endswith(".json"):
-            with open(entry.path) as file:
-                nb_spikes += json.load(file)["count_spike"]
+# df["Dist_VP-VD"] = df["DeltaVP"] - df["DeltaVD"]
+# df["Dist_LTP-LTD"] = df["TauLTP"] - df["TauLTD"]
 
-    sizes = [os.path.getsize(file) for file in os.scandir("/home/thomas/neuvisys-analysis/results/metrics/"+str(config)+"/")]
-    features["MeanSize"].append(np.mean(sizes))
-    features["StdSize"].append(np.std(sizes))
-    features["Spikes"].append(nb_spikes)
+# df["Dist_VP-LTP"] = df["DeltaVP"] - df["TauLTP"]
+# df["Dist_VD-LTD"] = df["DeltaVD"] - df["TauLTD"]
 
-features = pd.DataFrame(features)
-df_viz = pd.concat([df, features], axis=1)
-df_viz["Dist_VP-VD"] = df_viz["DeltaVP"] - df_viz["DeltaVD"]
-df_viz["Dist_LTP-LTD"] = df_viz["TauLTP"] - df_viz["TauLTD"]
-
-features = (features - features.mean()) / features.std()
-df = pd.concat([df, features], axis=1)
-
-df["Dist_VP-VD"] = df["DeltaVP"] - df["DeltaVD"]
-df["Dist_LTP-LTD"] = df["TauLTP"] - df["TauLTD"]
-
-df["Dist_VP-LTP"] = df["DeltaVP"] - df["TauLTP"]
-df["Dist_VD-LTD"] = df["DeltaVD"] - df["TauLTD"]
-
-df["Dist_VP-LTD"] = df["DeltaVP"] - df["TauLTD"]
-df["Dist_VD-LTP"] = df["DeltaVD"] - df["TauLTP"]
+# df["Dist_VP-LTD"] = df["DeltaVP"] - df["TauLTD"]
+# df["Dist_VD-LTP"] = df["DeltaVD"] - df["TauLTP"]
 
 #%%
 

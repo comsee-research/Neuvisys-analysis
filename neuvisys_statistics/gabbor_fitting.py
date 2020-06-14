@@ -9,11 +9,9 @@ Created on Tue Apr 28 20:10:06 2020
 import os
 import scipy.io as sio
 import numpy as np
-from PIL import Image
 from natsort import natsorted
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from itertools import combinations
 
 from utils import load_params
 
@@ -57,6 +55,8 @@ def plot_histogram():
 #         basis[100:200, i] = weight
 # sio.savemat("/home/thomas/Desktop/GaborFitting2D/weights.mat", {"data": basis})
 
+####
+
 directory = "/home/thomas/neuvisys-dv/configuration/"
 network_id = 0
 
@@ -85,30 +85,3 @@ for image_id in range(3536):
     images.append(image)
 
 plot_histogram()
-
-####
-
-dist = []
-for network_id in range(2):
-    direc = directory+"/images/"+str(network_id)+"/"
-    images = natsorted(os.listdir(direc))
-    distances = []
-
-    for i in range(0, 3536, 4):
-        vectors = []
-        for j in range(4):
-            vectors.append(np.asarray(Image.open(direc + images[i+j]), dtype=float) / 255)
-        
-        for combination in combinations(vectors, 2):
-            distances.append(np.sum((combination[0] - combination[1])**2) / 100)
-    dist.append(distances)
-
-fig, axes = plt.subplots()
-
-fig.subplots_adjust(left=0.3, right=0.8)
-
-axes.set_title('', y=-0.1, fontsize=14)
-axes.set_ylabel("Squared Euclidean distance", fontsize=14)
-axes.boxplot([dist[1], dist[0]])
-axes.xaxis.set_ticklabels(["No inhibition", "Inhibition"], fontsize=14)
-plt.savefig("boxplots.pdf", bbox_inches="tight")

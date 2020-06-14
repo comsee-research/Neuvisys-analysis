@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 
 from utils.utils import load_params
 
-def spike_train(directory, neuron_id):
-    return np.array(load_params(directory+"weights/neuron_"+str(neuron_id)+".json")["spike_train"])
+def spike_train(directory):
+    return np.array(load_params(directory)["spike_train"])
 
 def spike_count(directory, neuron_id):
     return load_params(directory+"weights/neuron_"+str(neuron_id)+".json")["count_spike"]
@@ -33,35 +33,39 @@ def isi_histogram(spike_train):
     isi = (spike_train[1:] - spike_train[:-1]) / 1000
     return isi[isi >= 0]
 
-directory = "/home/thomas/neuvisys-dv/configuration/Run3/network_5/"
-run_time = 3000
-run_time = 720
-nb_neurons = int(3346/2)
-
-spike_trains = []
-spike_counts = []
-for i in range(nb_neurons):
-    spike_trains.append(spike_train(directory, i))
-    spike_counts.append(spike_count(directory, i))
-
-std_spikes = std_spikes(spike_counts)
-spike_rate_histogram(spike_counts, run_time)
-
-n = 5
-argmaxs = np.argpartition([len(spike_trains[i]) for i in range(len(spike_trains))], -4)[-n:]
-for arg in argmaxs:
-    plt.figure()
+def plot_isi_histogram(directory):
+    isi = isi_histogram(spike_train(directory))
+    
+    fig = plt.figure()
     plt.title("Neuron ISI histogram")
     plt.xlabel("interspike interval (ms)")
-    plt.hist(isi_histogram(spike_trains[arg]), bins=np.arange(0, 700, 25))
+    plt.hist(isi, bins=np.arange(0, 700, 25))
+    return isi, fig
+    
+def plot_isi_histograms(directory):
+    isis = []
+    
+    for i in range(nb_neurons):
+        fig, isi = plot_isi_histogram(directory+"weights/neuron_"+str(i)+".json")
+        plt.savefig(directory+"figures/isi_hist/isi_"+str(i))
+        isis += list(isi)
+    return isis
 
-isis = []
-hists = []
-for i in range(nb_neurons):
-    spike_train = spike_trains[i]
-    isi = isi_histogram(spike_train)
-    isis += list(isi)
-    hists.append(np.histogram(isi[isi < 700], bins=np.arange(0, 700, 25))[0])
+####
+
+directory = "/home/thomas/neuvisys-dv/configuration/Run1/network_0/"
+run_time = 3000
+run_time = 720
+nb_neurons = int(3346)
+
+# spike_counts = []
+# for i in range(nb_neurons):
+#     spike_counts.append(spike_count(directory, i))
+
+# std_spikes = std_spikes(spike_counts)
+# spike_rate_histogram(spike_counts, run_time)
+
+isis = plot_isi_histograms(directory)
 
 plt.figure()
 plt.title("Average of all ISI histograms")

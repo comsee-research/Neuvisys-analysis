@@ -81,13 +81,31 @@ def generate_pdf_layers(directory, title, rows, cols, nb_synapses, nb_layers):
                 count += nb_synapses
     return pdf
 
-for i in range(10):
-    directory = "/home/thomas/neuvisys-dv/configuration/Run3/network_"+str(i)+"/"
+def generate_pdf_weight_sharing(directory, title, rows, cols, nb_synapses, nb_layers):
+    header = 30
+    images = natsorted(os.listdir(directory))
+    pdf = FPDF("P", "mm", (cols*11, header+3*11*nb_layers))
+    pdf.add_page()
     
-    network_params = plot_network(directory)
-    for layer in range(network_params["NETWORK_DEPTH"]):
-        pdf = generate_pdf(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"], layer)
-        pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
-        
-    pdf = generate_pdf_layers(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"])
-    pdf.output(directory+"figures/multi_layer.pdf", "F")
+    pdf.set_font('Arial', '', 10)
+    pdf.multi_cell(0, 5, title)
+    
+    count = 0
+    for i in range(3):
+        for j in range(3):
+            for l in range(nb_layers):
+                pdf.image(directory+images[count], x=150+i*31, y=header+j*11*nb_layers+l*10.4, w=10, h=10)
+                count += nb_synapses
+            count += 16*nb_layers
+    return pdf
+
+# for i in range(10):
+directory = "/home/thomas/neuvisys-dv/configuration/network/"
+
+network_params = plot_network(directory)
+# for layer in range(network_params["NETWORK_DEPTH"]):
+#     pdf = generate_pdf(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"], layer)
+#     pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+    
+pdf = generate_pdf_weight_sharing(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"])
+pdf.output(directory+"figures/multi_layer.pdf", "F")

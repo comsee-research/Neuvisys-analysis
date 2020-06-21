@@ -128,8 +128,8 @@ def build_mixed_file(files, chunk_size):
 
 ## Script
 
-files = ["/home/thomas/Videos/driving/city_6.aedat4", "/home/thomas/Videos/driving/freeway_7.aedat4"]
-chunk_size = 5000000
+files = ["/home/thomas/Videos/driving/city_34.aedat4", "/home/thomas/Videos/driving/freeway_40.aedat4"]
+chunk_size = 10000000
 
 events = build_mixed_file(files, chunk_size)
 write_aedat2_file(events, "/home/thomas/Desktop/split_test.aedat", 346, 260, True)

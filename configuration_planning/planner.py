@@ -13,7 +13,7 @@ import os
 import numpy as np
 from scipy.stats.distributions import norm
 
-def generate_multiple_configurations(directory, sampler, n_iter, learning_time):
+def generate_multiple_configurations(directory, sampler, network_params, n_iter):
     for i in range(n_iter):
         os.mkdir(directory+"network_"+str(i))
         os.mkdir(directory+"network_"+str(i)+"/weights")
@@ -21,59 +21,74 @@ def generate_multiple_configurations(directory, sampler, n_iter, learning_time):
         os.mkdir(directory+"network_"+str(i)+"/figures")
         os.mkdir(directory+"network_"+str(i)+"/images")
         
-        with open(directory+"network_"+str(i)+"/configs/config.json", "w") as file:
+        with open(directory+"network_"+str(i)+"/configs/network_config.json", "w") as file:
+            json.dump(network_params, file)
+        
+        with open(directory+"network_"+str(i)+"/configs/neuron_config.json", "w") as file:
             json.dump(sampler[i], file)
 
         with open(directory+"conf.json", "w") as conf:
             json.dump({"SAVE_DATA": True,
-                       "WEIGHT_SHARING": False,
+                       "WEIGHT_SHARING": True,
                        "SAVE_DATA_LOCATION": directory+"network_"+str(i)+"/weights/",
-                       "CONF_FILES_LOCATION": directory+"network_"+str(i)+"/configs/config.json"}, conf)
+                       "NETWORK_CONFIG": directory+"network_"+str(i)+"/configs/network_config.json"}, conf)
     
-        try:
-            subprocess.run(["dv-runtime", "-b0"], timeout=learning_time)
-        except:
-            print("Finished learning: " + str(i))
+        for path in execute(["dv-runtime", "-b0"]):
+            print(path, end="")
 
-# "DELTA_VP": norm(loc=0.065, scale=0.015),
-# "DELTA_VD": norm(loc=0.025, scale=0.015),
-# "TAU_LTP": norm(loc=10000, scale=5000),
-# "TAU_LTD": norm(loc=15000, scale=5000),
-# "VTHRESH": norm(loc=17, scale=4.5),
-# "VRESET": [-20],
-# "TAU_M": norm(loc=12000, scale=6000),
-# "TAU_INHIB": norm(loc=8500, scale=3500),
+def execute(cmd):
+    popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
+    for stdout_line in iter(popen.stdout.readline, ""):
+        if "Network reset" in stdout_line:
+            print("terminating learning")
+            popen.terminate()
+        yield stdout_line
+    popen.stdout.close()
+    return_code = popen.wait()
+    if return_code:
+        raise subprocess.CalledProcessError(return_code, cmd)
+            
+network_params = {
+	"Neuron1Config": "/home/thomas/neuvisys-dv/configuration/network/configs/neuron_config.json",
+	"Neuron2Config": "/home/thomas/neuvisys-dv/configuration/network/configs/pooling_neuron_config.json",
 
-param_grid = {
-	"NEURON_WIDTH": [10],
-	"NEURON_HEIGHT": [10],
-	"NEURON_SYNAPSES": [1],
-	"SYNAPSE_DELAY": [0],#norm(loc=10000, scale=5000),
-	"X_ANCHOR_POINT": [0],
-	"Y_ANCHOR_POINT": [0],
-	"NETWORK_WIDTH": [34],
-	"NETWORK_HEIGHT": [26],
-	"NETWORK_DEPTH": [4],
-	"DELTA_VP": [0.077],
-	"DELTA_VD": [0.021],
-	"DELTA_SR": norm(loc=1, scale=0.5),
-	"DELTA_RP": norm(loc=1, scale=0.5),
-	"DELTA_SRA": norm(0.06, scale=0.1),
-	"DELTA_INH": norm(100, scale=50),
+	"L1Width": 34,
+	"L1Height": 26,
+	"L1Depth": 100,
+	"L1XAnchor": 0,
+	"L1YAnchor": 0,
+	"Neuron1Width": 10,
+	"Neuron1Height": 10,
+	"Neuron1Synapses": 1,
+
+	"L2Width": 0,
+	"L2Height": 0,
+	"Neuron2Width": 3,
+	"Neuron2Height": 3
+}
+
+neuron_params = {
+    "SYNAPSE_DELAY": [0],
+	"DELTA_VP": [0.0077],
+	"DELTA_VD": [0.0021],
+	"DELTA_SR": [0.5, 1, 1.5],
+	"DELTA_RP": [0.5, 1, 1.5],
+	"DELTA_SRA": [0.03, 0.06, 0.09, 0.12],
+	"DELTA_INH": [50, 75, 100],
 	"TAU_LTP": [7000],
 	"TAU_LTD": [14000],
-	"TAU_M": norm(18000, scale=5000),
-	"TAU_RP": norm(25000, scale=10000),
-	"TAU_SRA": norm(100000, scale=50000),
-	"VTHRESH": [30],
+	"TAU_M": [18000],
+	"TAU_RP": [20000, 25000, 30000],
+	"TAU_SRA": [50000, 100000, 150000],
+	"VTHRESH": [20, 30, 40],
 	"VRESET": [-20],
 	"DECAY_FACTOR": [0.999, 0.995, 0.99],
-	"NORM_FACTOR": [4],
-	"TARGET_SPIKE_RATE": norm(0.75, scale=0.35)
+	"NORM_FACTOR": [3, 4, 5],
+	"TARGET_SPIKE_RATE": [0.75, 1]
 }
 
 directory = "/home/thomas/neuvisys-dv/configuration/"
-sampler = list(ParameterSampler(param_grid, 20))
+sampler = list(ParameterSampler(neuron_params, 20))
 for sample in sampler:
     for key in sample.keys():
         if key != "VRESET" and sample[key] < 0:
@@ -81,4 +96,4 @@ for sample in sampler:
     sample["SYNAPSE_DELAY"] = int(sample["SYNAPSE_DELAY"])
 n_iter = len(sampler)
 
-generate_multiple_configurations(directory, sampler, n_iter, 3400)
+generate_multiple_configurations(directory, sampler, network_params, n_iter)

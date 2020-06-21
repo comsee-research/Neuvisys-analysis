@@ -33,14 +33,14 @@ def load_neurons_infos(neuron_path):
 
 def plot_network(directory):
     files = natsorted([directory+"weights/"+f for f in os.listdir(directory+"weights/") if f.endswith(".npy")])
-    network_params = load_params(directory+"configs/config.json")
-    
+    network_params = {**load_params(directory+"configs/neuron_config.json"), **load_params(directory+"configs/network_config.json")}
+
     neurons_info = load_neurons_infos(directory+"weights/")
     neurons_info = [str(int(info["threshold"])) + "|" + str(round(info["spiking_rate"], 1)) for info in neurons_info]
     
     for i, file in enumerate(files):
-        for synapse in range(network_params["NEURON_SYNAPSES"]):
-            weights = np.moveaxis(np.concatenate((np.load(file)[:, synapse], np.zeros((1, network_params["NEURON_WIDTH"], network_params["NEURON_HEIGHT"]))), axis=0), 0, 2)     
+        for synapse in range(network_params["Neuron1Synapses"]):
+            weights = np.moveaxis(np.concatenate((np.load(file)[:, synapse], np.zeros((1, network_params["Neuron1Width"], network_params["Neuron1Height"]))), axis=0), 0, 2)     
                 
             weights = np.kron(weights, np.ones((3, 3, 1)))
             compress_weight(weights, directory+"images/"+str(i)+"_syn"+str(synapse)+".png")
@@ -99,13 +99,13 @@ def generate_pdf_weight_sharing(directory, title, rows, cols, nb_synapses, nb_la
             count += 16*nb_layers
     return pdf
 
-# for i in range(10):
-directory = "/home/thomas/neuvisys-dv/configuration/network/"
-
-network_params = plot_network(directory)
-# for layer in range(network_params["NETWORK_DEPTH"]):
-#     pdf = generate_pdf(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"], layer)
-#     pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+for i in range(10):
+    directory = "/home/thomas/neuvisys-dv/configuration/network_"+str(i)+"/"
     
-pdf = generate_pdf_weight_sharing(directory+"images/", str(network_params), network_params["NETWORK_HEIGHT"], network_params["NETWORK_WIDTH"], network_params["NEURON_SYNAPSES"], network_params["NETWORK_DEPTH"])
-pdf.output(directory+"figures/multi_layer.pdf", "F")
+    network_params = plot_network(directory)
+    # for layer in range(network_params["L1Depth"]):
+        # pdf = generate_pdf(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"], layer)
+        # pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+        
+    pdf = generate_pdf_weight_sharing(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"])
+    pdf.output(directory+"figures/multi_layer.pdf", "F")

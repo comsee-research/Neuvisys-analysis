@@ -71,24 +71,24 @@ neuron_params = {
     "SYNAPSE_DELAY": [0],
 	"DELTA_VP": [0.0077],
 	"DELTA_VD": [0.0021],
-	"DELTA_SR": [0.5, 1, 1.5],
-	"DELTA_RP": [0.5, 1, 1.5],
-	"DELTA_SRA": [0.03, 0.06, 0.09, 0.12],
-	"DELTA_INH": [50, 75, 100],
+	"DELTA_SR": [1],
+	"DELTA_RP": [1],
+	"DELTA_SRA": [0.06],
+	"DELTA_INH": [75],
 	"TAU_LTP": [7000],
 	"TAU_LTD": [14000],
 	"TAU_M": [18000],
-	"TAU_RP": [20000, 25000, 30000],
-	"TAU_SRA": [50000, 100000, 150000],
-	"VTHRESH": [20, 30, 40],
+	"TAU_RP": [20000],
+	"TAU_SRA": [100000],
+	"VTHRESH": [30],
 	"VRESET": [-20],
 	"DECAY_FACTOR": [0.999, 0.995, 0.99],
-	"NORM_FACTOR": [3, 4, 5],
-	"TARGET_SPIKE_RATE": [0.75, 1]
+	"NORM_FACTOR": [4],
+	"TARGET_SPIKE_RATE": [0.75]
 }
 
 directory = "/home/thomas/neuvisys-dv/configuration/"
-sampler = list(ParameterSampler(neuron_params, 20))
+sampler = list(ParameterSampler(neuron_params, 1))
 for sample in sampler:
     for key in sample.keys():
         if key != "VRESET" and sample[key] < 0:

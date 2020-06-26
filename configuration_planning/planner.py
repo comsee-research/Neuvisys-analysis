@@ -29,7 +29,6 @@ def generate_multiple_configurations(directory, sampler, network_params, n_iter)
 
         with open(directory+"conf.json", "w") as conf:
             json.dump({"SAVE_DATA": True,
-                       "WEIGHT_SHARING": True,
                        "SAVE_DATA_LOCATION": directory+"network_"+str(i)+"/weights/",
                        "NETWORK_CONFIG": directory+"network_"+str(i)+"/configs/network_config.json"}, conf)
     
@@ -64,7 +63,8 @@ network_params = {
 	"L2Width": 0,
 	"L2Height": 0,
 	"Neuron2Width": 3,
-	"Neuron2Height": 3
+	"Neuron2Height": 3,
+    "WeightSharing": True
 }
 
 neuron_params = {

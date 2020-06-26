@@ -8,6 +8,7 @@ Created on Wed Apr  8 03:46:47 2020
 
 import numpy as np
 import random
+import json
 
 from utils.utils import load_aedat4
 

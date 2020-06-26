@@ -109,39 +109,54 @@ def generate_pdf_layers(directory, title, rows, cols, nb_synapses, nb_layers):
     return pdf
 
 
-def generate_pdf_weight_sharing(directory, title, rows, cols, nb_synapses, nb_layers):
+def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_height, depth):
     header = 30
     images = natsorted(os.listdir(directory))
-    pdf = FPDF("P", "mm", (cols*11, header+3*11*nb_layers))
+
+    selection = []
+    for i in range(0, len(images), bloc_width*bloc_height*depth):
+        selection += images[i:(i+1)+(depth-1)]
+
+    nb_blocs_side = 3
+    size_im = 11
+    nb_im_per_bloc = int(np.sqrt(depth))
+    bloc_size = nb_im_per_bloc * 11
+
+    pdf = FPDF("P", "mm", (nb_blocs_side*bloc_size+30, header+nb_blocs_side*bloc_size+30))
     pdf.add_page()
-    
+
     pdf.set_font('Arial', '', 10)
     pdf.multi_cell(0, 5, title)
-    
+
     count = 0
-    for i in range(3):
-        for j in range(3):
-            for l in range(nb_layers):
-                pdf.image(directory+images[count], x=100+i*31, y=header+j*11*nb_layers+l*10.4, w=10, h=10)
-                count += nb_synapses
-            count += 16*nb_layers
+    for row in range(nb_blocs_side):
+        for col in range(nb_blocs_side):
+            for xim in range(nb_im_per_bloc):
+                for yim in range(nb_im_per_bloc):
+                    pdf.image(directory+selection[count], x=row*(bloc_size+10) + xim*size_im,
+                              y=header + col*(bloc_size+10) + yim*size_im, w=10, h=10)
+                    count += 1
     return pdf
 
-
-directory = "/home/thomas/neuvisys-dv/configuration/network/"
-network_params = plot_network(directory)
-for layer in range(network_params["L1Depth"]):
-    pdf = generate_pdf(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"], layer)
-    pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
-pdf = generate_pdf_pooling(directory+"images/", str(network_params), network_params["L2Height"], network_params["L2Width"], network_params["L1Depth"])
-pdf.output(directory+"figures/pooling.pdf", "F")
-# for i in range(10):
-#     directory = "/home/thomas/neuvisys-dv/configuration/network_"+str(i)+"/"
-    
-#     network_params = plot_network(directory)
-#     # for layer in range(network_params["L1Depth"]):
-#         # pdf = generate_pdf(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"], layer)
-#         # pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+def display_network(weight_sharing, pooling, nb_networks=1, batch=False):
+    for i in range(nb_networks):
+        if batch:
+            directory = "/home/thomas/neuvisys-dv/configuration/network_"+str(i)+"/"
+        else:
+            directory = "/home/thomas/neuvisys-dv/configuration/network/"
+        network_params = plot_network(directory)
         
-#     pdf = generate_pdf_weight_sharing(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"])
-#     pdf.output(directory+"figures/multi_layer.pdf", "F")
+        if weight_sharing:
+            pdf = generate_pdf_weight_sharing(directory+"images/", str(network_params), network_params["Neuron1Synapses"], 4, 4, network_params["L1Depth"])
+            pdf.output(directory+"figures/weight_sharing.pdf", "F")              
+        else:
+            for layer in range(network_params["L1Depth"]):
+                pdf = generate_pdf(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"], layer)
+                pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
+            pdf = generate_pdf_layers(directory+"iamges/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"])
+            pdf.output(directory+"figures/multi_layer.pdf", "F")
+        if pooling:
+            pdf = generate_pdf_pooling(directory+"images/", str(network_params), network_params["L2Height"], network_params["L2Width"], network_params["L1Depth"])
+            pdf.output(directory+"figures/pooling.pdf", "F")
+
+display_network(weight_sharing=True, pooling=False)

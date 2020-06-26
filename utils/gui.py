@@ -13,7 +13,7 @@ def write_json(directory, gui):
     with open(directory, "w") as file:
         json.dump(gui, file)
 
-weight_sharing = False
+weight_sharing = True
 
 patch_width = 4
 patch_height = 4
@@ -55,26 +55,27 @@ if weight_sharing:
 else:
     for i in range(height):
         layout1.append([])
-        
+    
     for col in range(width):
         for row in range(height):
             layout1[row].append(sg.Button("{:>3}".format(str(count)), key="l1"+str(count)))
             count += 1
 layout1.insert(0, [sg.Slider(range=(0, depth-1), size=(80, 20), orientation="horizontal", key="depth1", enable_events=True)])
+layout1.append([sg.Button("Save", key="save")])
 
 count = 0
 layout2 = []
 
 for i in range(height2):
     layout2.append([])
-    
+
 for col in range(width2):
     for row in range(height2):
         layout2[row].append(sg.Button("{:>3}".format(str(count)), key="l2"+str(count)))
         count += 1
 layout2.insert(0, [sg.Slider(range=(0, depth-1), orientation="horizontal", key="depth2", enable_events=True)])
 
-layout = [[sg.TabGroup([[sg.Tab('Tab 1', layout1, tooltip='tip'), sg.Tab('Tab 2', layout2)]], tooltip='tip2')]]
+layout = [[sg.TabGroup([[sg.Tab('Tab 1', layout1), sg.Tab('Tab 2', layout2)]])]]
 
 # Create the Window
 win = sg.Window('Neuvisys Interface', layout, default_button_element_size=(1, 1), auto_size_buttons=False)
@@ -82,8 +83,9 @@ win = sg.Window('Neuvisys Interface', layout, default_button_element_size=(1, 1)
 gui = {"index": 0,
        "index2": 0,
        "layer": 0, 
-       "layer2": 0}
-        
+       "layer2": 0,
+       "save": False}
+
 directory = "/home/thomas/neuvisys-dv/configuration/gui.json"
 x = 0
 y = 0
@@ -92,6 +94,9 @@ while True:
     event, values = win.read()
     if event == sg.WIN_CLOSED or event == 'Cancel':
         break
+    elif event == "save":
+        gui["save"] = True
+        write_json(directory, gui)
     elif event == "depth1":
         index = int(x * width * depth + y * depth + values["depth1"])
         gui["index"] = index

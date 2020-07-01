@@ -12,16 +12,7 @@ import numpy as np
 from PIL import Image
 from natsort import natsorted
 from fpdf import FPDF
-
-
-def compress_weight(weights, path):
-    img = np.array(255 * (weights / weights.max()), dtype=np.uint8)
-    img = Image.fromarray(img).save(path)
-
-
-def load_params(param_path):
-    with open(param_path) as file:
-        return json.load(file)
+from SpikingNetwork import SpikingNetwork
 
 
 def load_neurons_infos(neuron_path):
@@ -32,28 +23,6 @@ def load_neurons_infos(neuron_path):
             jayson = json.load(f)
         infos.append({"threshold": jayson["threshold"], "spiking_rate": jayson["spiking_rate"]})
     return infos
-
-
-def plot_network(directory):
-    files = natsorted([directory+"weights/"+f for f in os.listdir(directory+"weights/") if f.endswith(".npy")])
-    network_params = {**load_params(directory+"configs/neuron_config.json"), **load_params(directory+"configs/network_config.json")}
-
-    neurons_info = load_neurons_infos(directory+"weights/")
-    neurons_info = [str(int(info["threshold"])) + "|" + str(round(info["spiking_rate"], 1)) for info in neurons_info]
-    
-    for i, file in enumerate(files):
-        if "pooling" in file:
-            weights = np.load(file)
-            for lay in range(network_params["L1Depth"]):
-                dim = np.zeros((network_params["Neuron2Width"], network_params["Neuron2Height"]))
-                weight = np.stack((weights[lay], dim, dim), axis=2)
-                compress_weight(np.kron(weight, np.ones((7, 7, 1))), directory+"images/pooling_"+str(i)+"_lay_"+str(lay)+".png")
-        else:
-            for synapse in range(network_params["Neuron1Synapses"]):
-                weights = np.moveaxis(np.concatenate((np.load(file)[:, synapse], np.zeros((1, network_params["Neuron1Width"], network_params["Neuron1Height"]))), axis=0), 0, 2)
-                compress_weight(np.kron(weights, np.ones((3, 3, 1))), directory+"images/"+str(i)+"_syn"+str(synapse)+".png")
-
-    return network_params
 
 
 def generate_pdf(directory, title, rows, cols, nb_synapses, nb_layers, layer):
@@ -73,6 +42,7 @@ def generate_pdf(directory, title, rows, cols, nb_synapses, nb_layers, layer):
                 count += 1
             count += nb_synapses * (nb_layers - 1)
     return pdf
+
 
 def generate_pdf_pooling(directory, title, rows, cols, depth):
     header = 30
@@ -138,25 +108,24 @@ def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_
                     count += 1
     return pdf
 
-def display_network(weight_sharing, pooling, nb_networks=1, batch=False):
-    for i in range(nb_networks):
-        if batch:
-            directory = "/home/thomas/neuvisys-dv/configuration/network_"+str(i)+"/"
-        else:
-            directory = "/home/thomas/neuvisys-dv/configuration/network/"
-        network_params = plot_network(directory)
-        
-        if weight_sharing:
-            pdf = generate_pdf_weight_sharing(directory+"images/", str(network_params), network_params["Neuron1Synapses"], 4, 4, network_params["L1Depth"])
-            pdf.output(directory+"figures/weight_sharing.pdf", "F")              
-        else:
-            for layer in range(network_params["L1Depth"]):
-                pdf = generate_pdf(directory+"images/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"], layer)
-                pdf.output(directory+"figures/"+str(layer)+".pdf", "F")
-            pdf = generate_pdf_layers(directory+"iamges/", str(network_params), network_params["L1Height"], network_params["L1Width"], network_params["Neuron1Synapses"], network_params["L1Depth"])
-            pdf.output(directory+"figures/multi_layer.pdf", "F")
-        if pooling:
-            pdf = generate_pdf_pooling(directory+"images/", str(network_params), network_params["L2Height"], network_params["L2Width"], network_params["L1Depth"])
-            pdf.output(directory+"figures/pooling.pdf", "F")
 
-display_network(weight_sharing=True, pooling=False)
+def display_network(spinets, pooling=0):
+    for spinet in spinets:
+        spinet.generate_weight_images(spinet.path + "images/")
+        
+        if spinet.net_var["WeightSharing"]:
+            pdf = generate_pdf_weight_sharing(spinet.path+"images/", str(spinet.net_var), spinet.net_var["Neuron1Synapses"], 4, 4, spinet.net_var["L1Depth"])
+            pdf.output(spinet.path+"figures/weight_sharing.pdf", "F")              
+        else:
+            for layer in range(spinet.net_var["L1Depth"]):
+                pdf = generate_pdf(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"], layer)
+                pdf.output(spinet.path+"figures/"+str(layer)+".pdf", "F")
+            pdf = generate_pdf_layers(spinet.path+"iamges/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"])
+            pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
+        if pooling:
+            pdf = generate_pdf_pooling(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L2Height"], spinet.net_var["L2Width"], spinet.net_var["L1Depth"])
+            pdf.output(spinet.path+"figures/pooling.pdf", "F")
+
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+display_network([spinet])

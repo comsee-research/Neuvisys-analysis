@@ -8,9 +8,8 @@ Created on Wed Apr  8 03:46:47 2020
 
 import numpy as np
 import random
-import json
 
-from utils.utils import load_aedat4
+from SpikingNetwork import load_aedat4
 
 import rosbag
 from bitarray import bitarray

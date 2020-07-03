@@ -6,13 +6,48 @@ Created on Wed Apr  8 03:46:47 2020
 @author: thomas
 """
 
+from dv import AedatFile
+from dv import LegacyAedatFile
+import json
+import os, shutil
 import numpy as np
 import random
-
-from SpikingNetwork import load_aedat4
-
 import rosbag
 from bitarray import bitarray
+
+def delete_files(path):
+    for file in os.scandir(path):
+        try:
+            if os.path.isfile(file.path) or os.path.islink(file.path):
+                os.unlink(file.path)
+            elif os.path.isdir(file.path):
+                shutil.rmtree(file.path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file.path, e))
+
+def load_params(param_path):
+    with open(param_path) as file:
+        return json.load(file)
+
+def load_aedat4(file_path):
+    with AedatFile(file_path) as f:
+        events = np.hstack([packet for packet in f['events'].numpy()])
+    return events
+
+def load_aedat(file_path):
+    with LegacyAedatFile(file_path) as f:
+        for e in f:
+            print(e.x, e.y)
+
+def write_npdat(events, dest):    
+    arr = np.zeros((events.size, 4))
+    arr[:, 0] = events["timestamp"]
+    arr[:, 1] = events["x"]
+    arr[:, 2] = events["y"]
+    arr[:, 3] = events["polarity"]
+    
+    with open(dest, "wb") as file:
+        np.save(file, arr)
 
 def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
@@ -23,7 +58,7 @@ def write_aedat2_header(aedat_file):
     
 def event_address_aedat2(x, y, polarity):
     y = format(y, "09b")
-    x = format(x, "010b")
+    x = format(x, "010b")# write_npdat("/home/thomas/Vidéos/driving_dataset/mix/mix_17.aedat4", "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy")
     p = "10" if polarity else "00"
     return bitarray("0" + y + x + p + "0000000000")
 
@@ -36,25 +71,24 @@ def frame_address_aedat2(x, y, intensity):
     intensity = format(intensity, "010b")
     return bitarray("1" + y + x + "10" + intensity)
 
-def write_aedat2_file(events, outfile, x_size, y_size, new=False):
+def write_aedat2_file(events, outfile, x_size, y_size):
     print("writing file " + outfile)
     bits = bitarray()
     
-    if new:
-        first_timestamp = events[0]["timestamp"]
-        bits += event_address_aedat2(x_size-1, y_size-1, 1)
-        bits += timestamp_aedat2(first_timestamp)
+    first_timestamp = events[0]["timestamp"]
+    bits += event_address_aedat2(x_size-1, y_size-1, 1)
+    bits += timestamp_aedat2(first_timestamp)
+    
+    for i in range(events.size):
+        event = events[i]
+        bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
+        bits += timestamp_aedat2(event["timestamp"])
         
-        for i in range(events.size):
-            event = events[i]
-            bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
-            bits += timestamp_aedat2(event["timestamp"])
-            
-        # buffer system
-        with open(outfile, "wb") as out:
-            write_aedat2_header(out)
-            out.write(bits.tobytes())
-            bits = bitarray()
+    # buffer system
+    with open(outfile, "wb") as out:
+        write_aedat2_header(out)
+        out.write(bits.tobytes())
+        bits = bitarray()
     
 def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size, n_concat):
     print("\nFormatting: .rosbag -> .aedat\n")
@@ -108,7 +142,10 @@ def divide_events(events, chunk_size):
     splits = [events[(events["timestamp"] > chunk[i]) & (events["timestamp"] < chunk[i+1])] for i in range(chunk.size-1)]
     
     for split in splits:
-        split["timestamp"] -= split["timestamp"][0]
+        try:
+            split["timestamp"] -= split["timestamp"][0]
+        except:
+            print("oups")
     return splits, first_timestamp
 
 def build_mixed_file(files, chunk_size):
@@ -125,11 +162,3 @@ def build_mixed_file(files, chunk_size):
         split["timestamp"] += i * chunk_size + f_timestamps[0]
         
     return np.hstack(splits)
-
-## Script
-
-files = ["/home/thomas/Videos/driving/city_34.aedat4", "/home/thomas/Videos/driving/freeway_40.aedat4"]
-chunk_size = 10000000
-
-events = build_mixed_file(files, chunk_size)
-write_aedat2_file(events, "/home/thomas/Desktop/split_test.aedat", 346, 260, True)

@@ -10,11 +10,6 @@ import numpy as np
 
 from bitarray import bitarray
 
-def load_aedat4(file_path):
-    with AedatFile(file_path) as f:
-        events = np.hstack([packet for packet in f['events'].numpy()])
-    return events
-
 def write_aedat_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
     aedat_file.write(b'# This is a raw AE data file created by saveaerdat.m\r\n')

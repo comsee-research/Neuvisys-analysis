@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 from natsort import natsorted
 from fpdf import FPDF
-from SpikingNetwork import SpikingNetwork
+from spiking_network import SpikingNetwork
 
 
 def load_neurons_infos(neuron_path):
@@ -125,7 +125,3 @@ def display_network(spinets, pooling=0):
         if pooling:
             pdf = generate_pdf_pooling(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L2Height"], spinet.net_var["L2Width"], spinet.net_var["L1Depth"])
             pdf.output(spinet.path+"figures/pooling.pdf", "F")
-
-
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-display_network([spinet])

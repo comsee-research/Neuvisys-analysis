@@ -6,50 +6,17 @@ Created on Mon Jun 29 18:32:36 2020
 @author: thomas
 """
 
-from dv import AedatFile
-from dv import LegacyAedatFile
-import json
 from natsort import natsorted
-import os, shutil
+import os
 from PIL import Image
 import scipy.io as sio
 import numpy as np
 
+from aedat_tools.aedat_tools import load_params, delete_files
+
 def compress_weight(weights, path):
     img = np.array(255 * (weights / weights.max()), dtype=np.uint8)
     img = Image.fromarray(img).save(path)
-
-def delete_files(path):
-    for file in os.scandir(path):
-        try:
-            if os.path.isfile(file.path) or os.path.islink(file.path):
-                os.unlink(file.path)
-            elif os.path.isdir(file.path):
-                shutil.rmtree(file.path)
-        except Exception as e:
-            print('Failed to delete %s. Reason: %s' % (file.path, e))
-
-def load_params(param_path):
-    with open(param_path) as file:
-        return json.load(file)
-
-def load_aedat4(file_path):
-    with AedatFile(file_path) as f:
-        events = np.hstack([packet for packet in f['events'].numpy()])
-    return events
-
-def load_aedat(file_path):
-    with LegacyAedatFile(file_path) as f:
-        for e in f:
-            print(e.x, e.y)
-
-def write_npdat(file_path, dest):
-    events = []
-    with AedatFile(file_path) as f:
-        events = np.hstack([packet for packet in f['events'].numpy()])
-        
-    with open(dest, "wb") as file:
-        np.save(file, events)
 
 class SpikingNetwork:
     """Spiking Neural Network class"""

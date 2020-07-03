@@ -84,7 +84,7 @@ def raster_evts(data):
 
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('filename')
+parser.add_argument('filename')
 parser.add_argument('--tstart', type=int, default=0)
 parser.add_argument('--tstop', type=int)
 parser.add_argument('--binsize', type=float, default=0.1)
@@ -94,14 +94,16 @@ parser.add_argument('--export_dvs', type=int, default=1)
 parser.add_argument('--out_file', default='')
 args = parser.parse_args()
 
-filename = "/home/thomas/Videos/driving/rec1487846842.hdf5"
+filename = args.filename
+path, name = filename.rsplit("/", 1)
+aedat_file = path + "/" + name.replace(".hdf5", ".aedat")
+
 f_in = HDF5Stream(filename, export_data_vi.union({'dvs'}))
 m = MergedStream(f_in)
 
 x_size, y_size = 346, 260
 first = 1
 
-aedat_file = "/home/thomas/Desktop/freeway_night_40.aedat"
 with open(aedat_file, "wb") as file:
     write_aedat_header(file)
 

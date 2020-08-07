@@ -9,16 +9,17 @@ import os
 
 os.chdir("/home/thomas/neuvisys-analysis")
 
-from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4
+from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, convert_ros_to_aedat, concatenate_files
 from spiking_network import SpikingNetwork
 from neuvisys_statistics.display_weights import display_network
 from planning.planner import launch_spinet
+from gabor_fitting.gabbor_fitting import create_gabor_basis
 
 
 #%% Display weights
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network_0/")
-display_network([spinet])
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+display_network([spinet], 1)
 
 #%% Save aedat file as numpy array
 
@@ -41,9 +42,35 @@ aedat = "/home/thomas/Vidéos/driving_dataset/aedat/city_highway_night_16.aedat"
 
 remove_blank_space(aedat4, aedat, 346, 260)
 
+#%% Concatenate aedat4 files
+
+aedat4_files = ["/home/thomas/Vidéos/samples/horizontal_bars.aedat4", "/home/thomas/Vidéos/samples/vertical_bars.aedat4"]
+aedat = "/home/thomas/Bureau/concat.aedat"
+
+concatenate_files(aedat4_files, aedat, 346, 260)
+
 #%% Launch training script
 
 directory = "/home/thomas/neuvisys-dv/configuration/"
 files = ["/home/thomas/Vidéos/driving_dataset/npy/mix_12.npy", "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy"]
 
 launch_spinet(directory, files, 1)
+
+#%% Create Matlab weight.mat
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network_0/")
+spinet.generate_weight_mat("/home/thomas/neuvisys-dv/configuration/network_0/gabors/weights.mat")
+
+#%% Load and create gabor basis
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+create_gabor_basis(spinet, "/home/thomas/neuvisys-dv/configuration/network/gabors/")
+
+#%% Convert rosbag to aedat
+
+convert_ros_to_aedat("/home/thomas/Bureau/out.bag", "/home/thomas/Bureau/test.aedat", 346, 260)
+
+#%% //!!!\\ Delete weights network
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+spinet.clean_network()

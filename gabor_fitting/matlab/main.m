@@ -1,6 +1,6 @@
 clear all;close all;clc
 addpath('Funcs Gabor Fit');
-bfilename = 'weights';
+bfilename = '/home/thomas/neuvisys-dv/configuration/network_0/gabors/weights';
 load_filename = [bfilename '.mat'];
 load(load_filename);
 

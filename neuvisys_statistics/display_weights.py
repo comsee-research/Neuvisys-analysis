@@ -80,7 +80,7 @@ def generate_pdf_layers(directory, title, rows, cols, nb_synapses, nb_layers):
 
 
 def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_height, depth):
-    header = 30
+    header = 0
     images = natsorted(os.listdir(directory))
 
     selection = []
@@ -96,7 +96,7 @@ def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_
     pdf.add_page()
 
     pdf.set_font('Arial', '', 10)
-    pdf.multi_cell(0, 5, title)
+    # pdf.multi_cell(0, 5, title)
 
     count = 0
     for row in range(nb_blocs_side):
@@ -120,7 +120,7 @@ def display_network(spinets, pooling=0):
             for layer in range(spinet.net_var["L1Depth"]):
                 pdf = generate_pdf(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"], layer)
                 pdf.output(spinet.path+"figures/"+str(layer)+".pdf", "F")
-            pdf = generate_pdf_layers(spinet.path+"iamges/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"])
+            pdf = generate_pdf_layers(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"])
             pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
         if pooling:
             pdf = generate_pdf_pooling(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L2Height"], spinet.net_var["L2Width"], spinet.net_var["L1Depth"])

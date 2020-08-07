@@ -49,16 +49,15 @@ def plot_histogram(theta, error, err_thresh, dest):
     plt.close()
     
 def plot_polar_chart(spinet, bins, theta, error, err_thresh, dest):
-    # the = np.linspace(0.0, np.pi, bins, endpoint=False)
-    
     fig, axes = plt.subplots(3, 3, subplot_kw=dict(projection='polar'))
     for i in range(3):
         for j in range(3):
             sub_theta = theta[(i*3+j)*spinet.net_var["L1Depth"]:(i*3+j+1)*spinet.net_var["L1Depth"]]
             sub_error = error[(i*3+j)*spinet.net_var["L1Depth"]:(i*3+j+1)*spinet.net_var["L1Depth"]]
-            hist, thet = np.histogram(sub_theta[sub_error < err_thresh], bins, range=(0, np.pi))
+            hist, _ = np.histogram(sub_theta[sub_error < err_thresh], bins, range=(0, np.pi))
+            the1 = np.linspace(0.0, np.pi, hist.size)
             
-            axes[j, i].plot(thet[:-1], hist)
+            axes[j, i].plot(the1, hist)
             axes[j, i].set_thetamax(180)
             axes[j, i].set_theta_zero_location("W")
             axes[j, i].set_theta_direction(-1)
@@ -67,11 +66,18 @@ def plot_polar_chart(spinet, bins, theta, error, err_thresh, dest):
     
     plt.figure()
     ax = plt.subplot(111, polar=True)
-    hist, thet = np.histogram(theta[error < err_thresh], bins, range=(0, np.pi))
-    ax.plot(thet[:-1], hist)
+    hist, _ = np.histogram(theta[error < err_thresh], bins, range=(0, np.pi))
+    the1 = np.linspace(0.0, np.pi, hist.size)
+    the2 = np.linspace(np.pi, 2*np.pi, hist.size)
+    ax.plot(the1, hist)
+    ax.set_xticks(np.arange(0, np.pi+0.0001, np.pi/6.0))
+    # ax.plot(np.concatenate((the1, the2)), np.concatenate((hist, hist[::-1])))
     ax.set_thetamax(180)
     ax.set_theta_zero_location("W")
     ax.set_theta_direction(-1)
+    # ax.set_title("Orientation histogram of the fitted gabors")
+    # ax.set_xlabel("proportion")
+    ax.set_ylabel("orientation (°)")
 
     plt.savefig(dest+"total_histogram", bbox_inches="tight")
         
@@ -80,33 +86,30 @@ def error_percentage(theta, error, max_error, dest):
     x = np.arange(0, max_error, 0.01)
     for err in x:
         count.append(theta[error < err].size / theta.size)
-        
+
     plt.figure()
     plt.plot(x, count)
     plt.title("Proportion of accepted gabors function of the error threshold")
     plt.xlabel("error threshold")
     plt.ylabel("proportion of accepted gabors (%)")
     plt.savefig(dest+"error_proportion", bbox_inches="tight")
-
-### Script
-       
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-# spinet.generate_weight_mat("/home/thomas/Bureau/Gabor/weights.mat")
-
-mu = sio.loadmat("/home/thomas/Bureau/Gabor/mu.mat")["mu_table"]
-sigma = sio.loadmat("/home/thomas/Bureau/Gabor/sigma.mat")["sigma_table"]
-lambd = sio.loadmat("/home/thomas/Bureau/Gabor/lambda.mat")["lambda_table"]
-phase = sio.loadmat("/home/thomas/Bureau/Gabor/phase.mat")["phase_table"]
-theta = sio.loadmat("/home/thomas/Bureau/Gabor/theta.mat")["theta_table"]
-error = sio.loadmat("/home/thomas/Bureau/Gabor/error.mat")["error_table"]
-est_basis = sio.loadmat("/home/thomas/Bureau/Gabor/EstBasis.mat")["EstBasis"]
-
-# plot_gabors(spinet, est_basis, error, "/home/thomas/Bureau/Gabor/figures/")
-
-# for i in range(9):
-#     sub_theta = theta[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
-#     sub_error = error[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
-
-plot_polar_chart(spinet, 50, theta[0], error[0], 4, "/home/thomas/Bureau/Gabor/hists/")
-
-error_percentage(theta[0], error[0], 20, "/home/thomas/Bureau/Gabor/hists/")
+    
+def create_gabor_basis(spinet, directory):
+    mu = sio.loadmat(directory+"fitting/mu.mat")["mu_table"]
+    sigma = sio.loadmat(directory+"fitting/sigma.mat")["sigma_table"]
+    lambd = sio.loadmat(directory+"fitting/lambda.mat")["lambda_table"]
+    phase = sio.loadmat(directory+"fitting/phase.mat")["phase_table"]
+    theta = sio.loadmat(directory+"fitting/theta.mat")["theta_table"]
+    error = sio.loadmat(directory+"fitting/error.mat")["error_table"]
+    est_basis = sio.loadmat(directory+"fitting/EstBasis.mat")["EstBasis"]
+    
+    # plot_gabors(spinet, est_basis, error, directory+"figures/")
+    
+    # for i in range(9):
+    #     sub_theta = theta[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
+    #     sub_error = error[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
+    
+    plot_polar_chart(spinet, 16, theta[0], error[0], 5, directory+"hists/")
+    
+    # error_percentage(theta[0], error[0], 20, directory+"hists/")
+    

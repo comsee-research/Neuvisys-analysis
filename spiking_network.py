@@ -28,14 +28,21 @@ class SpikingNetwork:
         self.pool_neur_var = load_params(path + "configs/pooling_neuron_config.json")
         
         self.neurons = []
+        self.simple_cells = []
+        self.complex_cells = []
         neurons_paths = natsorted(os.listdir(path + "weights/"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
             if "pooling" in paths[0]:
-                self.neurons.append(Neuron("pooling", path + "weights/", *paths))
+                neuron = Neuron("pooling", path + "weights/", *paths)
+                self.neurons.append(neuron)
+                self.complex_cells.append(neuron)
             else:
-                self.neurons.append(Neuron("spatiotemporal", path + "weights/", *paths))
+                neuron = Neuron("spatiotemporal", path + "weights/", *paths)
+                self.neurons.append(neuron)
+                self.simple_cells.append(neuron)
         self.nb_neurons = len(self.neurons)
-        # self.nb_pool_neurons = len(self.neurons)
+        self.nb_simple_cells = len(self.simple_cells)
+        self.nb_complex_cells = len(self.complex_cells)
         
         if self.net_var["WeightSharing"]:
             self.shared_weights = []
@@ -50,11 +57,13 @@ class SpikingNetwork:
                     dim = np.zeros((self.net_var["Neuron2Width"], self.net_var["Neuron2Height"]))
                     weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
                     compress_weight(np.kron(weight, np.ones((7, 7, 1))), dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
+                    neuron.set_weight_image(dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
             else:
                 for synapse in range(self.net_var["Neuron1Synapses"]):
                     weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.net_var["Neuron1Width"], self.net_var["Neuron1Height"]))), axis=0), 0, 2)
                     compress_weight(np.kron(weights, np.ones((3, 3, 1))), dest+str(i)+"_syn"+str(synapse)+".png")
-    
+                    neuron.set_weight_image(dest+str(i)+"_syn"+str(synapse)+".png")
+
     def generate_weight_mat(self, dest):
         if self.net_var["WeightSharing"]:
             basis = np.zeros((200, len(self.shared_weights)))
@@ -80,3 +89,7 @@ class Neuron:
         self.type = neuron_type
         self.weights = np.load(path + weight_path)
         self.params = load_params(path + param_path)
+        self.down_connections = []
+        
+    def set_weight_image(self, path_image):
+        self.weight_image = path_image

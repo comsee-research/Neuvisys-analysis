@@ -21,7 +21,7 @@ patch_height = 4
 if weight_sharing:
     width = 3*patch_width
     height = 3*patch_height
-    depth = 100
+    depth = 5
 else:
     width = 34
     height = 26

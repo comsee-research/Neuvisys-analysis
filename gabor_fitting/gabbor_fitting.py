@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.image as mpimg
 
-from spiking_network import SpikingNetwork
-
 def plot_gabors(spinet, est_basis, error, dest):
     indices = []
     if spinet.net_var["WeightSharing"]:
@@ -48,38 +46,37 @@ def plot_histogram(theta, error, err_thresh, dest):
     plt.savefig(dest, bbox_inches="tight")
     plt.close()
     
-def plot_polar_chart(spinet, bins, theta, error, err_thresh, dest):
+def plot_polar_chart(depth, bins, theta, error, err_thresh, dest):
     fig, axes = plt.subplots(3, 3, subplot_kw=dict(projection='polar'))
     for i in range(3):
         for j in range(3):
-            sub_theta = theta[(i*3+j)*spinet.net_var["L1Depth"]:(i*3+j+1)*spinet.net_var["L1Depth"]]
-            sub_error = error[(i*3+j)*spinet.net_var["L1Depth"]:(i*3+j+1)*spinet.net_var["L1Depth"]]
+            sub_theta = theta[(i*3+j)*depth:(i*3+j+1)*depth]
+            sub_error = error[(i*3+j)*depth:(i*3+j+1)*depth]
             hist, _ = np.histogram(sub_theta[sub_error < err_thresh], bins, range=(0, np.pi))
             the1 = np.linspace(0.0, np.pi, hist.size)
+            the1 = np.concatenate((the1, the1+np.pi))
+            hist = np.concatenate((hist, np.flipud(hist)))
             
-            axes[j, i].plot(the1, hist)
-            axes[j, i].set_thetamax(180)
+            axes[j, i].plot(the1, hist, "r", linewidth=2)
+            axes[j, i].set_xticks(np.arange(0, np.pi+0.0001, np.pi/4.0))
             axes[j, i].set_theta_zero_location("W")
             axes[j, i].set_theta_direction(-1)
-        
-    plt.savefig(dest+"region_histogram", bbox_inches="tight")
+
+    plt.savefig(dest+"region_histogram.pdf", bbox_inches="tight")
     
     plt.figure()
     ax = plt.subplot(111, polar=True)
     hist, _ = np.histogram(theta[error < err_thresh], bins, range=(0, np.pi))
     the1 = np.linspace(0.0, np.pi, hist.size)
     the2 = np.linspace(np.pi, 2*np.pi, hist.size)
-    ax.plot(the1, hist)
+    ax.plot(the1, hist, "r")
     ax.set_xticks(np.arange(0, np.pi+0.0001, np.pi/6.0))
-    # ax.plot(np.concatenate((the1, the2)), np.concatenate((hist, hist[::-1])))
     ax.set_thetamax(180)
     ax.set_theta_zero_location("W")
     ax.set_theta_direction(-1)
-    # ax.set_title("Orientation histogram of the fitted gabors")
-    # ax.set_xlabel("proportion")
     ax.set_ylabel("orientation (°)")
 
-    plt.savefig(dest+"total_histogram", bbox_inches="tight")
+    plt.savefig(dest+"total_histogram.pdf", bbox_inches="tight")
         
 def error_percentage(theta, error, max_error, dest):
     count = []
@@ -94,7 +91,7 @@ def error_percentage(theta, error, max_error, dest):
     plt.ylabel("proportion of accepted gabors (%)")
     plt.savefig(dest+"error_proportion", bbox_inches="tight")
     
-def create_gabor_basis(spinet, directory):
+def create_gabor_basis(depth, bins, directory):
     mu = sio.loadmat(directory+"fitting/mu.mat")["mu_table"]
     sigma = sio.loadmat(directory+"fitting/sigma.mat")["sigma_table"]
     lambd = sio.loadmat(directory+"fitting/lambda.mat")["lambda_table"]
@@ -109,7 +106,6 @@ def create_gabor_basis(spinet, directory):
     #     sub_theta = theta[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
     #     sub_error = error[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
     
-    plot_polar_chart(spinet, 16, theta[0], error[0], 5, directory+"hists/")
+    plot_polar_chart(depth, bins, theta[0], error[0], 5, directory+"hists/")
     
-    # error_percentage(theta[0], error[0], 20, directory+"hists/")
-    
+    error_percentage(theta[0], error[0], 20, directory+"hists/")

@@ -58,7 +58,7 @@ def write_aedat2_header(aedat_file):
     
 def event_address_aedat2(x, y, polarity):
     y = format(y, "09b")
-    x = format(x, "010b")# write_npdat("/home/thomas/Vidéos/driving_dataset/mix/mix_17.aedat4", "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy")
+    x = format(x, "010b")
     p = "10" if polarity else "00"
     return bitarray("0" + y + x + p + "0000000000")
 
@@ -79,17 +79,14 @@ def write_aedat2_file(events, outfile, x_size, y_size):
     bits += event_address_aedat2(x_size-1, y_size-1, 1)
     bits += timestamp_aedat2(first_timestamp)
     
-    for i in range(events.size):
-        event = events[i]
+    for event in events:
         bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])
         bits += timestamp_aedat2(event["timestamp"])
         
-    # buffer system
     with open(outfile, "wb") as out:
         write_aedat2_header(out)
         out.write(bits.tobytes())
-        bits = bitarray()
-    
+
 def convert_ros_to_aedat(bag_file, aedat_file, x_size, y_size):
     print("\nFormatting: .rosbag -> .aedat\n")
     
@@ -118,18 +115,17 @@ def remove_blank_space(aedat4_file, outfile, x_size, y_size):
     
     write_aedat2_file(events, outfile, x_size, y_size)
 
-def concatenate_files(aedat4_files, outfile, x_size, y_size):
+def concatenate_files(aedat4_files):
     list_events = []
-    duration = 0
-    
+    last_tmsp = 0
+   
     for i, file in enumerate(aedat4_files):
         events = load_aedat4(file)
-        events["timestamp"] += duration
-        duration += events[-1]["timestamp"] - events[0]["timestamp"]
+        if i != 0:
+            events["timestamp"] += last_tmsp - events[0]["timestamp"]
+        last_tmsp = events[-1]["timestamp"]
         list_events.append(events)
-    events = np.hstack(list_events)
-    
-    write_aedat2_file(events, outfile, x_size, y_size)
+    return np.hstack(list_events)
 
 def divide_events(events, chunk_size):
     first_timestamp = events["timestamp"][0]

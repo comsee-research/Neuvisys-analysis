@@ -30,16 +30,18 @@ class SpikingNetwork:
         self.neurons = []
         self.simple_cells = []
         self.complex_cells = []
-        neurons_paths = natsorted(os.listdir(path + "weights/"))
-        for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            if "pooling" in paths[0]:
-                neuron = Neuron("pooling", path + "weights/", *paths)
-                self.neurons.append(neuron)
-                self.complex_cells.append(neuron)
-            else:
-                neuron = Neuron("spatiotemporal", path + "weights/", *paths)
-                self.neurons.append(neuron)
-                self.simple_cells.append(neuron)
+        neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
+        for paths in [neurons_paths[i:i+3] for i in range(0, len(neurons_paths), 3)]:
+            neuron = Neuron("pooling", path + "weights/complex_cells/", *paths)
+            self.neurons.append(neuron)
+            self.complex_cells.append(neuron)
+        
+        neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
+        for paths in [neurons_paths[i:i+3] for i in range(0, len(neurons_paths), 3)]:
+            neuron = Neuron("spatiotemporal", path + "weights/simple_cells/", *paths)
+            self.neurons.append(neuron)
+            self.simple_cells.append(neuron)
+                
         self.nb_neurons = len(self.neurons)
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
@@ -85,11 +87,23 @@ class SpikingNetwork:
 class Neuron:
     """Spiking Neuron class"""
     
-    def __init__(self, neuron_type, path, param_path, weight_path):
+    def __init__(self, neuron_type, path, param_path, weight_path, connection_path):
         self.type = neuron_type
         self.weights = np.load(path + weight_path)
         self.params = load_params(path + param_path)
-        self.down_connections = []
-        
+        self.connections = np.load(path + connection_path)
+
     def set_weight_image(self, path_image):
         self.weight_image = path_image
+        
+        
+import shutil
+import os
+
+def complex_cell(spinet):
+    for ind, complex_cell in enumerate(spinet.complex_cells):
+        os.mkdir("/home/thomas/Bureau/test/"+str(ind)+"/")
+        
+        shutil.copy(complex_cell.weight_image, "/home/thomas/Bureau/test/"+str(ind)+"/complex")
+        for i, neuron_ind in enumerate(complex_cell.connections[-1].flatten()):
+            shutil.copy(spinet.simple_cells[neuron_ind].weight_image, "/home/thomas/Bureau/test/"+str(ind)+"/"+str(i))

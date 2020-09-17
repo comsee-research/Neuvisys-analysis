@@ -75,9 +75,8 @@ def write_aedat2_file(events, outfile, x_size, y_size):
     print("writing file " + outfile)
     bits = bitarray()
     
-    first_timestamp = events[0]["timestamp"]
     bits += event_address_aedat2(x_size-1, y_size-1, 1)
-    bits += timestamp_aedat2(first_timestamp)
+    bits += timestamp_aedat2(events[0]["timestamp"])
     
     for event in events:
         bits += event_address_aedat2(x_size-1-event["x"], y_size-1-event["y"], event["polarity"])

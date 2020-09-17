@@ -59,12 +59,12 @@ class SpikingNetwork:
                     dim = np.zeros((self.net_var["Neuron2Width"], self.net_var["Neuron2Height"]))
                     weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
                     compress_weight(np.kron(weight, np.ones((7, 7, 1))), dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
-                    neuron.set_weight_image(dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
+                    neuron.weight_images.append(dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
             else:
                 for synapse in range(self.net_var["Neuron1Synapses"]):
                     weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.net_var["Neuron1Width"], self.net_var["Neuron1Height"]))), axis=0), 0, 2)
                     compress_weight(np.kron(weights, np.ones((3, 3, 1))), dest+str(i)+"_syn"+str(synapse)+".png")
-                    neuron.set_weight_image(dest+str(i)+"_syn"+str(synapse)+".png")
+                    neuron.weight_images.append(dest+str(i)+"_syn"+str(synapse)+".png")
 
     def generate_weight_mat(self, dest):
         if self.net_var["WeightSharing"]:
@@ -82,7 +82,8 @@ class SpikingNetwork:
         
     def clean_network(self):
         delete_files(self.path+"images/")
-        delete_files(self.path+"weights/")
+        delete_files(self.path+"weights/complex_cells")
+        delete_files(self.path+"weights/simple_cells")
 
 class Neuron:
     """Spiking Neuron class"""
@@ -92,18 +93,4 @@ class Neuron:
         self.weights = np.load(path + weight_path)
         self.params = load_params(path + param_path)
         self.connections = np.load(path + connection_path)
-
-    def set_weight_image(self, path_image):
-        self.weight_image = path_image
-        
-        
-import shutil
-import os
-
-def complex_cell(spinet):
-    for ind, complex_cell in enumerate(spinet.complex_cells):
-        os.mkdir("/home/thomas/Bureau/test/"+str(ind)+"/")
-        
-        shutil.copy(complex_cell.weight_image, "/home/thomas/Bureau/test/"+str(ind)+"/complex")
-        for i, neuron_ind in enumerate(complex_cell.connections[-1].flatten()):
-            shutil.copy(spinet.simple_cells[neuron_ind].weight_image, "/home/thomas/Bureau/test/"+str(ind)+"/"+str(i))
+        self.weight_images = []     

@@ -109,19 +109,56 @@ def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_
     return pdf
 
 
+def generate_pdf_complex_cell(spinet):
+    header = 30
+    cols = spinet.net_var["L1Depth"] * spinet.net_var["Neuron2Width"] * 12
+    rows = 2 * spinet.nb_complex_cells * spinet.net_var["Neuron2Height"] * 12 + header
+    
+    # images = natsorted(os.listdir(directory))
+    pdf = FPDF("P", "mm", (cols, rows))
+    pdf.add_page()
+    
+    pdf.set_font('Arial', '', 10)
+    pdf.multi_cell(0, 5, "")
+    
+    x = 0
+    y = 0
+    for ind, complex_cell in enumerate(spinet.complex_cells):
+        for lay in range(spinet.net_var["L1Depth"]):
+            x2 = 0
+            y2 = 0
+            for i, neuron_ind in enumerate(complex_cell.connections[lay].flatten()):
+                pdf.image(spinet.simple_cells[neuron_ind].weight_images[0], x=x+x2, y=y+y2, w=10, h=10)
+                pdf.image(complex_cell.weight_images[lay], x=x, y=y+spinet.net_var["Neuron2Width"]*11, w=30, h=30)
+
+                x2 += 11
+                if x2 >= spinet.net_var["Neuron2Width"] * 11:
+                    x2 = 0
+                    y2 += 11
+
+            x += 12 * spinet.net_var["Neuron2Width"]
+            if x >= 12 * spinet.net_var["L1Depth"] * spinet.net_var["Neuron2Width"]:
+                x = 0
+                y += 2 * 12 * spinet.net_var["Neuron2Height"]
+
+    pdf.output(spinet.path+"figures/complex_cells.pdf", "F")
+
+
 def display_network(spinets, pooling=0):
     for spinet in spinets:
         spinet.generate_weight_images(spinet.path + "images/")
         
+        if pooling:
+            pdf = generate_pdf_pooling(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L2Height"], spinet.net_var["L2Width"], spinet.net_var["L1Depth"])
+            pdf.output(spinet.path+"figures/pooling.pdf", "F")   
+        
         if spinet.net_var["WeightSharing"]:
             pdf = generate_pdf_weight_sharing(spinet.path+"images/", str(spinet.net_var), spinet.net_var["Neuron1Synapses"], 4, 4, spinet.net_var["L1Depth"])
-            pdf.output(spinet.path+"figures/weight_sharing.pdf", "F")              
+            pdf.output(spinet.path+"figures/weight_sharing.pdf", "F")
         else:
             for layer in range(spinet.net_var["L1Depth"]):
                 pdf = generate_pdf(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"], layer)
                 pdf.output(spinet.path+"figures/"+str(layer)+".pdf", "F")
             pdf = generate_pdf_layers(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"])
             pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
-        if pooling:
-            pdf = generate_pdf_pooling(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L2Height"], spinet.net_var["L2Width"], spinet.net_var["L1Depth"])
-            pdf.output(spinet.path+"figures/pooling.pdf", "F")
+        

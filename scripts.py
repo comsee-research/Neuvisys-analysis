@@ -6,12 +6,15 @@ Created on Thu Jul  2 16:58:28 2020
 @author: thomas
 """
 import os
+import numpy as np
+import json
+import matplotlib.pyplot as plt
 
 os.chdir("/home/thomas/neuvisys-analysis")
 
 from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, write_aedat2_file, load_aedat4, convert_ros_to_aedat, concatenate_files
-from spiking_network import SpikingNetwork, complex_cell
-from neuvisys_statistics.display_weights import display_network
+from spiking_network import SpikingNetwork
+from neuvisys_statistics.display_weights import display_network, generate_pdf_complex_cell
 from planning.planner import launch_spinet
 from gabor_fitting.gabbor_fitting import create_gabor_basis
 
@@ -24,8 +27,8 @@ display_network([spinet], 1)
 
 #%% Save aedat file as numpy array
 
-events = load_aedat4("/home/thomas/Vidéos/driving_dataset/aedat4/city_day_6.aedat4")
-write_npdat(events, "/home/thomas/Vidéos/driving_dataset/npy/city_day_6.npy")
+events = load_aedat4("/home/thomas/Vidéos/samples/bars_vertical.aedat4")
+write_npdat(events, "/home/thomas/Vidéos/samples/npy/bars_vertical.npy")
 
 
 #%% Build npdat file made of chunck of other files
@@ -94,5 +97,30 @@ spinet.clean_network()
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 spinet.generate_weight_images(spinet.path + "images/")
-complex_cell(spinet)
+generate_pdf_complex_cell(spinet)
 
+
+#%% load potential response complex cell
+
+with open("/home/thomas/neuvisys-dv/configuration/network/weights/potentials.json") as f:
+    potentials = json.load(f)["response"]
+    
+#%%
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+simp_spike = np.zeros(34*26*16)
+for i in range(34*26*16):
+    simp_spike[i] = spinet.simple_cells[i].params["count_spike"]
+simp_spike = simp_spike.reshape((34, 26, 16)).transpose((1, 0, 2))
+# simp_spike[0, 13] = np.min(simp_spike)
+simp_spike[16, 4] = np.min(simp_spike)
+
+
+#%%
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+comp_spike = np.zeros(88)
+for i in range(88):
+    comp_spike[i] = spinet.complex_cells[i].params["count_spike"]
+comp_spike = comp_spike.reshape((11, 8)).transpose((1, 0))
+# comp_spike[5, 1] = 0

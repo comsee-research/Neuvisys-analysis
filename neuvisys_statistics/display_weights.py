@@ -141,17 +141,13 @@ def generate_pdf_complex_cell(spinet):
                 x = 0
                 y += 2 * 12 * spinet.net_var["Neuron2Height"]
 
-    pdf.output(spinet.path+"figures/complex_cells.pdf", "F")
+    return pdf
 
 
 def display_network(spinets, pooling=0):
     for spinet in spinets:
         spinet.generate_weight_images(spinet.path + "images/")
-        
-        if pooling:
-            pdf = generate_pdf_pooling(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L2Height"], spinet.net_var["L2Width"], spinet.net_var["L1Depth"])
-            pdf.output(spinet.path+"figures/pooling.pdf", "F")   
-        
+                
         if spinet.net_var["WeightSharing"]:
             pdf = generate_pdf_weight_sharing(spinet.path+"images/", str(spinet.net_var), spinet.net_var["Neuron1Synapses"], 4, 4, spinet.net_var["L1Depth"])
             pdf.output(spinet.path+"figures/weight_sharing.pdf", "F")
@@ -161,4 +157,8 @@ def display_network(spinets, pooling=0):
                 pdf.output(spinet.path+"figures/"+str(layer)+".pdf", "F")
             pdf = generate_pdf_layers(spinet.path+"images/", str(spinet.net_var), spinet.net_var["L1Height"], spinet.net_var["L1Width"], spinet.net_var["Neuron1Synapses"], spinet.net_var["L1Depth"])
             pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
+
+        if pooling:
+            pdf = generate_pdf_complex_cell(spinet)
+            pdf.output(spinet.path+"figures/complex_cells.pdf", "F")
         

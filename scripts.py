@@ -17,6 +17,12 @@ from spiking_network import SpikingNetwork
 from neuvisys_statistics.display_weights import display_network, generate_pdf_complex_cell
 from planning.planner import launch_spinet
 from gabor_fitting.gabbor_fitting import create_gabor_basis
+from gui import launch_gui
+
+#%% GUI
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+launch_gui(spinet)
 
 
 #%% Display weights
@@ -27,8 +33,8 @@ display_network([spinet], 1)
 
 #%% Save aedat file as numpy array
 
-events = load_aedat4("/home/thomas/Vidéos/samples/bars_vertical.aedat4")
-write_npdat(events, "/home/thomas/Vidéos/samples/npy/bars_vertical.npy")
+events = load_aedat4("/home/thomas/Vidéos/samples/shape_slow_hovering.aedat4")
+write_npdat(events, "/home/thomas/Vidéos/samples/npy/shape_slow_hovering.npy")
 
 
 #%% Build npdat file made of chunck of other files
@@ -93,13 +99,6 @@ spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 spinet.clean_network()
 
 
-#%% Print complex cells connections
-
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-spinet.generate_weight_images(spinet.path + "images/")
-generate_pdf_complex_cell(spinet)
-
-
 #%% load potential response complex cell
 
 with open("/home/thomas/neuvisys-dv/configuration/network/weights/potentials.json") as f:
@@ -108,12 +107,12 @@ with open("/home/thomas/neuvisys-dv/configuration/network/weights/potentials.jso
 #%%
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-simp_spike = np.zeros(34*26*16)
-for i in range(34*26*16):
+simp_spike = np.zeros(10*10*16)
+for i in range(10*10*16):
     simp_spike[i] = spinet.simple_cells[i].params["count_spike"]
-simp_spike = simp_spike.reshape((34, 26, 16)).transpose((1, 0, 2))
+simp_spike = simp_spike.reshape((10, 10, 16)).transpose((1, 0, 2))
 # simp_spike[0, 13] = np.min(simp_spike)
-simp_spike[16, 4] = np.min(simp_spike)
+# simp_spike[16, 4] = np.min(simp_spike)
 
 
 #%%
@@ -124,3 +123,28 @@ for i in range(88):
     comp_spike[i] = spinet.complex_cells[i].params["count_spike"]
 comp_spike = comp_spike.reshape((11, 8)).transpose((1, 0))
 # comp_spike[5, 1] = 0
+
+
+#%%
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+decay = np.zeros(16*10*10)
+for i in range(16*10*10):
+    decay[i] = spinet.simple_cells[i].params["learning_decay"]
+decay = decay.reshape((10, 10, 16)).transpose((1, 0, 2))
+
+
+#%%
+
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+pot_train = []
+for i in range(88):
+    pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
+pot_train = np.array(pot_train)
+
+
+#%%
+
+for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"):
+    if file.endswith(".json"):
+        os.remove("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"+file)

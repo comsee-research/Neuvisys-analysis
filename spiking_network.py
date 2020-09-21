@@ -82,8 +82,8 @@ class SpikingNetwork:
         
     def clean_network(self):
         delete_files(self.path+"images/")
-        delete_files(self.path+"weights/complex_cells")
-        delete_files(self.path+"weights/simple_cells")
+        delete_files(self.path+"weights/complex_cells/")
+        delete_files(self.path+"weights/simple_cells/")
 
 class Neuron:
     """Spiking Neuron class"""

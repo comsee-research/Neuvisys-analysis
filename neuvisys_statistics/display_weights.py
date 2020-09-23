@@ -112,36 +112,54 @@ def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_
 def generate_pdf_complex_cell(spinet):
     header = 30
     cols = spinet.net_var["L1Depth"] * spinet.net_var["Neuron2Width"] * 12
-    rows = 2 * spinet.nb_complex_cells * spinet.net_var["Neuron2Height"] * 12 + header
+    rows = (spinet.nb_complex_cells / spinet.net_var["L2Depth"]) * spinet.net_var["Neuron2Height"] * 12 + header
     
-    # images = natsorted(os.listdir(directory))
     pdf = FPDF("P", "mm", (cols, rows))
     pdf.add_page()
     
     pdf.set_font('Arial', '', 10)
     pdf.multi_cell(0, 5, "")
     
+    count = 0
     x = 0
     y = 0
-    for ind, complex_cell in enumerate(spinet.complex_cells):
+    for ind, complex_cell in enumerate(spinet.complex_cells[::spinet.net_var["L2Depth"]]):
         for lay in range(spinet.net_var["L1Depth"]):
             x2 = 0
             y2 = 0
             for i, neuron_ind in enumerate(complex_cell.connections[lay].flatten()):
-                pdf.image(spinet.simple_cells[neuron_ind].weight_images[0], x=x+x2, y=y+y2, w=10, h=10)
-                pdf.image(complex_cell.weight_images[lay], x=x, y=y+spinet.net_var["Neuron2Width"]*11, w=30, h=30)
-
+                maximum = np.max(complex_cell.weights[lay])
+                dim = complex_cell.weights[lay].flatten()[i]
+                img = (dim / maximum) * np.array(Image.open(spinet.simple_cells[neuron_ind].weight_images[0]))
+                Image.fromarray(img.astype('uint8')).save(spinet.path + "temp/temp"+str(count)+".png")
+                pdf.image(spinet.path + "temp/temp"+str(count)+".png", x=x+x2, y=y+y2, w=10, h=10)
+                count += 1
+                
                 x2 += 11
                 if x2 >= spinet.net_var["Neuron2Width"] * 11:
                     x2 = 0
                     y2 += 11
-
+    
             x += 12 * spinet.net_var["Neuron2Width"]
             if x >= 12 * spinet.net_var["L1Depth"] * spinet.net_var["Neuron2Width"]:
                 x = 0
-                y += 2 * 12 * spinet.net_var["Neuron2Height"]
+                y += 12 * spinet.net_var["Neuron2Height"]
 
     return pdf
+
+
+def load_array_param(spinet, param):
+    simple_array = np.zeros(spinet.nb_simple_cells)
+    for i, simple_cell in enumerate(spinet.simple_cells):
+        simple_array[i] = simple_cell.params[param]
+    simple_array = simple_array.reshape((spinet.net_var["L1Width"], spinet.net_var["L1Height"], spinet.net_var["L1Depth"])).transpose((1, 0, 2))
+    
+    complex_array = np.zeros(spinet.nb_complex_cells)
+    for i, complex_cell in enumerate(spinet.complex_cells):
+        complex_array[i] = complex_cell.params[param]
+    complex_array = complex_array.reshape((spinet.net_var["L2Width"], spinet.net_var["L2Height"], spinet.net_var["L2Depth"])).transpose((1, 0, 2))
+    
+    return simple_array, complex_array
 
 
 def display_network(spinets, pooling=0):

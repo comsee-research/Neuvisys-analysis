@@ -31,13 +31,13 @@ class SpikingNetwork:
         self.simple_cells = []
         self.complex_cells = []
         neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
-        for paths in [neurons_paths[i:i+3] for i in range(0, len(neurons_paths), 3)]:
+        for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
             neuron = Neuron("pooling", path + "weights/complex_cells/", *paths)
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
         
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
-        for paths in [neurons_paths[i:i+3] for i in range(0, len(neurons_paths), 3)]:
+        for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
             neuron = Neuron("spatiotemporal", path + "weights/simple_cells/", *paths)
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
@@ -88,9 +88,8 @@ class SpikingNetwork:
 class Neuron:
     """Spiking Neuron class"""
     
-    def __init__(self, neuron_type, path, param_path, weight_path, connection_path):
+    def __init__(self, neuron_type, path, param_path, weight_path):
         self.type = neuron_type
         self.weights = np.load(path + weight_path)
         self.params = load_params(path + param_path)
-        self.connections = np.load(path + connection_path)
-        self.weight_images = []     
+        self.weight_images = []

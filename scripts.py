@@ -110,7 +110,7 @@ simpa_spike, compa_spike = load_array_param(spinet, "count_spike")
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 pot_train = []
-for i in range(25):
+for i in range(1):
     pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
 pot_train = np.array(pot_train)
 

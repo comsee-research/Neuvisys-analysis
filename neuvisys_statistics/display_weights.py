@@ -109,42 +109,37 @@ def generate_pdf_weight_sharing(directory, title, nb_synapses, bloc_width, bloc_
     return pdf
 
 
-def generate_pdf_complex_cell(spinet):
-    header = 30
-    cols = spinet.net_var["L1Depth"] * spinet.net_var["Neuron2Width"] * 12
-    rows = (spinet.nb_complex_cells / spinet.net_var["L2Depth"]) * spinet.net_var["Neuron2Height"] * 12 + header
+def generate_pdf_complex_cell(spinet, layer1, layer2):
+    cols = spinet.net_var["L1Width"] * 12
+    rows = spinet.net_var["L1Height"] * 12
     
     pdf = FPDF("P", "mm", (cols, rows))
     pdf.add_page()
     
     pdf.set_font('Arial', '', 10)
     pdf.multi_cell(0, 5, "")
-    
-    count = 0
-    x = 0
-    y = 0
-    for ind, complex_cell in enumerate(spinet.complex_cells[::spinet.net_var["L2Depth"]]):
-        for lay in range(spinet.net_var["L1Depth"]):
-            x2 = 0
-            y2 = 0
-            for i, neuron_ind in enumerate(complex_cell.connections[lay].flatten()):
-                maximum = np.max(complex_cell.weights[lay])
-                dim = complex_cell.weights[lay].flatten()[i]
-                img = (dim / maximum) * np.array(Image.open(spinet.simple_cells[neuron_ind].weight_images[0]))
-                Image.fromarray(img.astype('uint8')).save(spinet.path + "temp/temp"+str(count)+".png")
-                pdf.image(spinet.path + "temp/temp"+str(count)+".png", x=x+x2, y=y+y2, w=10, h=10)
-                count += 1
-                
-                x2 += 11
-                if x2 >= spinet.net_var["Neuron2Width"] * 11:
-                    x2 = 0
-                    y2 += 11
-    
-            x += 12 * spinet.net_var["Neuron2Width"]
-            if x >= 12 * spinet.net_var["L1Depth"] * spinet.net_var["Neuron2Width"]:
-                x = 0
-                y += 12 * spinet.net_var["Neuron2Height"]
 
+    for i, complex_cell in enumerate(spinet.complex_cells):
+        if complex_cell.params["position"][2] == layer2:
+            maximum = np.max(complex_cell.weights[layer1])
+            
+            xc = complex_cell.params["position"][0]
+            yc = complex_cell.params["position"][1]
+            
+            for neuron_ind in complex_cell.params["in_connections"]:
+                simple_cell = spinet.simple_cells[neuron_ind]
+                if simple_cell.params["position"][2] == layer1:
+                    xs = simple_cell.params["position"][0]
+                    ys = simple_cell.params["position"][1]
+                    
+                    dim = complex_cell.weights[layer1, ys - complex_cell.params["offset"][1], xs - complex_cell.params["offset"][0]]
+                    img = (dim / maximum) * np.array(Image.open(simple_cell.weight_images[0]))
+                    Image.fromarray(img.astype('uint8')).save(spinet.path + "temp/complex_"+str(i)+"_simple_"+str(neuron_ind)+".png")
+                    
+                    pos_x = 3 * xc + xs * 11
+                    pos_y = 3 * yc + ys * 11
+                    
+                    pdf.image(spinet.path + "temp/complex_"+str(i)+"_simple_"+str(neuron_ind)+".png", x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 
@@ -177,6 +172,8 @@ def display_network(spinets, pooling=0):
             pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if pooling:
-            pdf = generate_pdf_complex_cell(spinet)
-            pdf.output(spinet.path+"figures/complex_cells.pdf", "F")
+            for layer2 in range(spinet.net_var["L2Depth"]):
+                # for layer1 in range(spinet.net_var["L1Depth"]):
+                pdf = generate_pdf_complex_cell(spinet, 0, layer2)
+                pdf.output(spinet.path+"figures/complex_cells_"+str(layer2)+".pdf", "F")
         

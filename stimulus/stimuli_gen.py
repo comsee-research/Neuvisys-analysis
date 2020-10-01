@@ -10,13 +10,16 @@ from psychopy import visual, core, event
 
 win0 = visual.Window([346, 260], screen=0, monitor="testMonitor", fullscr=False, color=[0, 0, 0], units="pix")
 
-grat_stim_h = visual.GratingStim(win=win0, tex="sqr", units="pix", pos=(0.0, 0.0), size=346, sf=0.09, ori=0.0, phase=(0.0, 0.0))
-grat_stim_v = visual.GratingStim(win=win0, tex="sqr", units="pix", pos=(0.0, 0.0), size=346, sf=0.09, ori=90.0, phase=(0.0, 0.0))
+sf = 0.09
+phase = (0.0, 0.0)
+
+grat_stim_h = visual.GratingStim(win=win0, tex="sqr", units="pix", pos=(0.0, 0.0), size=346, sf=sf, ori=0.0, phase=phase)
+grat_stim_v = visual.GratingStim(win=win0, tex="sqr", units="pix", pos=(0.0, 0.0), size=346, sf=sf, ori=90.0, phase=phase)
 
 i = 0
 switch = True
 
-while(i < 10000):
+while(i < 100):
     if i % 1000 == 0:
         switch = not switch
     

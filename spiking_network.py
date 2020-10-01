@@ -32,13 +32,13 @@ class SpikingNetwork:
         self.complex_cells = []
         neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("pooling", path + "weights/complex_cells/", *paths)
+            neuron = Neuron("complex", path + "weights/complex_cells/", *paths)
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
         
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("spatiotemporal", path + "weights/simple_cells/", *paths)
+            neuron = Neuron("simple", path + "weights/simple_cells/", *paths)
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
                 
@@ -52,19 +52,21 @@ class SpikingNetwork:
                 self.shared_weights += self.neurons[i:i+(self.net_var["L1Depth"])]
             self.shared_weights = [neuron.weights for neuron in self.shared_weights]
         
-    def generate_weight_images(self, dest):
+    def generate_weight_images(self):
         for i, neuron in enumerate(self.neurons):
-            if neuron.type == "pooling":
+            if neuron.type == "complex":
                 for lay in range(self.net_var["L1Depth"]):
                     dim = np.zeros((self.net_var["Neuron2Width"], self.net_var["Neuron2Height"]))
                     weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
-                    compress_weight(np.kron(weight, np.ones((7, 7, 1))), dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
-                    neuron.weight_images.append(dest+"pooling_"+str(i)+"_lay_"+str(lay)+".png")
+                    path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
+                    compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
+                    neuron.weight_images.append(path)
             else:
                 for synapse in range(self.net_var["Neuron1Synapses"]):
                     weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.net_var["Neuron1Width"], self.net_var["Neuron1Height"]))), axis=0), 0, 2)
-                    compress_weight(np.kron(weights, np.ones((3, 3, 1))), dest+str(i)+"_syn"+str(synapse)+".png")
-                    neuron.weight_images.append(dest+str(i)+"_syn"+str(synapse)+".png")
+                    path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+".png"
+                    compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
+                    neuron.weight_images.append(path)
 
     def generate_weight_mat(self, dest):
         if self.net_var["WeightSharing"]:
@@ -81,7 +83,9 @@ class SpikingNetwork:
         sio.savemat(dest, {"data": basis})
         
     def clean_network(self):
-        delete_files(self.path+"images/")
+        delete_files(self.path+"images/simple_cells/")
+        delete_files(self.path+"images/complex_cells/")
+        delete_files(self.path+"images/complex_connections/")
         delete_files(self.path+"weights/complex_cells/")
         delete_files(self.path+"weights/simple_cells/")
 

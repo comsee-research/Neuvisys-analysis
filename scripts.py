@@ -15,7 +15,7 @@ os.chdir("/home/thomas/neuvisys-analysis")
 from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, write_aedat2_file, load_aedat4, convert_ros_to_aedat, concatenate_files
 from spiking_network import SpikingNetwork
 from neuvisys_statistics.display_weights import display_network, load_array_param
-from planning.planner import launch_spinet
+from planning.planner import launch_spinet, launch_neuvisys_rotation
 from gabor_fitting.gabbor_fitting import create_gabor_basis
 from gui import launch_gui
 
@@ -33,8 +33,8 @@ img = display_network([spinet], 1)
 
 #%% Save aedat file as numpy array
 
-events = load_aedat4("/home/thomas/Vidéos/samples/shape_slow_hovering.aedat4")
-write_npdat(events, "/home/thomas/Vidéos/samples/npy/shape_slow_hovering.npy")
+events = load_aedat4("/home/thomas/Vidéos/samples/bars_horizontal_up_down.aedat4")
+write_npdat(events, "/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy")
 
 
 #%% Build npdat file made of chunck of other files
@@ -112,11 +112,34 @@ spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 pot_train = []
 for i in range(1):
     pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
-pot_train = np.array(pot_train)
+y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
-
+    
 #%%
 
 for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"):
     if file.endswith(".json"):
         os.remove("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"+file)
+        
+#%% Get potential responses from a rotating stimulus
+
+train = []
+for rotation in range(-180, 181, 5):
+    launch_neuvisys_rotation("/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy", rotation)
+
+    spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+    pot_train = []
+    for i in range(1):
+        pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
+    y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
+    train.append((x_train, y_train))
+
+rotation = list(range(-180, 181, 5))
+
+plt.figure()
+plt.title("mean cell response function of stimulus orientation")
+plt.plot(rotation, np.mean(train, axis=2)[:, 1])
+
+plt.figure()
+plt.title("mean cell response function of stimulus orientation")
+plt.plot(rotation, np.max(train, axis=2)[:, 1])

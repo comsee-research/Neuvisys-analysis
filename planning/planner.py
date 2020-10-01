@@ -114,3 +114,8 @@ def execute(cmd):
     return_code = popen.wait()
     if return_code:
         raise subprocess.CalledProcessError(return_code, cmd)
+        
+def launch_neuvisys_rotation(event_file, rotation):
+    for path in execute(["/home/thomas/neuvisys-dv/cmake-build-release/event-analysis", "rotation", event_file, str(rotation)]):
+        print(path, end="")
+

@@ -24,6 +24,7 @@ class SpikingNetwork:
     def __init__(self, path):
         self.path = path
         self.net_var = load_params(path + "configs/network_config.json")
+        self.unpack_json(self.net_var)
         self.neu_var = load_params(path + "configs/neuron_config.json")
         self.pool_neur_var = load_params(path + "configs/pooling_neuron_config.json")
         
@@ -46,24 +47,24 @@ class SpikingNetwork:
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
         
-        if self.net_var["WeightSharing"]:
+        if self.weight_sharing:
             self.shared_weights = []
-            for i in range(0, self.nb_neurons, 4*4*self.net_var["L1Depth"]):
-                self.shared_weights += self.neurons[i:i+(self.net_var["L1Depth"])]
+            for i in range(0, self.nb_neurons, 4*4*self.l1depth): # TODO
+                self.shared_weights += self.neurons[i:i+(self.l1depth)]
             self.shared_weights = [neuron.weights for neuron in self.shared_weights]
         
     def generate_weight_images(self):
         for i, neuron in enumerate(self.neurons):
             if neuron.type == "complex":
-                for lay in range(self.net_var["L1Depth"]):
-                    dim = np.zeros((self.net_var["Neuron2Width"], self.net_var["Neuron2Height"]))
+                for lay in range(self.l1depth):
+                    dim = np.zeros((self.neuron2_width, self.neuron2_height))
                     weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
                     path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
                     compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
                     neuron.weight_images.append(path)
             else:
-                for synapse in range(self.net_var["Neuron1Synapses"]):
-                    weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.net_var["Neuron1Width"], self.net_var["Neuron1Height"]))), axis=0), 0, 2)
+                for synapse in range(self.neuron1_synapses):
+                    weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
                     path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+".png"
                     compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
                     neuron.weight_images.append(path)
@@ -81,6 +82,25 @@ class SpikingNetwork:
             basis[0:100, i] = basi
             basis[100:200, i] = basi
         sio.savemat(dest, {"data": basis})
+        
+    def unpack_json(self, json):
+        self.weight_sharing = json["WeightSharing"]
+        self.l1width = json["L1Width"]
+        self.l1height = json["L1Height"]
+        self.l1depth = json["L1Depth"]
+        self.l1xanchor = json["L1XAnchor"]
+        self.l1yanchor = json["L1YAnchor"]
+        self.neuron1_width = json["Neuron1Width"]
+        self.neuron1_height = json["Neuron1Height"]
+        self.neuron1_synapses = json["Neuron1Synapses"]
+        
+        self.l2width = json["L2Width"]
+        self.l2height = json["L2Height"]
+        self.l2depth = json["L2Depth"]
+        self.l2xanchor = json["L2XAnchor"]
+        self.l2yanchor = json["L2YAnchor"]
+        self.neuron2_width = json["Neuron2Width"]
+        self.neuron2_height = json["Neuron2Height"]
         
     def clean_network(self):
         delete_files(self.path+"images/simple_cells/")

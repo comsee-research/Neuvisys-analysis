@@ -18,9 +18,6 @@ def launch_gui(spinet):
     width = spinet.net_var["L1Width"]
     height = spinet.net_var["L1Height"]
     depth = spinet.net_var["L1Depth"]
-
-    neuron_width = spinet.net_var["Neuron1Width"]
-    neuron_height = spinet.net_var["Neuron1Height"]
     
     width2 = spinet.net_var["L2Width"]
     height2 = spinet.net_var["L2Height"]
@@ -32,21 +29,20 @@ def launch_gui(spinet):
     
     count = 0
     if weight_sharing:
-        for i in range(height):
+        for i in range(len(spinet.net_var["L1YAnchor"])*height):
             layout1.append([])
         
         for i in range(len(spinet.net_var["L1XAnchor"])):
             for j in range(len(spinet.net_var["L1YAnchor"])):
-                for col in range(neuron_height):
-                    for row in range(neuron_width):
-                        layout1[j*neuron_width+row].append(sg.Button("{:>3}".format(str(count)), key="l1"+str(count)))
+                for col in range(height):
+                    for row in range(width):
+                        layout1[j*width+row].append(sg.Button("{:>3}".format(str(count)), key="l1"+str(count)))
                         count += 1
-                layout1[j*4+0].append(sg.Text(" "))
-                layout1[j*4+1].append(sg.Text(" "))
-                layout1[j*4+2].append(sg.Text(" "))
-                layout1[j*4+3].append(sg.Text(" "))
-        layout1.insert(4, [sg.Text(" ")])
-        layout1.insert(9, [sg.Text(" ")])
+                for k in range(width):
+                    layout1[j*width+k].append(sg.Text(" "))
+
+        for i in range(1, len(spinet.net_var["L1YAnchor"])):
+            layout1.insert(i*height+i-1, [sg.Text(" ")])
     else:
         for i in range(height):
             layout1.append([])

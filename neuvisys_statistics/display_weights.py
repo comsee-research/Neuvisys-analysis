@@ -54,16 +54,16 @@ def generate_pdf_layers(spinet, rows, cols, nb_synapses, nb_layers):
     return pdf
 
 
-def generate_pdf_weight_sharing(spinet, nb_synapses, bloc_width, bloc_height, depth):
+def generate_pdf_weight_sharing(spinet):
     images = natsorted(os.listdir(spinet.path+"images/simple_cells/"))
 
     selection = []
-    for i in range(0, len(images), bloc_width*bloc_height*depth):
-        selection += images[i:(i+1)+(depth-1)]
+    for i in range(0, len(images), len(spinet.l1xanchor)*len(spinet.l1yanchor)*spinet.l1depth):
+        selection += images[i:(i+1)+(spinet.l1depth-1)]
 
     nb_blocs_side = len(spinet.l1xanchor)
     size_im = 11
-    nb_im_per_bloc = int(np.sqrt(depth))
+    nb_im_per_bloc = int(np.sqrt(spinet.l1depth))
     bloc_size = nb_im_per_bloc * 11
 
     pdf = FPDF("P", "mm", (nb_blocs_side*bloc_size+30, nb_blocs_side*bloc_size+30))
@@ -85,7 +85,7 @@ def generate_pdf_complex_cell(spinet, layer):
     rows = len(spinet.l1yanchor) * spinet.l1height
     depth = spinet.l1depth
     
-    pdf = FPDF("P", "mm", (cols * 13, rows * depth * 13))
+    pdf = FPDF("P", "mm", (cols * 12, rows * depth * 12))
     pdf.add_page()
     
     pdf.set_font('Arial', '', 10)
@@ -95,7 +95,7 @@ def generate_pdf_complex_cell(spinet, layer):
         if complex_cell.params["position"][2] == layer:
             maximum = np.max(complex_cell.weights)
             
-            xc = complex_cell.params["position"][0] * spinet.l2width
+            xc = complex_cell.params["position"][0]
             yc = complex_cell.params["position"][1]
             
             for neuron_ind in complex_cell.params["in_connections"]:
@@ -109,8 +109,8 @@ def generate_pdf_complex_cell(spinet, layer):
                 path = spinet.path+"images/complex_connections/"+str(i)+"_simple_"+str(neuron_ind)+".png"
                 Image.fromarray(img.astype('uint8')).save(path)
                 
-                pos_x = xc + xs * 11
-                pos_y = yc * depth * 3 * 12 + zs * 3 * 11.5 + (ys - complex_cell.params["offset"][1]) * 11
+                pos_x = xc * spinet.l2width + xs * 11
+                pos_y = yc * depth * spinet.l1width * 12 + zs * spinet.l1height * 11.5 + (ys - complex_cell.params["offset"][1]) * 11
                 
                 pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
     return pdf
@@ -136,7 +136,7 @@ def display_network(spinets, pooling=0):
         spinet.generate_weight_images()
                 
         if spinet.weight_sharing:
-            pdf = generate_pdf_weight_sharing(spinet, spinet.neuron1_synapses, 3, 3, spinet.l1depth)
+            pdf = generate_pdf_weight_sharing(spinet)
             pdf.output(spinet.path+"figures/weight_sharing.pdf", "F")
         else:
             for layer in range(spinet.l1depth):

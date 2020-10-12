@@ -47,41 +47,39 @@ class SpikingNetwork:
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
         
-        if self.weight_sharing:
-            self.shared_weights = []
-            for i in range(0, self.nb_neurons, 4*4*self.l1depth): # TODO
-                self.shared_weights += self.neurons[i:i+(self.l1depth)]
-            self.shared_weights = [neuron.weights for neuron in self.shared_weights]
-        
     def generate_weight_images(self):
-        for i, neuron in enumerate(self.neurons):
-            if neuron.type == "complex":
-                for lay in range(self.l1depth):
-                    dim = np.zeros((self.neuron2_width, self.neuron2_height))
-                    weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
-                    path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
-                    compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
-                    neuron.weight_images.append(path)
-            else:
-                for synapse in range(self.neuron1_synapses):
-                    weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
-                    path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+".png"
-                    compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
-                    neuron.weight_images.append(path)
+        for i, neuron in enumerate(self.simple_cells):
+            for synapse in range(self.neuron1_synapses):
+                weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
+                path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+".png"
+                compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
+                neuron.weight_images.append(path)
 
-    def generate_weight_mat(self, dest):
-        if self.net_var["WeightSharing"]:
-            basis = np.zeros((200, len(self.shared_weights)))
-            weights = self.shared_weights
+        for i, neuron in enumerate(self.complex_cells):
+            for lay in range(self.l1depth):
+                dim = np.zeros((self.neuron2_width, self.neuron2_height))
+                weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
+                path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
+                compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
+                neuron.weight_images.append(path)
+
+
+    def generate_weight_mat(self):
+        weights = []
+        if self.weight_sharing:
+            for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
+                weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
         else:
-            basis = np.zeros((200, self.nb_neurons))
-            weights = [neuron.weights for neuron in self.neurons]
+            weights = [neuron.weights for neuron in self.simple_cells]
+            
+        basis = np.zeros((200, len(weights)))
         
         for i, weight in enumerate(weights):    
             basi = (weight[0, 0] - weight[1, 0]).flatten("F")
             basis[0:100, i] = basi
             basis[100:200, i] = basi
-        sio.savemat(dest, {"data": basis})
+        
+        sio.savemat(self.path+"gabors/weights.mat", {"data": basis})
         
     def unpack_json(self, json):
         self.weight_sharing = json["WeightSharing"]
@@ -102,12 +100,15 @@ class SpikingNetwork:
         self.neuron2_width = json["Neuron2Width"]
         self.neuron2_height = json["Neuron2Height"]
         
-    def clean_network(self):
+    def clean_network(self, simple_cells, complex_cells):
+        if simple_cells:
+            delete_files(self.path+"weights/simple_cells/")
+        if complex_cells:
+            delete_files(self.path+"weights/complex_cells/")
+        delete_files(self.path+"images/complex_connections/")
         delete_files(self.path+"images/simple_cells/")
         delete_files(self.path+"images/complex_cells/")
-        delete_files(self.path+"images/complex_connections/")
-        delete_files(self.path+"weights/complex_cells/")
-        delete_files(self.path+"weights/simple_cells/")
+        
 
 class Neuron:
     """Spiking Neuron class"""

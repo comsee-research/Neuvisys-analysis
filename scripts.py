@@ -77,15 +77,14 @@ launch_spinet(directory, files, 1)
 
 #%% Create Matlab weight.mat
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network_0/")
-spinet.generate_weight_mat("/home/thomas/neuvisys-dv/configuration/network_0/gabors/weights.mat")
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+basis = spinet.generate_weight_mat()
 
 
 #%% Load and create gabor basis
 
-# spinet = SpikingNetwork("/home/thomas/Bureau/basis_0/")
-depth = 100
-create_gabor_basis(depth, 15, "/home/thomas/Bureau/basis_1/gabors/")
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+create_gabor_basis(spinet, bins=15)
 
 
 #%% Convert rosbag to aedat
@@ -96,7 +95,7 @@ convert_ros_to_aedat("/home/thomas/Bureau/out.bag", "/home/thomas/Bureau/test.ae
 #%% //!!!\\ Delete weights network
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-spinet.clean_network()
+spinet.clean_network(simple_cells=0, complex_cells=1)
 
 
 #%% Load various neuron informations
@@ -124,26 +123,39 @@ for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/s
         
 #%% Get potential responses from a rotating stimulus
 
+rotation = list(range(-180, 181, 10))
 train = []
-for rotation in range(-180, 181, 5):
-    launch_neuvisys_rotation("/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy", rotation)
+for rot in rotation:
+    launch_neuvisys_rotation("/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy", rot)
 
     spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
     pot_train = []
-    for i in range(1):
-        pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
-    y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
-    train.append((x_train, y_train))
+    for neuron in spinet.complex_cells:
+        pot_train.append(np.array(neuron.params["potential_train"]))
+    # y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
+    train.append(pot_train)
 
-rotation = list(range(-180, 181, 5))
+train = np.array(train)
 
-plt.figure()
-plt.title("mean cell response function of stimulus orientation")
-plt.plot(rotation, np.mean(train, axis=2)[:, 1])
-
-plt.figure()
-plt.title("mean cell response function of stimulus orientation")
-plt.plot(rotation, np.max(train, axis=2)[:, 1])
+for i in range(spinet.nb_complex_cells):
+    y = np.mean(train[:, i, :, 0], axis=1)
+    plt.figure()
+    plt.title("mean cell response function of stimulus orientation")
+    plt.xticks(rotation[::2], rotation=45)
+    plt.axvline(-90)
+    plt.axvline(0)
+    plt.axvline(90)
+    plt.plot(rotation, y)
+    
+for i in range(spinet.nb_complex_cells):
+    y = np.max(train[:, i, :, 0], axis=1)
+    plt.figure()
+    plt.title("max cell response function of stimulus orientation")
+    plt.xticks(rotation[::2], rotation=45)
+    plt.axvline(-90)
+    plt.axvline(0)
+    plt.axvline(90)
+    plt.plot(rotation, y)
 
 
 #%% Launch

@@ -16,15 +16,15 @@ import matplotlib.image as mpimg
 
 def plot_gabors(spinet, est_basis, error, dest):
     indices = []
-    if spinet.net_var["WeightSharing"]:
-        for i in range(0, spinet.nb_neurons, 4*4*spinet.net_var["L1Depth"]):
-            indices += list(np.arange(i, i+spinet.net_var["L1Depth"]))
+    if spinet.weight_sharing:
+        for i in range(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth):
+            indices += list(np.arange(i, i + spinet.l1depth))
     else:
-        indices = range(spinet.nb_neurons)
+        indices = range(spinet.nb_simple_cells)
 
     images = []
     for i in indices:
-        images.append(mpimg.imread(spinet.path+"images/"+str(i)+"_syn0.png"))
+        images.append(mpimg.imread(spinet.path+"images/simple_cells/"+str(i)+"_syn0.png"))
 
     for i, image in enumerate(images):
         gabor = -1 * est_basis[:, i].reshape(10, 10, order="F")
@@ -91,21 +91,17 @@ def error_percentage(theta, error, max_error, dest):
     plt.ylabel("proportion of accepted gabors (%)")
     plt.savefig(dest+"error_proportion", bbox_inches="tight")
     
-def create_gabor_basis(depth, bins, directory):
-    mu = sio.loadmat(directory+"fitting/mu.mat")["mu_table"]
-    sigma = sio.loadmat(directory+"fitting/sigma.mat")["sigma_table"]
-    lambd = sio.loadmat(directory+"fitting/lambda.mat")["lambda_table"]
-    phase = sio.loadmat(directory+"fitting/phase.mat")["phase_table"]
-    theta = sio.loadmat(directory+"fitting/theta.mat")["theta_table"]
-    error = sio.loadmat(directory+"fitting/error.mat")["error_table"]
-    est_basis = sio.loadmat(directory+"fitting/EstBasis.mat")["EstBasis"]
+def create_gabor_basis(spinet, bins):
+    mu = sio.loadmat(spinet.path+"gabors/data/mu.mat")["mu_table"]
+    sigma = sio.loadmat(spinet.path+"gabors/data/sigma.mat")["sigma_table"]
+    lambd = sio.loadmat(spinet.path+"gabors/data/lambda.mat")["lambda_table"]
+    phase = sio.loadmat(spinet.path+"gabors/data/phase.mat")["phase_table"]
+    theta = sio.loadmat(spinet.path+"gabors/data/theta.mat")["theta_table"]
+    error = sio.loadmat(spinet.path+"gabors/data/error.mat")["error_table"]
+    est_basis = sio.loadmat(spinet.path+"gabors/data/EstBasis.mat")["EstBasis"]
     
-    # plot_gabors(spinet, est_basis, error, directory+"figures/")
+    plot_gabors(spinet, est_basis, error, spinet.path+"gabors/figures/")
     
-    # for i in range(9):
-    #     sub_theta = theta[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
-    #     sub_error = error[0, i*spinet.net_var["L1Depth"]:(i+1)*spinet.net_var["L1Depth"]]
+    plot_polar_chart(spinet.l1depth, bins, theta[0], error[0], 5, spinet.path+"gabors/hists/")
     
-    plot_polar_chart(depth, bins, theta[0], error[0], 5, directory+"hists/")
-    
-    error_percentage(theta[0], error[0], 20, directory+"hists/")
+    error_percentage(theta[0], error[0], 20, spinet.path+"gabors/hists/")

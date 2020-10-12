@@ -14,14 +14,14 @@ def write_json(directory, gui):
         json.dump(gui, file)
 
 def launch_gui(spinet):  
-    weight_sharing = spinet.net_var["WeightSharing"]
-    width = spinet.net_var["L1Width"]
-    height = spinet.net_var["L1Height"]
-    depth = spinet.net_var["L1Depth"]
+    weight_sharing = spinet.weight_sharing
+    width = spinet.l1width
+    height = spinet.l1height
+    depth = spinet.l1depth
     
-    width2 = spinet.net_var["L2Width"]
-    height2 = spinet.net_var["L2Height"]
-    depth2 = 1
+    width2 = spinet.l2width
+    height2 = spinet.l2height
+    depth2 = spinet.l2depth
     
     sg.theme('DarkAmber')
     
@@ -29,11 +29,11 @@ def launch_gui(spinet):
     
     count = 0
     if weight_sharing:
-        for i in range(len(spinet.net_var["L1YAnchor"])*height):
+        for i in range(len(spinet.l1xanchor)*height):
             layout1.append([])
         
-        for i in range(len(spinet.net_var["L1XAnchor"])):
-            for j in range(len(spinet.net_var["L1YAnchor"])):
+        for i in range(len(spinet.l1xanchor)):
+            for j in range(len(spinet.l1yanchor)):
                 for col in range(height):
                     for row in range(width):
                         layout1[j*width+row].append(sg.Button("{:>3}".format(str(count)), key="l1"+str(count)))
@@ -41,7 +41,7 @@ def launch_gui(spinet):
                 for k in range(width):
                     layout1[j*width+k].append(sg.Text(" "))
 
-        for i in range(1, len(spinet.net_var["L1YAnchor"])):
+        for i in range(1, len(spinet.l1yanchor)):
             layout1.insert(i*height+i-1, [sg.Text(" ")])
     else:
         for i in range(height):
@@ -57,14 +57,18 @@ def launch_gui(spinet):
     count = 0
     layout2 = []
     
-    for i in range(height2):
+    for i in range(len(spinet.l2xanchor)*height):
         layout2.append([])
     
-    for col in range(width2):
-        for row in range(height2):
-            layout2[row].append(sg.Button("{:>3}".format(str(count)), key="l2"+str(count)))
-            count += 1
-    layout2.insert(0, [sg.Slider(range=(0, depth-1), orientation="horizontal", key="depth2", enable_events=True)])
+    for i in range(len(spinet.l2xanchor)):
+        for j in range(len(spinet.l2yanchor)):
+            for col in range(height2):
+                for row in range(width2):
+                    layout2[j*width2+row].append(sg.Button("{:>3}".format(str(count)), key="l2"+str(count)))
+                    count += 1
+            for k in range(width2):
+                layout2[j*width2+k].append(sg.Text(" "))
+    layout2.insert(0, [sg.Slider(range=(0, depth2-1), orientation="horizontal", key="depth2", enable_events=True)])
     
     layout = [[sg.TabGroup([[sg.Tab('Tab 1', layout1), sg.Tab('Tab 2', layout2)]])]]
     
@@ -81,6 +85,9 @@ def launch_gui(spinet):
     x = 0
     y = 0
     index = 0
+    x2 = 0
+    y2 = 0
+    index2 = 0
     while True:
         event, values = win.read()
         if event == sg.WIN_CLOSED or event == 'Cancel':
@@ -93,6 +100,11 @@ def launch_gui(spinet):
             gui["index"] = index
             gui["layer"] = int(values["depth1"])
             write_json(directory, gui)
+        elif event == "depth2":
+            index2 = int(x2 * width2 * depth2 + y2 * depth2 + values["depth2"])
+            gui["index2"] = index2
+            gui["layer2"] = int(values["depth2"])
+            write_json(directory, gui)
         elif "l1" in event:
             x = int(event[2:]) // width
             y = int(event[2:]) % width
@@ -103,7 +115,7 @@ def launch_gui(spinet):
         elif "l2" in event:
             x2 = int(event[2:]) // width2
             y2 = int(event[2:]) % width2
-            index2 = int(x2 * width2 * depth2 + y2 * depth2)
+            index2 = int(x2 * width2 * depth2 + y2 * depth2 + values["depth2"])
             gui["index2"] = index2
             write_json(directory, gui)
     win.close()

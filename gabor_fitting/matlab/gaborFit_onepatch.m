@@ -1,4 +1,4 @@
-function [mu_table, sigma_table, theta_table, phase_table, lambda_table, error_table] = gaborFit_onepatch(basis)
+function [mu_table, sigma_table, theta_table, phase_table, lambda_table, error_table] = gaborFit_onepatch(basis, folder)
 
 disp("computing gabor basis");
 num_basis = size(basis, 2);
@@ -39,6 +39,6 @@ for i=1:num_basis
 end
 figure(1);
 %drawBasis_v2(TrueBasis, EstBasis, 20, 10);
-save("mat/TrueBasis.mat", "TrueBasis");
-save("mat/EstBasis.mat", "EstBasis");
+save([folder 'TrueBasis.mat'], 'TrueBasis');
+save([fodler 'EstBasis.mat'], 'EstBasis');
 end

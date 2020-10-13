@@ -84,6 +84,7 @@ basis = spinet.generate_weight_mat()
 #%% Load and create gabor basis
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+spinet.generate_weight_images()
 create_gabor_basis(spinet, bins=15)
 
 

@@ -118,3 +118,18 @@ class Neuron:
         self.weights = np.load(path + weight_path)
         self.params = load_params(path + param_path)
         self.weight_images = []
+        self.gabor_image = 0
+        self.lambd = 0
+        self.theta = 0
+        self.phase = 0
+        self.sigma = 0
+        self.error = 0
+        
+    def add_gabor(self, image, mu, sigma, lambd, phase, theta, error):
+        self.gabor_image = image
+        self.mu = mu
+        self.sigma = sigma
+        self.lambd = lambd
+        self.phase = phase
+        self.theta = theta
+        self.error = error

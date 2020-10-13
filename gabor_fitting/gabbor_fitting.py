@@ -14,28 +14,30 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.image as mpimg
 
-def plot_gabors(spinet, est_basis, error, dest):
-    indices = []
+def plot_gabor_image(neuron, est_basis, error, path, count):
+    gabor = -1 * est_basis[:, count].reshape(10, 10, order="F")
+    fig, axes = plt.subplots(2, 1)
+    axes[0].axis('off')
+    axes[1].axis('off')
+    axes[0].imshow(mpimg.imread(neuron.weight_images[0]))
+    axes[1].imshow(gabor)
+    plt.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+
+def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest):
+    count = 0
     if spinet.weight_sharing:
         for i in range(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth):
-            indices += list(np.arange(i, i + spinet.l1depth))
+            for neuron in spinet.simple_cells[i:i+spinet.l1depth]:
+                path = dest + str(count) + "_" + str(round(error[0, count], 2)) + ".png"
+                neuron.add_gabor(path, mu[0, count], sigma[0, count], lambd[0, count], phase[0, count], theta[0, count], error[0, count])
+                plot_gabor_image(neuron, est_basis, error, dest, count)
+                count += 1
     else:
-        indices = range(spinet.nb_simple_cells)
-
-    images = []
-    for i in indices:
-        images.append(mpimg.imread(spinet.path+"images/simple_cells/"+str(i)+"_syn0.png"))
-
-    for i, image in enumerate(images):
-        gabor = -1 * est_basis[:, i].reshape(10, 10, order="F")
-        
-        fig, axes = plt.subplots(2, 1)
-        axes[0].axis('off')
-        axes[1].axis('off')
-        axes[0].imshow(image)
-        axes[1].imshow(gabor)
-        plt.savefig(dest + str(i) + "_" + str(round(error[0, i], 2)) + ".png", bbox_inches="tight")
-        plt.close(fig)
+        for neuron in spinet.simple_cells:
+            neuron.add_gabor(path, mu[0, count], sigma[0, count], lambd[0, count], phase[0, count], theta[0, count], error[0, count])
+            plot_gabor_image(neuron, est_basis, error, dest, count)
+            count += 1
 
 def plot_histogram(theta, error, err_thresh, dest):
     plt.figure()
@@ -100,8 +102,6 @@ def create_gabor_basis(spinet, bins):
     error = sio.loadmat(spinet.path+"gabors/data/error.mat")["error_table"]
     est_basis = sio.loadmat(spinet.path+"gabors/data/EstBasis.mat")["EstBasis"]
     
-    plot_gabors(spinet, est_basis, error, spinet.path+"gabors/figures/")
-    
+    plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, spinet.path+"gabors/figures/")
     plot_polar_chart(spinet.l1depth, bins, theta[0], error[0], 5, spinet.path+"gabors/hists/")
-    
     error_percentage(theta[0], error[0], 20, spinet.path+"gabors/hists/")

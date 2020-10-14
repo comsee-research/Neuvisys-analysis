@@ -147,16 +147,17 @@ for i in range(spinet.nb_complex_cells):
     plt.axvline(0)
     plt.axvline(90)
     plt.plot(rotation, y)
+    plt.savefig("cell"+str(i))
     
-for i in range(spinet.nb_complex_cells):
-    y = np.max(train[:, i, :, 0], axis=1)
-    plt.figure()
-    plt.title("max cell response function of stimulus orientation")
-    plt.xticks(rotation[::2], rotation=45)
-    plt.axvline(-90)
-    plt.axvline(0)
-    plt.axvline(90)
-    plt.plot(rotation, y)
+# for i in range(spinet.nb_complex_cells):
+#     y = np.max(train[:, i, :, 0], axis=1)
+#     plt.figure()
+#     plt.title("max cell response function of stimulus orientation")
+#     plt.xticks(rotation[::2], rotation=45)
+#     plt.axvline(-90)
+#     plt.axvline(0)
+#     plt.axvline(90)
+#     plt.plot(rotation, y)
 
 
 #%% Launch

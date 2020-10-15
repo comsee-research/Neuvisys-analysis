@@ -96,7 +96,7 @@ convert_ros_to_aedat("/home/thomas/Bureau/out.bag", "/home/thomas/Bureau/test.ae
 #%% //!!!\\ Delete weights network
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-spinet.clean_network(simple_cells=0, complex_cells=1)
+spinet.clean_network(simple_cells=1, complex_cells=1)
 
 
 #%% Load various neuron informations
@@ -106,11 +106,11 @@ simpa_decay, compa_decay = load_array_param(spinet, "learning_decay")
 simpa_spike, compa_spike = load_array_param(spinet, "count_spike")
 
 
-#%%
+#%% Plot cell response
 
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 pot_train = []
-for i in range(1):
+for i in range(1, 2):
     pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
 y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
@@ -124,28 +124,29 @@ for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/s
         
 #%% Get potential responses from a rotating stimulus
 
-rotation = list(range(-180, 181, 10))
-train = []
+rotation = list(range(-180, 181, 20))
+potentials = []
+spikes = []
 for rot in rotation:
     launch_neuvisys_rotation("/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy", rot)
 
     spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
     pot_train = []
+    spike_train = []
     for neuron in spinet.complex_cells:
         pot_train.append(np.array(neuron.params["potential_train"]))
-    # y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
-    train.append(pot_train)
+        spike_train.append(np.array(neuron.params["spike_train"]))
+    potentials.append(pot_train)
+    spikes.append(spike_train)
 
-train = np.array(train)
+potentials = np.array(potentials)
+spikes = np.array(spikes)
 
 for i in range(spinet.nb_complex_cells):
-    y = np.mean(train[:, i, :, 0], axis=1)
+    y = np.mean(potentials[:, i, :, 0], axis=1)
     plt.figure()
     plt.title("mean cell response function of stimulus orientation")
     plt.xticks(rotation[::2], rotation=45)
-    plt.axvline(-90)
-    plt.axvline(0)
-    plt.axvline(90)
     plt.plot(rotation, y)
     plt.savefig("cell"+str(i))
     
@@ -154,12 +155,10 @@ for i in range(spinet.nb_complex_cells):
 #     plt.figure()
 #     plt.title("max cell response function of stimulus orientation")
 #     plt.xticks(rotation[::2], rotation=45)
-#     plt.axvline(-90)
-#     plt.axvline(0)
-#     plt.axvline(90)
 #     plt.plot(rotation, y)
 
 
 #%% Launch
 
-launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy", 20)
+launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy", 10)
+

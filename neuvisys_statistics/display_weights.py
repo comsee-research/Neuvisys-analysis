@@ -80,53 +80,52 @@ def generate_pdf_weight_sharing(spinet):
     return pdf
 
 
-def generate_pdf_complex_cell(spinet, layer):
-    cols = len(spinet.l1xanchor) * spinet.l1width
-    rows = len(spinet.l1yanchor) * spinet.l1height
-    depth = spinet.l1depth
-    
-    pdf = FPDF("P", "mm", (cols * 12, rows * depth * 12))
+def generate_pdf_complex_cell(spinet, layer):    
+    pdf = FPDF("P", "mm", (len(spinet.l1xanchor)*spinet.l1width*11 + len(spinet.l1xanchor)*11, len(spinet.l1yanchor)*spinet.l1height*spinet.l1depth*11 + len(spinet.l1yanchor)*11))
     pdf.add_page()
     
     pdf.set_font('Arial', '', 10)
     pdf.multi_cell(0, 5, "")
 
-    for i, complex_cell in enumerate(spinet.complex_cells):
-        if complex_cell.params["position"][2] == layer:
-            maximum = np.max(complex_cell.weights)
+    for c, complex_cell in enumerate(spinet.complex_cells):
+        xc, yc, zc = complex_cell.params["position"]
+        ox, oy, oz = complex_cell.params["offset"]
             
-            xc = complex_cell.params["position"][0]
-            yc = complex_cell.params["position"][1]
-            
-            for neuron_ind in complex_cell.params["in_connections"]:
-                simple_cell = spinet.simple_cells[neuron_ind]
-                xs = simple_cell.params["position"][0]
-                ys = simple_cell.params["position"][1]
-                zs = simple_cell.params["position"][2]
-                
-                dim = complex_cell.weights[zs, ys - complex_cell.params["offset"][1], xs - complex_cell.params["offset"][0]]
-                img = (dim / maximum) * np.array(Image.open(simple_cell.weight_images[0]))
-                path = spinet.path+"images/complex_connections/"+str(i)+"_simple_"+str(neuron_ind)+".png"
-                Image.fromarray(img.astype('uint8')).save(path)
-                
-                pos_x = xc * spinet.l2width + xs * 11
-                pos_y = yc * depth * spinet.l1width * 12 + zs * spinet.l1height * 11.5 + (ys - complex_cell.params["offset"][1]) * 11
-                
-                pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
+        if zc == layer:
+            maximum = np.max(complex_cell.weights)            
+            for z, k in enumerate(sort_connections(spinet, complex_cell, oz)):
+                for i in range(ox, ox + spinet.l1width):
+                    for j in range(oy, oy + spinet.l1height):
+                        simple_cell = spinet.simple_cells[spinet.layout1[i, j, k]]
+                        xs, ys, zs = simple_cell.params["position"]
+                        
+                        weight_sc = complex_cell.weights[k, ys - oy, xs - ox] / maximum
+                        img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
+                        path = spinet.path+"images/complex_connections/"+str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        Image.fromarray(img.astype('uint8')).save(path)
+                        
+                        pos_x = xc * (11 * spinet.l1width + 10) + (xs - ox) * 11
+                        pos_y = yc * (11 * spinet.l1height * spinet.l1depth + spinet.l1depth * 2 + 10) + z * (11 * spinet.l1height + 2) + (ys - oy) * 11
+                        pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
+def sort_connections(spinet, complex_cell, oz):
+    strengths = []
+    for i in range(oz, oz + spinet.l1depth):
+        strengths.append(np.sum(complex_cell.weights[i]))
+    return np.argsort(strengths)[::-1]
 
 def load_array_param(spinet, param):
     simple_array = np.zeros(spinet.nb_simple_cells)
     for i, simple_cell in enumerate(spinet.simple_cells):
         simple_array[i] = simple_cell.params[param]
     return simple_array, 0
-    simple_array = simple_array.reshape((spinet.l1width, spinet.l1height, spinet.l1depth)).transpose((1, 0, 2))
+    simple_array = simple_array.reshape((len(spinet.l1xanchor) * spinet.l1width, len(spinet.l1yanchor) * spinet.l1height, spinet.l1depth)).transpose((1, 0, 2))
     
     complex_array = np.zeros(spinet.nb_complex_cells)
     for i, complex_cell in enumerate(spinet.complex_cells):
         complex_array[i] = complex_cell.params[param]
-    complex_array = complex_array.reshape((spinet.l2width, spinet.l2height, spinet.l2depth)).transpose((1, 0, 2))
+    complex_array = complex_array.reshape((len(spinet.l2xanchor) * spinet.l2width, len(spinet.l2yanchor) * spinet.l2height, spinet.l2depth)).transpose((1, 0, 2))
     
     return simple_array, complex_array
 

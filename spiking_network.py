@@ -47,6 +47,10 @@ class SpikingNetwork:
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
         
+        self.layout1 = np.load(path + "weights/layout1.npy")
+        self.layout2 = np.load(path + "weights/layout2.npy")
+        
+        
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
             for synapse in range(self.neuron1_synapses):

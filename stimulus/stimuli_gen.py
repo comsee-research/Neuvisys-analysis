@@ -6,39 +6,26 @@ Created on Tue Aug  4 13:56:18 2020
 @author: thomas
 """
 
-from psychopy import visual, core, event
+from psychopy import visual
 
-win0 = visual.Window([346, 260], screen=0, monitor="testMonitor", fullscr=False, color=[0, 0, 0], units="pix")
-
-sf = 0.09
-phase = (0.0, 0.0)
-
-grat_stim_h = visual.GratingStim(win=win0, tex="sqr", units="pix", pos=(0.0, 0.0), size=346, sf=sf, ori=0.0, phase=phase)
-grat_stim_v = visual.GratingStim(win=win0, tex="sqr", units="pix", pos=(0.0, 0.0), size=346, sf=sf, ori=90.0, phase=phase)
-
-i = 0
-switch = True
-
-while(i < 100):
-    if i % 1000 == 0:
-        switch = not switch
+def flashing_grating(folder, frequency=1/346, orientation=0, time=1, framerate=1000, flash_period=0.5, flip=False): # time in s
+    win = visual.Window([346, 260], screen=0, monitor="testMonitor", fullscr=False, color=[0, 0, 0], units="pix")
+    grat_stim = visual.GratingStim(win=win, tex="sqr", units="pix", pos=(0.0, 0.0), size=500)
+    grat_stim.sf = frequency
+    grat_stim.ori = orientation
     
-    if switch:
-        grat_stim_h.setPhase(0.002, "+")
-        grat_stim_h.draw()
-    else:
-        grat_stim_v.setPhase(0.002, "+")
-        grat_stim_v.draw()
+    phase = 0
+    for i in range(int(time*framerate)):
+        if i % int(flash_period*framerate) == 0:
+            phase = (phase + 0.5) % 1
+        grat_stim.phase = phase
+        grat_stim.draw()
+        win.getMovieFrame(buffer='back')
+        if flip:
+            win.flip()
     
-    win0.getMovieFrame(buffer='back')
-    win0.flip()
-    
-    if len(event.getKeys()) > 0:
-        break
-    event.clearEvents()
-    
-    i += 1
-    
-win0.saveMovieFrames(fileName='/home/thomas/Bureau/frames/frame.png')
+    win.saveMovieFrames(fileName=folder+"frame.png")
+    win.close()
 
-win0.close()
+flashing_grating(folder="/home/thomas/Bureau/test/",
+                 frequency=70/346, orientation=0, time=1, framerate=1000, flash_period=0.5, flip=False)

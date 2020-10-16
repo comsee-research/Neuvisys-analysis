@@ -23,23 +23,20 @@ class SpikingNetwork:
     
     def __init__(self, path):
         self.path = path
-        self.net_var = load_params(path + "configs/network_config.json")
-        self.unpack_json(self.net_var)
-        self.neu_var = load_params(path + "configs/neuron_config.json")
-        self.pool_neur_var = load_params(path + "configs/pooling_neuron_config.json")
+        self.unpack_json(path+"configs/network_config.json")
         
         self.neurons = []
         self.simple_cells = []
         self.complex_cells = []
         neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("complex", path + "weights/complex_cells/", *paths)
+            neuron = Neuron("complex", path+"configs/pooling_neuron_config.json", path+"weights/complex_cells/", *paths)
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
         
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("simple", path + "weights/simple_cells/", *paths)
+            neuron = Neuron("simple", path+"configs/neuron_config.json", path+"weights/simple_cells/", *paths)
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
                 
@@ -62,7 +59,7 @@ class SpikingNetwork:
         for i, neuron in enumerate(self.complex_cells):
             for lay in range(self.l1depth):
                 dim = np.zeros((self.neuron2_width, self.neuron2_height))
-                weight = np.stack((neuron.weights[lay], dim, dim), axis=2)
+                weight = np.stack((neuron.weights[:, :, lay], dim, dim), axis=2)
                 path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
                 compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
                 neuron.weight_images.append(path)
@@ -85,7 +82,8 @@ class SpikingNetwork:
         
         sio.savemat(self.path+"gabors/weights.mat", {"data": basis})
         
-    def unpack_json(self, json):
+    def unpack_json(self, json_path):
+        json = load_params(json_path)
         self.weight_sharing = json["WeightSharing"]
         self.l1width = json["L1Width"]
         self.l1height = json["L1Height"]
@@ -117,10 +115,11 @@ class SpikingNetwork:
 class Neuron:
     """Spiking Neuron class"""
     
-    def __init__(self, neuron_type, path, param_path, weight_path):
+    def __init__(self, neuron_type, config_path, path, param_path, weight_path):
         self.type = neuron_type
+        self.unpack_json_config(config_path)
         self.weights = np.load(path + weight_path)
-        self.params = load_params(path + param_path)
+        self.unpack_json_params(path + param_path)
         self.weight_images = []
         self.gabor_image = 0
         self.lambd = 0
@@ -137,3 +136,44 @@ class Neuron:
         self.phase = phase
         self.theta = theta
         self.error = error
+        
+    def unpack_json_config(self, json_path):
+        json = load_params(json_path)
+        if self.type == "simple":
+            self.min_thresh = json["MIN_THRESH"]
+            self.delta_vd = json["DELTA_VD"]
+            self.delta_sra = json["DELTA_SRA"]
+            self.delta_sr = json["DELTA_SR"]
+            self.delta_rp = json["DELTA_RP"]
+            self.tau_sra = json["TAU_SRA"]
+            self.tau_rp = json["TAU_RP"]
+            self.tau_ltd= json["TAU_LTD"]
+            self.target_spike_rate = json["TARGET_SPIKE_RATE"]
+            self.synapse_delay = json["SYNAPSE_DELAY"]
+            
+        self.vthresh = json["VTHRESH"]
+        self.vreset = json["VRESET"]
+        self.tau_m = json["TAU_M"]
+        self.tau_ltp = json["TAU_LTP"]
+        self.norm_factor = json["NORM_FACTOR"]
+        self.delta_vp = json["DELTA_VP"]
+        self.delta_inh = json["DELTA_INH"]
+        self.decay_factor = json["DECAY_FACTOR"]
+        self.stdp_learning = json["STDP_LEARNING"]
+        self.tracking = json["TRACKING"]
+        
+    def unpack_json_params(self, json_path):
+        json = load_params(json_path)
+        self.count_spike = json["count_spike"]
+        self.creation_time = json["creation_time"]
+        self.in_connections = json["in_connections"]
+        self.learning_decay = json["learning_decay"]
+        self.offset = json["offset"]
+        self.out_connections = json["out_connections"]
+        self.position = json["position"]
+        self.potential = json["potential"]
+        self.potential_train = json["potential_train"]
+        self.recent_spikes = json["recent_spikes"]
+        self.spike_train = json["spike_train"]
+        self.spiking_rate = json["spiking_rate"]
+        self.threshold = json["threshold"]

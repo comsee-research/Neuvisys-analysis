@@ -111,7 +111,7 @@ simpa_spike, compa_spike = load_array_param(spinet, "count_spike")
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 pot_train = []
 for i in range(1, 2):
-    pot_train.append(np.array(spinet.complex_cells[i].params["potential_train"]))
+    pot_train.append(np.array(spinet.complex_cells[i].potential_train))
 y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
     
@@ -124,31 +124,39 @@ for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/s
         
 #%% Get potential responses from a rotating stimulus
 
-rotation = list(range(-180, 181, 20))
-potentials = []
-spikes = []
-for rot in rotation:
-    launch_neuvisys_rotation("/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy", rot)
+rotation = np.array(np.arange(-180, 181, 22.5), dtype=np.int16)
+nb_pass = 5
 
-    spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
-    pot_train = []
-    spike_train = []
-    for neuron in spinet.complex_cells:
-        pot_train.append(np.array(neuron.params["potential_train"]))
-        spike_train.append(np.array(neuron.params["spike_train"]))
-    potentials.append(pot_train)
-    spikes.append(spike_train)
+potentials = np.zeros((len(rotation), spinet.nb_complex_cells, nb_pass))
+spikes = np.zeros((len(rotation), spinet.nb_complex_cells, nb_pass))
 
-potentials = np.array(potentials)
-spikes = np.array(spikes)
+for i, rot in enumerate(rotation):
+    for j in range(nb_pass):
+        launch_neuvisys_rotation("/home/thomas/Vidéos/samples/npy/bars_horizontal_up_down.npy", rot)
+
+        spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+        for k, neuron in enumerate(spinet.complex_cells):
+            potentials[i, k, j] = np.mean(neuron.potential_train)
+            spikes[i, k, j] = np.array(neuron.spike_train).size
+    potentials = np.mean(potentials, axis=-1)
+    spikes = np.mean(spikes, axis=-1)
+
+
+#%%
 
 for i in range(spinet.nb_complex_cells):
-    y = np.mean(potentials[:, i, :, 0], axis=1)
     plt.figure()
-    plt.title("mean cell response function of stimulus orientation")
-    plt.xticks(rotation[::2], rotation=45)
-    plt.plot(rotation, y)
-    plt.savefig("cell"+str(i))
+    plt.title("Average spikes per orientation, Neuron: " + str(i))
+    plt.plot(rotation, spikes[:, i])
+    plt.savefig("save/"+str(i))
+
+# for i in range(spinet.nb_complex_cells):
+#     y = np.mean(potentials[:, i, :, 0], axis=1)
+#     plt.figure()
+#     plt.title("mean cell response function of stimulus orientation")
+#     plt.xticks(rotation[::2], rotation=45)
+#     plt.plot(rotation, y)
+#     plt.savefig("cell"+str(i))
     
 # for i in range(spinet.nb_complex_cells):
 #     y = np.max(train[:, i, :, 0], axis=1)
@@ -160,5 +168,5 @@ for i in range(spinet.nb_complex_cells):
 
 #%% Launch
 
-launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy", 10)
+launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy", 20)
 

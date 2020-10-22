@@ -61,7 +61,7 @@ def generate_pdf_weight_sharing(spinet):
 
 
 def generate_pdf_complex_cell(spinet, layer):    
-    pdf = FPDF("P", "mm", (len(spinet.l1xanchor)*spinet.l1width*11 + len(spinet.l1xanchor)*11, len(spinet.l1yanchor)*spinet.l1height*spinet.l1depth*11 + len(spinet.l1yanchor)*11))
+    pdf = FPDF("P", "mm", (len(spinet.l1xanchor)*spinet.l1width*11 + len(spinet.l1xanchor)*11, len(spinet.l1yanchor)*spinet.l1height*spinet.neuron2_depth*11 + len(spinet.l1yanchor)*11 + len(spinet.l1yanchor)*10))
     pdf.add_page()
     
     pdf.set_font('Arial', '', 10)
@@ -85,13 +85,13 @@ def generate_pdf_complex_cell(spinet, layer):
                         Image.fromarray(img.astype('uint8')).save(path)
                         
                         pos_x = xc * (11 * spinet.l1width + 10) + (xs - ox) * 11
-                        pos_y = yc * (11 * spinet.l1height * spinet.l1depth + spinet.l1depth * 2 + 10) + z * (11 * spinet.l1height + 2) + (ys - oy) * 11
+                        pos_y = yc * (11 * spinet.l1height * spinet.neuron2_depth + spinet.neuron2_depth * 2 + 10) + z * (11 * spinet.l1height + 2) + (ys - oy) * 11
                         pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 def sort_connections(spinet, complex_cell, oz):
     strengths = []
-    for z in range(oz, oz + spinet.l1depth):
+    for z in range(spinet.neuron2_depth):
         strengths.append(np.sum(complex_cell.weights[:, :, z]))
     return np.argsort(strengths)[::-1]
 

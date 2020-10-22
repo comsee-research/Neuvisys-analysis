@@ -57,7 +57,7 @@ class SpikingNetwork:
                 neuron.weight_images.append(path)
 
         for i, neuron in enumerate(self.complex_cells):
-            for lay in range(self.l1depth):
+            for lay in range(self.neuron2_depth):
                 dim = np.zeros((self.neuron2_width, self.neuron2_height))
                 weight = np.stack((neuron.weights[:, :, lay], dim, dim), axis=2)
                 path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
@@ -101,6 +101,7 @@ class SpikingNetwork:
         self.l2yanchor = json["L2YAnchor"]
         self.neuron2_width = json["Neuron2Width"]
         self.neuron2_height = json["Neuron2Height"]
+        self.neuron2_depth = json["Neuron2Depth"]
         
     def clean_network(self, simple_cells, complex_cells):
         if simple_cells:

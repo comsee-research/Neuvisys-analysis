@@ -31,20 +31,13 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest):
         for i, ind in enumerate(indices):
             for neuron in spinet.simple_cells[ind:ind+spinet.l1depth]:
                 path = dest + str(cnt) + "_" + str(round(error[0, cnt], 2)) + ".png"
-                plot_gabor_image(neuron, est_basis, error, dest, cnt)
+                plot_gabor_image(neuron, est_basis, error, path, cnt)
                 neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
                 cnt += 1
             for j, neuron in enumerate(spinet.simple_cells[ind+spinet.l1depth:ind+spinet.l1width*spinet.l1height*spinet.l1depth]):
-                c = i * spinet.l1depth + j % 144
+                c = i * spinet.l1depth + j % spinet.l1depth
                 path = dest + str(c) + "_" + str(round(error[0, c], 2)) + ".png"
                 neuron.add_gabor(path, mu[0, c], sigma[0, c], lambd[0, c], phase[0, c], theta[0, c], error[0, c])
-        
-        # for i in range(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth):
-        #     for neuron in spinet.simple_cells[i:i+spinet.l1depth]:
-        #         path = dest + str(count) + "_" + str(round(error[0, count], 2)) + ".png"
-        #         neuron.add_gabor(path, mu[0, count], sigma[0, count], lambd[0, count], phase[0, count], theta[0, count], error[0, count])
-        #         plot_gabor_image(neuron, est_basis, error, dest, count)
-        #         count += 1
     else:
         for neuron in spinet.simple_cells:
             neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])

@@ -40,5 +40,5 @@ end
 figure(1);
 %drawBasis_v2(TrueBasis, EstBasis, 20, 10);
 save([folder 'TrueBasis.mat'], 'TrueBasis');
-save([fodler 'EstBasis.mat'], 'EstBasis');
+save([folder 'EstBasis.mat'], 'EstBasis');
 end

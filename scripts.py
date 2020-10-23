@@ -194,3 +194,36 @@ for i in range(spinet.nb_complex_cells):
 
 launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy", 1)
 
+
+#%%
+
+thetas = {}
+phases = {}
+for cell in spinet.simple_cells:
+    thetas[str.split(str.split(cell.gabor_image, "_")[0], "/")[-1]] = cell.theta * 180 / np.pi
+    phases[str.split(str.split(cell.gabor_image, "_")[0], "/")[-1]] = cell.phase * 180 / np.pi
+    
+    
+#%%
+
+for i in range(spinet.nb_complex_cells):
+    complex_cell = spinet.complex_cells[i]
+    ox, oy, oz = complex_cell.offset
+    
+    thetas = []
+    strengths = []
+    maximum = np.max(complex_cell.weights)
+    
+    for connection in complex_cell.in_connections:
+        simple_cell = spinet.simple_cells[connection]
+        xs, ys, zs = simple_cell.position
+        strengths.append(complex_cell.weights[xs - ox, ys - oy, zs] / maximum)
+        thetas.append(simple_cell.theta * 180 / np.pi)
+    
+    if i % 16 == 0:
+        plt.figure()
+        plt.hist(thetas, np.linspace(0, 180, 16))
+    
+    plt.figure()
+    plt.title("complex cell ("+str(i)+":"+str(complex_cell.position)+") prefered orientation")
+    plt.hist(thetas, np.linspace(0, 180, 16), weights=strengths)

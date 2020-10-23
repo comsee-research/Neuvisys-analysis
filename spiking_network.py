@@ -72,15 +72,15 @@ class SpikingNetwork:
                 weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
         else:
             weights = [neuron.weights for neuron in self.simple_cells]
-            
+
         basis = np.zeros((200, len(weights)))
-        
+
         for i, weight in enumerate(weights):    
             basi = (weight[0, 0] - weight[1, 0]).flatten("F")
             basis[0:100, i] = basi
             basis[100:200, i] = basi
         
-        sio.savemat(self.path+"gabors/weights.mat", {"data": basis})
+        sio.savemat(self.path+"gabors/data/weights.mat", {"data": basis})
         
     def unpack_json(self, json_path):
         json = load_params(json_path)

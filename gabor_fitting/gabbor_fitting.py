@@ -111,3 +111,49 @@ def create_gabor_basis(spinet, bins):
     plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, spinet.path+"gabors/figures/")
     plot_polar_chart(spinet.l1depth, bins, theta[0], error[0], 5, spinet.path+"gabors/hists/")
     error_percentage(theta[0], error[0], 20, spinet.path+"gabors/hists/")
+    
+def circular_plot(title, directions, thet_max, weights=None):
+    bins = list(np.arange(11.25, thet_max, 22.5))
+    bins.insert(0, 0)
+    bins.append(thet_max)
+    
+    plt.figure()
+    ax = plt.subplot(111, polar=True)
+    ax.set_title(title)
+    hist, _ = np.histogram(directions, bins, weights=weights)
+    hist[0] = hist[0] + hist[-1]
+    hist[-1] = hist[0]
+    x = list(np.arange(0, (thet_max/180)*np.pi, np.pi/8))
+    x.append(0) if thet_max == 360 else x.append(180)
+    ax.plot(x, hist, "r")
+    ax.set_thetamax(thet_max)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+
+def plot_preferred_orientations(spinet):
+    for i in range(spinet.nb_complex_cells):
+        complex_cell = spinet.complex_cells[i]
+        ox, oy, oz = complex_cell.offset
+        
+        directions = []
+        orientations = []
+        strengths = []
+        maximum = np.max(complex_cell.weights)
+        
+        for connection in complex_cell.in_connections:
+            simple_cell = spinet.simple_cells[connection]
+            xs, ys, zs = simple_cell.position
+            strengths.append(complex_cell.weights[xs - ox, ys - oy, zs] / maximum)
+            directions.append(simple_cell.direction * 180 / np.pi)
+            orientations.append(simple_cell.orientation * 180 / np.pi)
+            
+        if i % 16 == 0:
+            circular_plot("Histogram of a region orientations", orientations, 180)
+            plt.savefig("/home/thomas/neuvisys-analysis/Data/orientations/"+str(i)+"_r")
+            circular_plot("Histogram of a region directions", directions, 360)
+            plt.savefig("/home/thomas/neuvisys-analysis/Data/directions/"+str(i)+"_r")
+        
+        circular_plot("complex cell ("+str(i)+":"+str(complex_cell.position)+") prefered orientation", orientations, 180, weights=strengths)
+        plt.savefig("/home/thomas/neuvisys-analysis/Data/orientations/"+str(i))
+        circular_plot("complex cell ("+str(i)+":"+str(complex_cell.position)+") prefered orientation", directions, 360, weights=strengths)
+        plt.savefig("/home/thomas/neuvisys-analysis/Data/directions/"+str(i))

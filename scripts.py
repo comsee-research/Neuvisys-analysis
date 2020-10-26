@@ -16,18 +16,19 @@ from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_
 from spiking_network import SpikingNetwork
 from neuvisys_statistics.display_weights import display_network, load_array_param
 from planning.planner import launch_spinet, launch_neuvisys_rotation, launch_neuvisys_multi_pass
-from gabor_fitting.gabbor_fitting import create_gabor_basis
+from gabor_fitting.gabbor_fitting import create_gabor_basis, plot_preferred_orientations
 from gui import launch_gui
+
+#%%
+spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 
 #%% GUI
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 launch_gui(spinet)
 
 
 #%% Display weights
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 img = display_network([spinet], 1)
 
 
@@ -77,15 +78,18 @@ launch_spinet(directory, files, 1)
 
 #%% Create Matlab weight.mat
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 basis = spinet.generate_weight_mat()
 
 
 #%% Load and create gabor basis
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 spinet.generate_weight_images()
 create_gabor_basis(spinet, bins=15)
+
+
+#%% Create plots for preferred orientations and directions
+
+plot_preferred_orientations(spinet)
 
 
 #%% Convert rosbag to aedat
@@ -95,20 +99,17 @@ convert_ros_to_aedat("/home/thomas/Bureau/flash_135.bag", "/home/thomas/Bureau/f
 
 #%% //!!!\\ Delete weights network
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 spinet.clean_network(simple_cells=1, complex_cells=1)
 
 
 #%% Load various neuron informations
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 simpa_decay, compa_decay = load_array_param(spinet, "learning_decay")
 simpa_spike, compa_spike = load_array_param(spinet, "count_spike")
 
 
 #%% Plot cell response
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 pot_train = []
 for i in range(1, 2):
     pot_train.append(np.array(spinet.complex_cells[i].potential_train))
@@ -124,7 +125,6 @@ for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/s
         
 #%% Get potential responses from a rotating stimulus
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 rotation = np.array(np.arange(-180, 181, 22.5), dtype=np.int16)
 nb_pass = 5
 
@@ -146,7 +146,6 @@ spikes = np.mean(spikes, axis=-1)
 
 #%% Get potential responses from a flashing stimulus
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
 rotation = [0, 45, 90, 135]
 nb_pass = 5
 
@@ -199,31 +198,16 @@ launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy"
 
 thetas = {}
 phases = {}
+orientations = {}
+directions = {}
 for cell in spinet.simple_cells:
     thetas[str.split(str.split(cell.gabor_image, "_")[0], "/")[-1]] = cell.theta * 180 / np.pi
     phases[str.split(str.split(cell.gabor_image, "_")[0], "/")[-1]] = cell.phase * 180 / np.pi
-    
-    
-#%%
+    orientations[str.split(str.split(cell.gabor_image, "_")[0], "/")[-1]] = cell.orientation * 180 / np.pi
+    directions[str.split(str.split(cell.gabor_image, "_")[0], "/")[-1]] = cell.direction * 180 / np.pi
 
-for i in range(spinet.nb_complex_cells):
-    complex_cell = spinet.complex_cells[i]
-    ox, oy, oz = complex_cell.offset
-    
-    thetas = []
-    strengths = []
-    maximum = np.max(complex_cell.weights)
-    
-    for connection in complex_cell.in_connections:
-        simple_cell = spinet.simple_cells[connection]
-        xs, ys, zs = simple_cell.position
-        strengths.append(complex_cell.weights[xs - ox, ys - oy, zs] / maximum)
-        thetas.append(simple_cell.theta * 180 / np.pi)
-    
-    if i % 16 == 0:
-        plt.figure()
-        plt.hist(thetas, np.linspace(0, 180, 16))
-    
-    plt.figure()
-    plt.title("complex cell ("+str(i)+":"+str(complex_cell.position)+") prefered orientation")
-    plt.hist(thetas, np.linspace(0, 180, 16), weights=strengths)
+thetas = np.array(list(thetas.values()))
+phases = np.array(list(phases.values()))
+orientations = np.array(list(orientations.values()))
+directions = np.array(list(directions.values()))
+

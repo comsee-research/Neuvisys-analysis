@@ -137,6 +137,11 @@ class Neuron:
         self.phase = phase
         self.theta = theta
         self.error = error
+        self.orientation = (self.theta + np.pi / 2) % np.pi
+        if self.phase < np.pi:
+            self.direction = (self.orientation + np.pi) % (2*np.pi)
+        else:
+            self.direction = self.orientation % (2*np.pi)
         
     def unpack_json_config(self, json_path):
         json = load_params(json_path)

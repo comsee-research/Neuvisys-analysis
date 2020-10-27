@@ -16,11 +16,13 @@ from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_
 from spiking_network import SpikingNetwork
 from neuvisys_statistics.display_weights import display_network, load_array_param
 from planning.planner import launch_spinet, launch_neuvisys_rotation, launch_neuvisys_multi_pass
-from gabor_fitting.gabbor_fitting import create_gabor_basis, plot_preferred_orientations
+from gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 from gui import launch_gui
 
-#%%
+#%% Generate Spiking Network
+
 spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+
 
 #%% GUI
 
@@ -29,13 +31,13 @@ launch_gui(spinet)
 
 #%% Display weights
 
-img = display_network([spinet], 1)
+display_network([spinet], 1)
 
 
 #%% Save aedat file as numpy array
 
-events = load_aedat4("/home/thomas/Vidéos/samples/shape_hovering.aedat4")
-write_npdat(events, "/home/thomas/Vidéos/samples/npy/shape_hovering.npy")
+events = load_aedat4("/home/thomas/Vidéos/samples/shapes_filtered.aedat4")
+write_npdat(events, "/home/thomas/Vidéos/samples/npy/shapes_filtered.npy")
 
 
 #%% Build npdat file made of chunck of other files
@@ -89,8 +91,22 @@ create_gabor_basis(spinet, bins=15)
 
 #%% Create plots for preferred orientations and directions
 
-plot_preferred_orientations(spinet)
+oris, dirs, oris_r, dirs_r = hists_preferred_orientations(spinet)
+plot_preferred_orientations(oris, dirs, oris_r, dirs_r)
 
+OIs, DIs = [], []
+for orie, dire in zip(oris, dirs):
+    orie = orie[:-1]
+    dire = dire[:-1]
+    OIs.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
+    DIs.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
+    
+OIsr, DIsr = [], []
+for orie, dire in zip(oris_r, dirs_r):
+    orie = orie[:-1]
+    dire = dire[:-1]
+    OIsr.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
+    DIsr.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
 
 #%% Convert rosbag to aedat
 
@@ -191,7 +207,7 @@ for i in range(spinet.nb_complex_cells):
 
 #%% Launch
 
-launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_hovering.npy", 1)
+launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_filtered.npy", 20)
 
 
 #%%

@@ -227,3 +227,12 @@ phases = np.array(list(phases.values()))
 orientations = np.array(list(orientations.values()))
 directions = np.array(list(directions.values()))
 
+#%%
+import subprocess
+
+for i in range(20):
+    for j in range(5):
+        launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/split_shape/shape_"+str(j+1)+".npy", 1)
+        spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+        display_network([spinet], 0)
+        subprocess.run(["cp", "/home/thomas/neuvisys-dv/configuration/network/figures/weight_sharing.pdf", "/home/thomas/Bureau/learning_progress/weight_sharing_"+str(i*5+j)+".pdf"])

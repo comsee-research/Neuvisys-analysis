@@ -38,6 +38,16 @@ def load_aedat(file_path):
     with LegacyAedatFile(file_path) as f:
         for e in f:
             print(e.x, e.y)
+            
+def txt_to_events(file_path):
+    arr = []
+    with open(file_path, "r") as file:
+        for line in file:
+            event = line.split(" ")
+            arr.append([int(event[0]), int(event[1]), int(event[2]), int(event[3][0])])
+    events = np.array(arr)
+    events = events[events[:, 2].argsort()]
+    return events
 
 def write_npdat(events, dest):    
     arr = np.zeros((events.size, 4))

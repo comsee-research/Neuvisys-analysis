@@ -7,21 +7,23 @@ Created on Thu Jul  2 16:58:28 2020
 """
 
 import os
-os.chdir("/home/thomas/neuvisys-analysis")
+os.chdir("/home/alphat/neuvisys-analysis")
 
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, write_aedat2_file, load_aedat4, convert_ros_to_aedat, concatenate_files
+from aedat_tools.aedat_tools import txt_to_events, build_mixed_file, remove_blank_space, write_npdat, write_aedat2_file, load_aedat4, convert_ros_to_aedat, concatenate_files
 from spiking_network import SpikingNetwork
 from neuvisys_statistics.display_weights import display_network, load_array_param
 from planning.planner import launch_spinet, launch_neuvisys_rotation, launch_neuvisys_multi_pass
 from gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 from gui import launch_gui
 
+network_path = "/home/alphat/neuvisys-dv/configuration/network/"
+
 #%% Generate Spiking Network
 
-spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
+spinet = SpikingNetwork(network_path)
 
 
 #%% GUI
@@ -31,15 +33,34 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 1)
+display_network([spinet], 0)
 
 
 #%% Save aedat file as numpy array
 
-events = load_aedat4("/home/thomas/Vidéos/samples/shapes_filtered.aedat4")
-write_npdat(events, "/home/thomas/Vidéos/samples/npy/shapes_filtered.npy")
+events = load_aedat4("/home/alphat/Desktop/diverse_shapes/shapes_rot_-90.aedat4")
+write_npdat(events, "/home/alphat/Desktop/diverse_shapes/shapes_rot_-90.npy")
 
 
+#%%
+
+events = txt_to_events("/home/alphat/Desktop/circles.txt")
+times = np.diff(events[:, 2])
+imgs = []
+width = np.max(events[:, 0]) + 1
+height = np.max(events[:, 1]) + 1
+
+time = 0
+img = np.zeros((height, width, 3))
+for i in range(events.shape[0]-1):
+    img[events[i, 1], events[i, 0], events[i, 3]] = 1
+    time += times[i]
+    if time > 200000:
+        time = 0
+        plt.figure()
+        plt.imshow(img)
+        img = np.zeros((height, width, 3))
+        
 #%% Build npdat file made of chunck of other files
 
 path = "/home/thomas/Vidéos/driving_dataset/aedat4/"
@@ -207,8 +228,13 @@ for i in range(spinet.nb_complex_cells):
 
 #%% Launch
 
-launch_neuvisys_multi_pass("/home/thomas/Vidéos/samples/npy/shape_filtered.npy", 20)
-
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_flip_h.npy", 1)
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_-90.npy", 1)
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_180.npy", 1)
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_flip_hv.npy", 1)
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_flip_v.npy", 1)
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_0.npy", 1)
+launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_90.npy", 1)
 
 #%%
 
@@ -236,3 +262,26 @@ for i in range(20):
         spinet = SpikingNetwork("/home/thomas/neuvisys-dv/configuration/network/")
         display_network([spinet], 0)
         subprocess.run(["cp", "/home/thomas/neuvisys-dv/configuration/network/figures/weight_sharing.pdf", "/home/thomas/Bureau/learning_progress/weight_sharing_"+str(i*5+j)+".pdf"])
+
+
+#%%
+
+import numpy as np
+import cv2 as cv
+from PIL import Image
+
+# Create a black image
+img = np.zeros((260, 346, 3), np.uint8)
+cnt = 0
+
+for i in range(100):
+    center_x = np.random.randint(0, 346)
+    center_y = np.random.randint(0, 260)
+    intensity = np.random.randint(0, 255)
+    size = np.random.randint(10, 40)
+
+    cv.circle(img, (center_x, center_y), size, (intensity, intensity, intensity), 2)
+
+    image = Image.fromarray(img)
+    image.save("/home/alphat/Desktop/circles/img"+str(i)+".png")
+

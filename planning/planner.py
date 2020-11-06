@@ -103,7 +103,7 @@ def start_gui_neuvisys():
         
 def start_neuvisys(files):
     for file in files:
-        for path in execute(["/home/thomas/neuvisys-dv/cmake-build-release/neuvisys-test", file]):
+        for path in execute(["/home/alphat/neuvisys-dv/cmake-build-release/neuvisys-test", file]):
             print(path, end="")
 
 def execute(cmd):
@@ -116,9 +116,9 @@ def execute(cmd):
         raise subprocess.CalledProcessError(return_code, cmd)
         
 def launch_neuvisys_rotation(event_file, rotation):
-    for path in execute(["/home/thomas/neuvisys-dv/cmake-build-release/event-analysis", "rotation", event_file, str(rotation)]):
+    for path in execute(["/home/alphat/neuvisys-dv/cmake-build-release/event-analysis", "rotation", event_file, str(rotation)]):
         print(path, end="")
 
 def launch_neuvisys_multi_pass(event_file, nb_pass):
-    for path in execute(["/home/thomas/neuvisys-dv/cmake-build-release/event-analysis", "multi-pass", event_file, str(nb_pass)]):
+    for path in execute(["/home/alphat/neuvisys-dv/cmake-build-release/event-analysis", "multi-pass", event_file, str(nb_pass)]):
         print(path, end="")

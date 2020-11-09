@@ -8,6 +8,8 @@ Created on Tue Aug  4 13:56:18 2020
 
 from psychopy import visual
 import numpy as np
+import cv2 as cv
+from PIL import Image
 
 
 def flashing_grating(win, frequency=1/346, orientation=0, phase=0, contrast=1):
@@ -45,3 +47,16 @@ for i in range(int(time*framerate)):
 # win.saveMovieFrames(fileName="/home/thomas/Bureau/test/frame.png")
 win.close()
 
+def falling_leaves():
+    img = np.zeros((260, 346, 3), np.uint8)
+    
+    for i in range(100):
+        center_x = np.random.randint(0, 346)
+        center_y = np.random.randint(0, 260)
+        intensity = np.random.randint(0, 255)
+        size = np.random.randint(10, 40)
+    
+        cv.circle(img, (center_x, center_y), size, (intensity, intensity, intensity), 2)
+    
+        image = Image.fromarray(img)
+        image.save("/home/alphat/Desktop/circles/img"+str(i)+".png")

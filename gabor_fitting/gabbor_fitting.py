@@ -43,47 +43,26 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest):
             neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
             plot_gabor_image(neuron, est_basis, error, dest, cnt)
             cnt += 1
-                
-
-def plot_histogram(theta, error, err_thresh, dest):
-    plt.figure()
-    plt.hist(theta[error < err_thresh] * 180 / np.pi, bins=10)
-    plt.xticks(np.arange(0, 181, 30))
-    plt.xlabel("Phase (degree)", fontsize=14)
-    plt.ylabel("Frequency", fontsize=14)
-    plt.savefig(dest, bbox_inches="tight")
-    plt.close()
     
-def plot_polar_chart(depth, bins, theta, error, err_thresh, dest):
+def plot_polar_chart(depth, nb_ticks, theta, error, err_thresh, dest):
     fig, axes = plt.subplots(3, 3, subplot_kw=dict(projection='polar'))
     for i in range(3):
         for j in range(3):
             sub_theta = theta[(i*3+j)*depth:(i*3+j+1)*depth]
             sub_error = error[(i*3+j)*depth:(i*3+j+1)*depth]
-            hist, _ = np.histogram(sub_theta[sub_error < err_thresh], bins, range=(0, np.pi))
-            the1 = np.linspace(0.0, np.pi, hist.size)
-            the1 = np.concatenate((the1, the1+np.pi))
-            hist = np.concatenate((hist, np.flipud(hist)))
+            hist = compute_histogram(sub_theta[sub_error < err_thresh]*180/np.pi, 180, nb_ticks)
             
-            axes[j, i].plot(the1, hist, "r", linewidth=2)
-            axes[j, i].set_xticks(np.arange(0, np.pi+0.0001, np.pi/4.0))
-            axes[j, i].set_theta_zero_location("W")
+            x = list(np.arange(0, np.pi, np.pi/nb_ticks))
+            x.append(180)
+            axes[j, i].plot(x, hist, "r")
+            axes[j, i].set_xticks(np.arange(0, np.pi+0.1, np.pi/nb_ticks))
+            axes[j, i].set_thetamax(180)
+            axes[j, i].set_theta_zero_location("N")
             axes[j, i].set_theta_direction(-1)
-
     plt.savefig(dest+"region_histogram.pdf", bbox_inches="tight")
     
-    plt.figure()
-    ax = plt.subplot(111, polar=True)
-    hist, _ = np.histogram(theta[error < err_thresh], bins, range=(0, np.pi))
-    the1 = np.linspace(0.0, np.pi, hist.size)
-    the2 = np.linspace(np.pi, 2*np.pi, hist.size)
-    ax.plot(the1, hist, "r")
-    ax.set_xticks(np.arange(0, np.pi+0.0001, np.pi/6.0))
-    ax.set_thetamax(180)
-    ax.set_theta_zero_location("W")
-    ax.set_theta_direction(-1)
-    ax.set_ylabel("orientation (°)")
-
+    hist = compute_histogram(theta[error < err_thresh]*180/np.pi, 180, nb_ticks)
+    circular_plot("plot", hist, 180, nb_ticks)
     plt.savefig(dest+"total_histogram.pdf", bbox_inches="tight")
         
 def error_percentage(theta, error, max_error, dest):
@@ -99,7 +78,7 @@ def error_percentage(theta, error, max_error, dest):
     plt.ylabel("proportion of accepted gabors (%)")
     plt.savefig(dest+"error_proportion", bbox_inches="tight")
     
-def create_gabor_basis(spinet, bins):
+def create_gabor_basis(spinet, nb_ticks):
     mu = sio.loadmat(spinet.path+"gabors/data/mu.mat")["mu_table"]
     sigma = sio.loadmat(spinet.path+"gabors/data/sigma.mat")["sigma_table"]
     lambd = sio.loadmat(spinet.path+"gabors/data/lambda.mat")["lambda_table"]
@@ -109,11 +88,11 @@ def create_gabor_basis(spinet, bins):
     est_basis = sio.loadmat(spinet.path+"gabors/data/EstBasis.mat")["EstBasis"]
     
     plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, spinet.path+"gabors/figures/")
-    plot_polar_chart(spinet.l1depth, bins, theta[0], error[0], 5, spinet.path+"gabors/hists/")
+    plot_polar_chart(spinet.l1depth, nb_ticks, theta[0], error[0], 5, spinet.path+"gabors/hists/")
     error_percentage(theta[0], error[0], 20, spinet.path+"gabors/hists/")
     
-def compute_histogram(directions, thet_max, weights=None):
-    bins = list(np.arange(11.25, thet_max, 22.5))
+def compute_histogram(directions, thet_max, nb_ticks=8, weights=None):
+    bins = list(np.arange((180/nb_ticks)/2, thet_max, 180/nb_ticks))
     bins.insert(0, 0)
     bins.append(thet_max)
     hist, _ = np.histogram(directions, bins, weights=weights)
@@ -121,14 +100,15 @@ def compute_histogram(directions, thet_max, weights=None):
     hist[-1] = hist[0]
     return hist
     
-def circular_plot(title, hist, thet_max):
+def circular_plot(title, hist, thet_max, nb_ticks=8):
     plt.figure()
     ax = plt.subplot(111, polar=True)
     ax.set_title(title)
     
-    x = list(np.arange(0, (thet_max/180)*np.pi, np.pi/8))
+    x = list(np.arange(0, (thet_max/180)*np.pi, np.pi/nb_ticks))
     x.append(0) if thet_max == 360 else x.append(180)
     ax.plot(x, hist, "r")
+    ax.set_xticks(np.arange(0, (thet_max/180)*np.pi+0.1, np.pi/nb_ticks))
     ax.set_thetamax(thet_max)
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
@@ -136,14 +116,11 @@ def circular_plot(title, hist, thet_max):
 def hists_preferred_orientations(spinet):
     hists_o = []
     hists_ro = []
-    hists_d = []
-    hists_rd = []
     
     for i in range(spinet.nb_complex_cells):
         complex_cell = spinet.complex_cells[i]
         ox, oy, oz = complex_cell.offset
         
-        directions = []
         orientations = []
         strengths = []
         maximum = np.max(complex_cell.weights)
@@ -151,32 +128,25 @@ def hists_preferred_orientations(spinet):
             simple_cell = spinet.simple_cells[connection]
             xs, ys, zs = simple_cell.position
             strengths.append(complex_cell.weights[xs - ox, ys - oy, zs] / maximum)
-            directions.append(simple_cell.direction * 180 / np.pi)
             orientations.append(simple_cell.orientation * 180 / np.pi)
             
-        hists_o.append(compute_histogram(orientations, 180, strengths))
-        hists_d.append(compute_histogram(directions, 360, strengths))
+        hists_o.append(compute_histogram(orientations, 180, 8, strengths))
 
         if i % spinet.l2depth == 0:
-            hists_ro.append(compute_histogram(orientations, 180))
-            hists_rd.append(compute_histogram(directions, 360))
+            hists_ro.append(compute_histogram(orientations, 180, 8))
 
-    return np.array(hists_o), np.array(hists_d), np.array(hists_ro), np.array(hists_rd)
+    return np.array(hists_o), np.array(hists_ro)
             
         
-def plot_preferred_orientations(hists_o, hists_d, hists_ro, hists_rd):
+def plot_preferred_orientations(spinet, hists_o, hists_ro):
     i = 0
-    for hist_o, hist_d in zip(hists_o, hists_d):
-        circular_plot("complex cell ("+str(i)+") prefered orientation", hist_o, 180)
-        plt.savefig("/home/thomas/neuvisys-analysis/Data/orientations/"+str(i))
-        circular_plot("complex cell ("+str(i)+") prefered orientation", hist_d, 360)
-        plt.savefig("/home/thomas/neuvisys-analysis/Data/directions/"+str(i))
+    for hist_o in hists_o:
+        circular_plot("complex cell ("+str(i)+") prefered orientation", hist_o, 180, 8)
+        plt.savefig(spinet.path+"figures/complex_orientations/"+str(i))
         i += 1
         
     i = 0
-    for hist_ro, hist_rd in zip(hists_ro, hists_rd):
-        circular_plot("Histogram of a region orientations", hist_ro, 180)
-        plt.savefig("/home/thomas/neuvisys-analysis/Data/orientations/"+"r_"+str(i))
-        circular_plot("Histogram of a region directions", hist_rd, 360)
-        plt.savefig("/home/thomas/neuvisys-analysis/Data/directions/"+"r_"+str(i))
+    for hist_ro in hists_ro:
+        circular_plot("Histogram of a region orientations", hist_ro, 180, 8)
+        plt.savefig(spinet.path+"figures/complex_orientations/"+"r_"+str(i))
         i += 1

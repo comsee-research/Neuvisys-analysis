@@ -33,7 +33,7 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 0)
+display_network([spinet], 1)
 
 
 #%% Save aedat file as numpy array
@@ -42,25 +42,6 @@ events = load_aedat4("/home/alphat/Desktop/diverse_shapes/shapes_rot_-90.aedat4"
 write_npdat(events, "/home/alphat/Desktop/diverse_shapes/shapes_rot_-90.npy")
 
 
-#%%
-
-events = txt_to_events("/home/alphat/Desktop/circles.txt")
-times = np.diff(events[:, 2])
-imgs = []
-width = np.max(events[:, 0]) + 1
-height = np.max(events[:, 1]) + 1
-
-time = 0
-img = np.zeros((height, width, 3))
-for i in range(events.shape[0]-1):
-    img[events[i, 1], events[i, 0], events[i, 3]] = 1
-    time += times[i]
-    if time > 200000:
-        time = 0
-        plt.figure()
-        plt.imshow(img)
-        img = np.zeros((height, width, 3))
-        
 #%% Build npdat file made of chunck of other files
 
 path = "/home/thomas/Vidéos/driving_dataset/aedat4/"
@@ -107,27 +88,28 @@ basis = spinet.generate_weight_mat()
 #%% Load and create gabor basis
 
 spinet.generate_weight_images()
-create_gabor_basis(spinet, bins=15)
+create_gabor_basis(spinet, nb_ticks=8)
 
 
 #%% Create plots for preferred orientations and directions
 
-oris, dirs, oris_r, dirs_r = hists_preferred_orientations(spinet)
-plot_preferred_orientations(oris, dirs, oris_r, dirs_r)
+oris, oris_r = hists_preferred_orientations(spinet)
+plot_preferred_orientations(spinet, oris, oris_r)
 
 OIs, DIs = [], []
-for orie, dire in zip(oris, dirs):
+for orie in oris:
     orie = orie[:-1]
-    dire = dire[:-1]
+    # dire = dire[:-1]
     OIs.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
-    DIs.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
+    # DIs.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
     
 OIsr, DIsr = [], []
-for orie, dire in zip(oris_r, dirs_r):
+for orie in oris_r:
     orie = orie[:-1]
-    dire = dire[:-1]
+    # dire = dire[:-1]
     OIsr.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
-    DIsr.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
+    # DIsr.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
+
 
 #%% Convert rosbag to aedat
 
@@ -152,13 +134,6 @@ for i in range(1, 2):
     pot_train.append(np.array(spinet.complex_cells[i].potential_train))
 y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
-    
-#%%
-
-for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"):
-    if file.endswith(".json"):
-        os.remove("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"+file)
-
         
 #%% Get potential responses from a rotating stimulus
 
@@ -181,7 +156,7 @@ potentials = np.mean(potentials, axis=-1)
 spikes = np.mean(spikes, axis=-1)
 
 
-#%% Get potential responses from a flashing stimulus
+#%% Get potential responses from a counterphase stimulus
 
 rotation = [0, 45, 90, 135]
 nb_pass = 5
@@ -228,13 +203,14 @@ for i in range(spinet.nb_complex_cells):
 
 #%% Launch
 
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_flip_h.npy", 1)
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_-90.npy", 1)
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_180.npy", 1)
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_flip_hv.npy", 1)
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_flip_v.npy", 1)
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_0.npy", 1)
-launch_neuvisys_multi_pass("/home/alphat//Desktop/diverse_shapes/shapes_rot_90.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_h.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_-90.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_180.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_hv.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_v.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_0.npy", 1)
+launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_90.npy", 1)
+
 
 #%%
 
@@ -254,6 +230,7 @@ orientations = np.array(list(orientations.values()))
 directions = np.array(list(directions.values()))
 
 #%%
+
 import subprocess
 
 for i in range(20):
@@ -264,24 +241,8 @@ for i in range(20):
         subprocess.run(["cp", "/home/thomas/neuvisys-dv/configuration/network/figures/weight_sharing.pdf", "/home/thomas/Bureau/learning_progress/weight_sharing_"+str(i*5+j)+".pdf"])
 
 
-#%%
+#%% Remove json files only
 
-import numpy as np
-import cv2 as cv
-from PIL import Image
-
-# Create a black image
-img = np.zeros((260, 346, 3), np.uint8)
-cnt = 0
-
-for i in range(100):
-    center_x = np.random.randint(0, 346)
-    center_y = np.random.randint(0, 260)
-    intensity = np.random.randint(0, 255)
-    size = np.random.randint(10, 40)
-
-    cv.circle(img, (center_x, center_y), size, (intensity, intensity, intensity), 2)
-
-    image = Image.fromarray(img)
-    image.save("/home/alphat/Desktop/circles/img"+str(i)+".png")
-
+for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"):
+    if file.endswith(".json"):
+        os.remove("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"+file)

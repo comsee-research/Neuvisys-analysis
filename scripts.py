@@ -118,7 +118,7 @@ convert_ros_to_aedat("/home/thomas/Bureau/flash_135.bag", "/home/thomas/Bureau/f
 
 #%% //!!!\\ Delete weights network
 
-spinet.clean_network(simple_cells=1, complex_cells=1)
+spinet.clean_network(simple_cells=0, complex_cells=1)
 
 
 #%% Load various neuron informations
@@ -203,14 +203,15 @@ for i in range(spinet.nb_complex_cells):
 
 #%% Launch
 
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_h.npy", 1)
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_-90.npy", 1)
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_180.npy", 1)
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_hv.npy", 1)
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_v.npy", 1)
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_0.npy", 1)
-launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_90.npy", 1)
-
+for i in range(2):
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_h.npy", 1)
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_-90.npy", 1)
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_180.npy", 1)
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_hv.npy", 1)
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_v.npy", 1)
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_0.npy", 1)
+    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_90.npy", 1)
+spinet = SpikingNetwork(network_path)
 
 #%%
 

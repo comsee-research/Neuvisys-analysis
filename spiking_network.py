@@ -51,7 +51,7 @@ class SpikingNetwork:
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
             for synapse in range(self.neuron1_synapses):
-                weights = np.moveaxis(np.concatenate((neuron.weights[:, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
+                weights = np.moveaxis(np.concatenate((neuron.weights[:, 0, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
                 path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+".png"
                 compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
                 neuron.weight_images.append(path)
@@ -68,15 +68,16 @@ class SpikingNetwork:
     def generate_weight_mat(self):
         weights = []
         if self.weight_sharing:
-            for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
-                weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
+            weights = [neuron.weights for neuron in self.simple_cells[0:self.l1depth]]
+            # for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
+            #     weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
         else:
             weights = [neuron.weights for neuron in self.simple_cells]
 
         basis = np.zeros((200, len(weights)))
 
         for i, weight in enumerate(weights):    
-            basi = (weight[0, 0] - weight[1, 0]).flatten("F")
+            basi = (weight[0, 0, 0] - weight[1, 0, 0]).flatten("F")
             basis[0:100, i] = basi
             basis[100:200, i] = basi
         
@@ -137,7 +138,7 @@ class Neuron:
         self.phase = phase
         self.theta = theta
         self.error = error
-        self.orientation = (self.theta + np.pi / 2) % np.pi
+        self.orientation = self.theta
         
     def unpack_json_config(self, json_path):
         json = load_params(json_path)

@@ -26,18 +26,26 @@ def plot_gabor_image(neuron, est_basis, error, path, count):
 
 def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest):
     cnt = 0
-    indices = np.arange(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth)
+    # indices = np.arange(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth)
     if spinet.weight_sharing:
-        for i, ind in enumerate(indices):
-            for neuron in spinet.simple_cells[ind:ind+spinet.l1depth]:
-                path = dest + str(cnt) + "_" + str(round(error[0, cnt], 2)) + ".png"
-                plot_gabor_image(neuron, est_basis, error, path, cnt)
-                neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
-                cnt += 1
-            for j, neuron in enumerate(spinet.simple_cells[ind+spinet.l1depth:ind+spinet.l1width*spinet.l1height*spinet.l1depth]):
-                c = i * spinet.l1depth + j % spinet.l1depth
-                path = dest + str(c) + "_" + str(round(error[0, c], 2)) + ".png"
-                neuron.add_gabor(path, mu[0, c], sigma[0, c], lambd[0, c], phase[0, c], theta[0, c], error[0, c])
+        for i in range(spinet.l1depth):
+            path = dest + str(i) + "_" + str(round(error[0, i], 2)) + ".png"
+            plot_gabor_image(spinet.simple_cells[i], est_basis, error, path, i)
+        for neuron in spinet.simple_cells:
+            x, y, z = neuron.position
+            path = dest + str(z) + "_" + str(round(error[0, z], 2)) + ".png"
+            neuron.add_gabor(path, mu[0, z], sigma[0, z], lambd[0, z], phase[0, z], theta[0, z], error[0, z])
+         
+        # for i, ind in enumerate(indices):
+        #     for neuron in spinet.simple_cells[ind:ind+spinet.l1depth]:
+        #         path = dest + str(cnt) + "_" + str(round(error[0, cnt], 2)) + ".png"
+        #         plot_gabor_image(neuron, est_basis, error, path, cnt)
+        #         neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
+        #         cnt += 1
+        #     for j, neuron in enumerate(spinet.simple_cells[ind+spinet.l1depth:ind+spinet.l1width*spinet.l1height*spinet.l1depth]):
+        #         c = i * spinet.l1depth + j % spinet.l1depth
+        #         path = dest + str(c) + "_" + str(round(error[0, c], 2)) + ".png"
+        #         neuron.add_gabor(path, mu[0, c], sigma[0, c], lambd[0, c], phase[0, c], theta[0, c], error[0, c])
     else:
         for neuron in spinet.simple_cells:
             neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
@@ -87,8 +95,10 @@ def create_gabor_basis(spinet, nb_ticks):
     error = sio.loadmat(spinet.path+"gabors/data/error.mat")["error_table"]
     est_basis = sio.loadmat(spinet.path+"gabors/data/EstBasis.mat")["EstBasis"]
     
+    theta = (theta + np.pi / 2) % np.pi
+    
     plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, spinet.path+"gabors/figures/")
-    plot_polar_chart(spinet.l1depth, nb_ticks, theta[0], error[0], 5, spinet.path+"gabors/hists/")
+    plot_polar_chart(spinet.l1depth, nb_ticks, theta[0], error[0], 20, spinet.path+"gabors/hists/")
     error_percentage(theta[0], error[0], 20, spinet.path+"gabors/hists/")
     
 def compute_histogram(directions, thet_max, nb_ticks=8, weights=None):
@@ -106,9 +116,8 @@ def circular_plot(title, hist, thet_max, nb_ticks=8):
     ax.set_title(title)
     
     x = list(np.arange(0, (thet_max/180)*np.pi, np.pi/nb_ticks))
-    x.append(0) if thet_max == 360 else x.append(180)
+    x.append(0) if thet_max == 360 else x.append(np.pi)
     ax.plot(x, hist, "r")
-    ax.set_xticks(np.arange(0, (thet_max/180)*np.pi+0.1, np.pi/nb_ticks))
     ax.set_thetamax(thet_max)
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)

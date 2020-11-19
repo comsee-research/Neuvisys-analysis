@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 from natsort import natsorted
 from fpdf import FPDF
-
+from multiprocessing import Pool, Process
 
 def generate_pdf_simple_cell(spinet, layer):
     pdf = FPDF("P", "mm", (11*spinet.l1width, 11*spinet.l1height*spinet.neuron1_synapses))
@@ -81,7 +81,7 @@ def generate_pdf_complex_cell(spinet, layer):
                         
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
-                        path = spinet.path+"images/complex_connections/"+str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        path = "/media/alphat/SSD Games/Thesis/temp/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
                         Image.fromarray(img.astype('uint8')).save(path)
                         
                         pos_x = xc * (11 * spinet.l1width + 10) + (xs - ox) * 11
@@ -125,7 +125,15 @@ def display_network(spinets, pooling=0):
             pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if pooling:
-            for layer in range(spinet.l2depth):
-                pdf = generate_pdf_complex_cell(spinet, layer)
-                pdf.output(spinet.path+"figures/complex_figures/"+str(layer)+".pdf", "F")
-        
+            p = Pool(10)
+            args = [(spinet, x) for x in list(np.arange(spinet.l2depth))]
+            pdfs = p.starmap(generate_pdf_complex_cell, args)
+
+            proc = []
+            for i, pdf in enumerate(pdfs[0:4]):
+                process = Process(target=pdf.output, args=(spinet.path+"figures/complex_figures/"+str(i)+".pdf", "F"))
+                process.start()
+                proc.append(process)
+            for process in proc:
+                process.join()
+

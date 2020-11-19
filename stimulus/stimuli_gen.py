@@ -20,10 +20,12 @@ def counterphase_grating(win, frequency=1/346, orientation=0, phase=0, contrast=
     grat_stim.contrast = contrast
     grat_stim.draw()
 
-def grating_generation():
-    time = 1 # s
-    framerate = 1000 # fps
-    flash_period = 0.03 # s
+def grating_generation(folder, display=False, time=0.2, framerate=1000, flash_period=0.1):
+    """
+    time # s
+    framerate # fps
+    flash_period # s
+    """
     
     x = np.sin(np.linspace(-np.pi/2, np.pi/2, int(flash_period*framerate) // 2))
     flash = (np.hstack((x, x[::-1])) + 1) / 2
@@ -41,9 +43,10 @@ def grating_generation():
         counterphase_grating(win, 58/346, 0, phase, contrast)
             
         win.getMovieFrame(buffer='back')
-        win.flip()
+        if display:
+            win.flip()
    
-    # win.saveMovieFrames(fileName="/home/thomas/Bureau/test/frame.png")
+    win.saveMovieFrames(fileName=folder)
     win.close()
 
 def falling_leaves(nb_circles=1000, framerate=10):

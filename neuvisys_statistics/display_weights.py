@@ -44,7 +44,7 @@ def generate_pdf_layers(spinet, rows, cols, nb_synapses, nb_layers):
     return pdf
 
 
-def generate_pdf_weight_sharing(spinet):
+def generate_pdf_weight_sharing(spinet, camera):
     pdf = FPDF("P", "mm", (11*len(spinet.l1xanchor)*int(np.sqrt(spinet.l1depth)) + (len(spinet.l1xanchor)-1)*10, 11*len(spinet.l1yanchor)*int(np.sqrt(spinet.l1depth)) + (len(spinet.l1yanchor)-1)*10))
     pdf.add_page()
     
@@ -56,7 +56,7 @@ def generate_pdf_weight_sharing(spinet):
             x, y, z = neuron.position
             pos_x = (x / spinet.l1width) * int(np.sqrt(spinet.l1depth)) * 11 + np.where(shift == z)[0][0] * 11 + (x / spinet.l1width) * 10
             pos_y = (y / spinet.l1height) * int(np.sqrt(spinet.l1depth)) * 11 + np.where(shift == z)[1][0] * 11 + (y / spinet.l1height) * 10
-            pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
+            pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 
@@ -115,8 +115,9 @@ def display_network(spinets, pooling=0):
         spinet.generate_weight_images()
                 
         if spinet.weight_sharing:
-            pdf = generate_pdf_weight_sharing(spinet)
-            pdf.output(spinet.path+"figures/weight_sharing.pdf", "F")
+            for i in range(spinet.nb_cameras):
+                pdf = generate_pdf_weight_sharing(spinet, i)
+                pdf.output(spinet.path+"figures/weight_sharing_"+str(i)+".pdf", "F")
         else:
             for layer in range(spinet.l1depth):
                 pdf = generate_pdf_simple_cell(spinet, layer)

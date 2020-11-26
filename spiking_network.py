@@ -11,6 +11,7 @@ import os
 from PIL import Image
 import scipy.io as sio
 import numpy as np
+import itertools
 
 from aedat_tools.aedat_tools import load_params, delete_files
 
@@ -24,21 +25,29 @@ class SpikingNetwork:
     def __init__(self, path):
         self.path = path
         self.unpack_json(path+"configs/network_config.json")
-        
         self.neurons = []
         self.simple_cells = []
         self.complex_cells = []
+        
+        self.sspikes = []
+        self.cspikes = []
+        
         neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("complex", path+"configs/pooling_neuron_config.json", path+"weights/complex_cells/", *paths)
+            neuron = Neuron("complex", path+"configs/complex_cell_config.json", path+"weights/complex_cells/", *paths)
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
+            if neuron.tracking:
+                self.cspikes.append(neuron.spike_train)
         
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
         for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("simple", path+"configs/neuron_config.json", path+"weights/simple_cells/", *paths)
+            neuron = Neuron("simple", path+"configs/simple_cell_config.json", path+"weights/simple_cells/", *paths)
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
+            
+            if neuron.tracking:
+                self.sspikes.append(neuron.spike_train)
                 
         self.nb_neurons = len(self.neurons)
         self.nb_simple_cells = len(self.simple_cells)
@@ -47,14 +56,21 @@ class SpikingNetwork:
         self.layout1 = np.load(path + "weights/layout1.npy")
         # self.layout2 = np.load(path + "weights/layout2.npy")
         
+        if len(self.sspikes) > 0:
+            self.sspikes = np.array(list(itertools.zip_longest(*self.sspikes, fillvalue=0))).T
+            self.sspikes[self.sspikes != 0] -= np.min(self.sspikes[self.sspikes != 0])
+        if len(self.cspikes) > 0:
+            self.cspikes = np.array(list(itertools.zip_longest(*self.cspikes, fillvalue=0))).T
+            self.cspikes[self.cspikes != 0] -= np.min(self.cspikes[self.cspikes != 0])
         
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
             for synapse in range(self.neuron1_synapses):
-                weights = np.moveaxis(np.concatenate((neuron.weights[:, 0, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
-                path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+".png"
-                compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
-                neuron.weight_images.append(path)
+                for camera in range(self.nb_cameras):
+                    weights = np.moveaxis(np.concatenate((neuron.weights[:, camera, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
+                    path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+"_cam"+str(camera)+".png"
+                    compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
+                    neuron.weight_images.append(path)
 
         for i, neuron in enumerate(self.complex_cells):
             for lay in range(self.neuron2_depth):
@@ -103,6 +119,7 @@ class SpikingNetwork:
         self.neuron2_width = json["Neuron2Width"]
         self.neuron2_height = json["Neuron2Height"]
         self.neuron2_depth = json["Neuron2Depth"]
+        self.nb_cameras = json["NbCameras"]
         
     def clean_network(self, simple_cells, complex_cells):
         if simple_cells:
@@ -180,3 +197,4 @@ class Neuron:
         self.spike_train = json["spike_train"]
         self.spiking_rate = json["spiking_rate"]
         self.threshold = json["threshold"]
+        self.inhibition_connections = json["inhibition_connections"]

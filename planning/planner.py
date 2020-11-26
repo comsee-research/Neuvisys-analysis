@@ -14,10 +14,7 @@ import numpy as np
 from scipy.stats.distributions import norm
 
 def launch_spinet(directory, n_iter):
-    network_params = {
-    	"Neuron1Config": ["/media/alphat/SSD Games/Thesis/configuration/network/configs/neuron_config.json"],
-    	"Neuron2Config": ["/media/alphat/SSD Games/Thesis/configuration/network/configs/pooling_neuron_config.json"],
-    
+    network_params = {    
         "NbCameras": [1],
     	"L1Width": [4],
     	"L1Height": [4],
@@ -38,7 +35,8 @@ def launch_spinet(directory, n_iter):
         "Neuron2Depth": [100],
         "WeightSharing": [True],
         "SaveData": [True],
-        "SaveDataLocation": ["/media/alphat/SSD Games/Thesis/configuration/network/configuration/network/"]
+        "NetworkPath": ["/media/alphat/SSD Games/Thesis/configuration/network/configuration/network/"],
+        "Display": [False]
     }
     
     neuron_params = {
@@ -97,16 +95,16 @@ def generate_networks(directory, network_params, neuron_params, pooling_neuron_p
         os.mkdir(directory+"network_"+str(i)+"/images/simple_cells")
         os.mkdir(directory+"network_"+str(i)+"/images/complex_cells")
 
-        network_params["Neuron1Config"] = [directory+"network_"+str(i)+"/configs/neuron_config.json"]
-        network_params["Neuron2Config"] = [directory+"network_"+str(i)+"/configs/pooling_neuron_config.json"]
+        network_params["Neuron1Config"] = [directory+"network_"+str(i)+"/configs/simple_cell_config.json"]
+        network_params["Neuron2Config"] = [directory+"network_"+str(i)+"/configs/complex_cell_config.json"]
         network_params["SaveDataLocation"] = [directory+"network_"+str(i)+"/"]
         with open(directory+"network_"+str(i)+"/configs/network_config.json", "w") as file:
             json.dump(list(ParameterSampler(network_params, 1))[0], file)
         
-        with open(directory+"network_"+str(i)+"/configs/neuron_config.json", "w") as file:
+        with open(directory+"network_"+str(i)+"/configs/simple_cell_config.json", "w") as file:
             json.dump(list(ParameterSampler(neuron_params, 1))[0], file)
             
-        with open(directory+"network_"+str(i)+"/configs/pooling_neuron_config.json", "w") as file:
+        with open(directory+"network_"+str(i)+"/configs/complex_cell_config.json", "w") as file:
             json.dump(list(ParameterSampler(pooling_neuron_params, 1))[0], file)
 
 def execute(cmd):
@@ -124,4 +122,8 @@ def launch_neuvisys_rotation(network_path, event_file, rotation):
 
 def launch_neuvisys_multi_pass(network_path, event_file, nb_pass):
     for path in execute(["/home/alphat/neuvisys-dv/cmake-build-release/event-analysis", network_path, "multi-pass", event_file, str(nb_pass)]):
+        print(path, end="")
+
+def launch_neuvisys_stereo(network_path, left_file, right_file, nb_pass):
+    for path in execute(["/home/alphat/neuvisys-dv/cmake-build-release/event-analysis", network_path, "stereo", left_file, right_file, str(nb_pass)]):
         print(path, end="")

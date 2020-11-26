@@ -119,26 +119,6 @@ for orie in oris_r:
     OIsr.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
     # DIsr.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
    
-
-#%%
-
-spinet = SpikingNetwork("/media/alphat/SSD Games/Thesis/network/")
-spikes = {}
-
-for i in range(len(spinet.l1xanchor) * spinet.l1width):
-    for j in range(len(spinet.l1yanchor) * spinet.l1height):
-        for k in range(spinet.l1depth):
-            spikes[(i, j, k)] = spinet.simple_cells[spinet.layout1[i, j, k]].spike_train
-            
-#%%
-
-c_spikes = {}
-
-for i in range(len(spinet.l2xanchor) * spinet.l2width):
-    for j in range(len(spinet.l2yanchor) * spinet.l2height):
-        for k in range(spinet.l2depth):
-            ind = k + j * 3 + i * 3
-            c_spikes[(i, j, k)] = spinet.complex_cells[ind].spike_train
             
 #%%
 
@@ -152,25 +132,3 @@ for i in range(len(spinet.l1xanchor) * spinet.l1width):
         l2.append(np.mean(l))
         l3.append(np.std(l))
         
-#%%
-
-plt.figure()
-plots = []
-for i in range(4):
-    for j in range(4):
-        for k in range(144):
-            plots.append(spikes[i, j, k])
-            
-        colors1 = ['C{}'.format(i) for i in range(144)]
-        plt.eventplot(plots, colors=colors1)
-        plots = []
-
-#%%
-
-plots = []
-for i in range(16):
-    plots.append(c_spikes[2, 2, i])
-colors1 = ['C{}'.format(i) for i in range(16)]
-
-plt.figure()
-plt.eventplot(plots, colors=colors1)

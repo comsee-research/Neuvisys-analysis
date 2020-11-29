@@ -118,17 +118,44 @@ for orie in oris_r:
     # dire = dire[:-1]
     OIsr.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
     # DIsr.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
-   
-            
+
+        
+#%% Spike rate
+
+network_path = "/home/alphat/neuvisys-dv/configuration/network/"
+network_path = "/home/alphat/neuvisys-dv/configuration/network/"
+time = np.max(spinet.sspikes)
+
+srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
+print("mean:", np.mean(srates))
+print("std:", np.std(srates))
+
+#%% cross corr
+
+indices = []
+for i in range(4):
+    for j in range(4):
+        for k in range(100):
+           indices.append(spinet.layout1[i, j, k])
+           
+test = spinet.sspikes[indices, :]
+
+
 #%%
 
-l2 = []
-l3 = []
-for i in range(len(spinet.l1xanchor) * spinet.l1width):
-    for j in range(len(spinet.l1yanchor) * spinet.l1height):
-        l = []
-        for k in range(spinet.l1depth):
-            l.append(len(spikes[(i, j, k)]))
-        l2.append(np.mean(l))
-        l3.append(np.std(l))
-        
+bin_size = 100000
+nb_bins = 19
+
+
+strain_ref = test[10]
+
+for i in range(100):
+    strain_tar = test[i+100]
+    
+    a = np.zeros(nb_bins-1)
+    for tmstp in strain_ref[strain_ref != 0]:
+        bins = np.linspace(tmstp-bin_size, tmstp+bin_size, nb_bins)
+        a += np.histogram(strain_tar, bins)[0]
+
+    plt.figure()
+    plt.plot(a)

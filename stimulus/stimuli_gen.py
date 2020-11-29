@@ -65,3 +65,22 @@ def falling_leaves(nb_circles=1000, framerate=10):
         for frame in range(framerate):
             image.save("/home/alphat/Desktop/circles/img"+str(cnt)+".png")
             cnt += 1
+            
+def moving_lines(time=10, framerate=1000, speed=200):
+    cnt = 0
+    positions = np.linspace(0, 350, 11, dtype=np.uint16)
+    
+    for frame in range(int(time*framerate)):
+        img = np.full((260, 346, 3), 0, np.uint8)
+        
+        shift = int(frame * (speed / framerate))
+        for i in positions:
+            pos = (i + shift) % 350
+            # cv.line(img, (pos, 0), (pos, 260), (0, 0, 0), 4)
+            cv.line(img, (pos+5, 0), (pos+5, 260), (255, 255, 255), 4)
+            
+        image = Image.fromarray(img)
+        image.save("/home/alphat/Desktop/lines/img"+str(cnt)+".png")
+        cnt += 1
+        
+moving_lines()

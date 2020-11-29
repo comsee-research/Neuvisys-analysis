@@ -81,7 +81,7 @@ def launch_gui(spinet):
            "layer2": 0,
            "save": False}
     
-    directory = "/home/thomas/neuvisys-dv/configuration/gui.json"
+    directory = "/home/alphat/neuvisys-dv/configuration/gui.json"
     x = 0
     y = 0
     index = 0

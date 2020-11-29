@@ -26,7 +26,7 @@ class Pix2Eve:
         # self.swin = swin
         self.n_max = n_max
         self.adapt_thresh_coef_shift = adapt_thresh_coef_shift
-        self.event_file = "/home/alphat/Desktop/cirlces.np"
+        self.event_file = "/home/alphat/Desktop/events.npy"
         
     def write_event(self, events, delta_B, thresh, frame_id, x, y, polarity):
         moddiff = int(delta_B / thresh)
@@ -72,6 +72,7 @@ class Pix2Eve:
             if (100 * frame_id / len(frames) % 5) == 0:
                 print(str(100 * frame_id / len(frames)) + "%...")
 
+        print("Finished conversion")
         return np.array(events, dtype=np.float64)
 
 # class Pix2Eve:
@@ -134,8 +135,13 @@ class Pix2Eve:
 
 #         return np.array(events)
 
-pix2eve = Pix2Eve("/home/alphat/Desktop/artificial_videos/circles/", time_gap=10e6 * 1/1000, log_threshold=0, map_threshold=0.4, n_max=5, adapt_thresh_coef_shift=0.05)
+
+framerate = 1000
+time_gap = 1e6 * 1/framerate
+
+pix2eve = Pix2Eve("/home/alphat/Desktop/lines/", time_gap=time_gap, log_threshold=0, map_threshold=0.4, n_max=5, adapt_thresh_coef_shift=0.05)
 events = pix2eve.run()
+
 events = events[events[:, 0].argsort()]
 
 imgs = []
@@ -146,14 +152,14 @@ cnt = 0
 time = 0
 img = np.zeros((height, width, 3))
 
-gap = 10000
+gap = 1000
 for time in range(int(events[0, 0]), int(events[-1, 0]), gap):
     for event in events[(events[:, 0] >= time) & (events[:, 0] < time + gap)]:
         img[int(event[2]), int(event[1]), int(event[3])] = 1
     
     time += gap
     img = img.astype(np.uint8) * 255
-    Image.fromarray(img).save("/home/alphat/Desktop/artificial_videos/circles_events/img"+str(cnt)+".png")
+    Image.fromarray(img).save("/home/alphat/Desktop/artificial_videos/img"+str(cnt)+".png")
     cnt += 1
     img = np.zeros((height, width, 3))
 

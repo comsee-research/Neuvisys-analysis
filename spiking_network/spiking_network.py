@@ -18,7 +18,11 @@ from aedat_tools.aedat_tools import load_params, delete_files
 def compress_weight(weights, path):
     img = np.array(255 * (weights / weights.max()), dtype=np.uint8)
     img = Image.fromarray(img).save(path)
-
+    
+def reshape_weights(weights, width, height):
+    weights = np.concatenate((weights, np.zeros((1, width, height))), axis=0)
+    return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
+    
 class SpikingNetwork:
     """Spiking Neural Network class"""
     
@@ -56,10 +60,10 @@ class SpikingNetwork:
         self.layout1 = np.load(path + "weights/layout1.npy")
         # self.layout2 = np.load(path + "weights/layout2.npy")
         
-        if len(self.sspikes) > 0:
+        if np.array(self.sspikes).size > 0:
             self.sspikes = np.array(list(itertools.zip_longest(*self.sspikes, fillvalue=0))).T
             self.sspikes[self.sspikes != 0] -= np.min(self.sspikes[self.sspikes != 0])
-        if len(self.cspikes) > 0:
+        if np.array(self.cspikes).size > 0:
             self.cspikes = np.array(list(itertools.zip_longest(*self.cspikes, fillvalue=0))).T
             self.cspikes[self.cspikes != 0] -= np.min(self.cspikes[self.cspikes != 0])
         
@@ -67,9 +71,9 @@ class SpikingNetwork:
         for i, neuron in enumerate(self.simple_cells):
             for synapse in range(self.neuron1_synapses):
                 for camera in range(self.nb_cameras):
-                    weights = np.moveaxis(np.concatenate((neuron.weights[:, camera, synapse], np.zeros((1, self.neuron1_width, self.neuron1_height))), axis=0), 0, 2)
+                    weights = reshape_weights(neuron.weights[:, camera, synapse], self.neuron1_width, self.neuron1_height)
                     path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+"_cam"+str(camera)+".png"
-                    compress_weight(np.kron(weights, np.ones((3, 3, 1))), path)
+                    compress_weight(weights, path)
                     neuron.weight_images.append(path)
 
         for i, neuron in enumerate(self.complex_cells):
@@ -121,15 +125,28 @@ class SpikingNetwork:
         self.neuron2_depth = json["Neuron2Depth"]
         self.nb_cameras = json["NbCameras"]
         
-    def clean_network(self, simple_cells, complex_cells):
-        if simple_cells:
-            delete_files(self.path+"weights/simple_cells/")
-        if complex_cells:
-            delete_files(self.path+"weights/complex_cells/")
-        delete_files(self.path+"images/complex_connections/")
-        delete_files(self.path+"images/simple_cells/")
-        delete_files(self.path+"images/complex_cells/")
+    def clean_network(self, simple_cells, complex_cells, json_only):
+        if json_only:
+            if simple_cells:
+                for file in os.listdir(self.path+"weights/simple_cells/"):
+                    if file.endswith(".json"):
+                        os.remove(self.path+"weights/simple_cells/"+file)
+            if complex_cells:
+                for file in os.listdir(self.path+"weights/complex_cells/"):
+                    if file.endswith(".json"):
+                        os.remove(self.path+"weights/complex_cells/"+file)
+        else:
+            if simple_cells:
+                delete_files(self.path+"weights/simple_cells/")
+            if complex_cells:
+                delete_files(self.path+"weights/complex_cells/")
+            delete_files(self.path+"images/complex_connections/")
+            delete_files(self.path+"images/simple_cells/")
+            delete_files(self.path+"images/complex_cells/")
         
+    def save_complex_directions(self, spike_vector):
+        self.directions = spike_vector
+        self.orientations = spike_vector[0:8] + spike_vector[8:16]
 
 class Neuron:
     """Spiking Neuron class"""
@@ -161,22 +178,22 @@ class Neuron:
         json = load_params(json_path)
         if self.type == "simple":
             self.min_thresh = json["MIN_THRESH"]
-            self.delta_vd = json["DELTA_VD"]
             self.delta_sra = json["DELTA_SRA"]
-            self.delta_sr = json["DELTA_SR"]
-            self.delta_rp = json["DELTA_RP"]
+            self.delta_sr = json["ETA_SR"]
             self.tau_sra = json["TAU_SRA"]
-            self.tau_rp = json["TAU_RP"]
-            self.tau_ltd= json["TAU_LTD"]
             self.target_spike_rate = json["TARGET_SPIKE_RATE"]
             self.synapse_delay = json["SYNAPSE_DELAY"]
             
         self.vthresh = json["VTHRESH"]
         self.vreset = json["VRESET"]
+        self.delta_rp = json["DELTA_RP"]
+        self.tau_rp = json["TAU_RP"]
         self.tau_m = json["TAU_M"]
         self.tau_ltp = json["TAU_LTP"]
+        self.tau_ltd= json["TAU_LTD"]
         self.norm_factor = json["NORM_FACTOR"]
-        self.delta_vp = json["DELTA_VP"]
+        self.delta_vp = json["ETA_LTP"]
+        self.delta_vd = json["ETA_LTD"]
         self.delta_inh = json["DELTA_INH"]
         self.decay_factor = json["DECAY_FACTOR"]
         self.stdp_learning = json["STDP_LEARNING"]

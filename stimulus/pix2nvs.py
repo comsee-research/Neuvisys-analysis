@@ -139,10 +139,11 @@ class Pix2Eve:
 framerate = 1000
 time_gap = 1e6 * 1/framerate
 
-pix2eve = Pix2Eve("/home/alphat/Desktop/lines/", time_gap=time_gap, log_threshold=0, map_threshold=0.4, n_max=5, adapt_thresh_coef_shift=0.05)
+pix2eve = Pix2Eve("/home/alphat/Desktop/stimulus/disparity_bars/right/", time_gap=time_gap, log_threshold=0, map_threshold=0.4, n_max=5, adapt_thresh_coef_shift=0.05)
 events = pix2eve.run()
-
 events = events[events[:, 0].argsort()]
+
+np.save("/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bar_right.npy", events)
 
 imgs = []
 width = int(np.max(events[:, 1])) + 1
@@ -159,7 +160,7 @@ for time in range(int(events[0, 0]), int(events[-1, 0]), gap):
     
     time += gap
     img = img.astype(np.uint8) * 255
-    Image.fromarray(img).save("/home/alphat/Desktop/artificial_videos/img"+str(cnt)+".png")
+    Image.fromarray(img).save("/home/alphat/Desktop/artificial_videos/disparity_bars_right/img"+str(cnt)+".png")
     cnt += 1
     img = np.zeros((height, width, 3))
 

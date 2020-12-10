@@ -107,6 +107,19 @@ def generate_networks(directory, network_params, neuron_params, pooling_neuron_p
         with open(directory+"network_"+str(i)+"/configs/complex_cell_config.json", "w") as file:
             json.dump(list(ParameterSampler(pooling_neuron_params, 1))[0], file)
 
+def toggle_learning(spinet, switch):
+    with open(spinet.path+"configs/complex_cell_config.json", "r") as file:
+        conf = json.load(file)
+    conf["STDP_LEARNING"] = switch
+    with open(spinet.path+"configs/complex_cell_config.json", "w") as file:
+        json.dump(conf, file)
+        
+    with open(spinet.path+"configs/simple_cell_config.json", "r") as file:
+        conf = json.load(file)
+    conf["STDP_LEARNING"] = switch
+    with open(spinet.path+"configs/simple_cell_config.json", "w") as file:
+        json.dump(conf, file)
+
 def execute(cmd):
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
     for stdout_line in iter(popen.stdout.readline, ""):

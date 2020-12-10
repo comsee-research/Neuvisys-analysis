@@ -13,8 +13,9 @@ from PIL import Image
 from natsort import natsorted
 from fpdf import FPDF
 from multiprocessing import Pool, Process
+import matplotlib.pyplot as plt
 
-def generate_pdf_simple_cell(spinet, layer):
+def generate_pdf_simple_cell(spinet, layer, camera):
     pdf = FPDF("P", "mm", (11*spinet.l1width, 11*spinet.l1height*spinet.neuron1_synapses))
     pdf.add_page()
     
@@ -26,7 +27,7 @@ def generate_pdf_simple_cell(spinet, layer):
             for i in range(spinet.neuron1_synapses):
                 pos_x = x * 11
                 pos_y = y * spinet.neuron1_synapses * 11 + i * 11
-                pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
+                pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 
@@ -109,6 +110,60 @@ def load_array_param(spinet, param):
     
     return simple_array, complex_array
 
+def complex_cells_directions(spinet, rotations, spike_array):
+    spike_vector = []
+    for rot in range(rotations.size):
+        spike_vector.append(np.count_nonzero(spike_array[rot], axis=1))
+    spike_vector = np.array(spike_vector)
+    
+    spinet.save_complex_directions(spike_vector)
+    np.save(spinet.path+"gabors/data/direction_response", spike_vector)
+    
+    plot_directions(spinet, spinet.directions, rotations)
+    plot_orientations(spinet, spinet.orientations, rotations[0:8])
+
+def plot_directions(spinet, directions, rotations):
+    temp = np.zeros((directions.shape[0]+1, directions.shape[1]))
+    temp[:-1, :] = directions
+    temp[-1, :] = directions[0, :]
+    angles = np.append(rotations, 0) * np.pi / 180
+    spike_vector = temp
+    
+    for i in range(spike_vector.shape[1]):
+        mean = mean_response(spike_vector[:-1, i], angles[:-1])
+        
+        plt.figure()
+        ax = plt.subplot(111, polar=True)
+        ax.set_title("Cell"+str(i))
+        ax.plot(angles, spike_vector[:, i], "r")
+        ax.scatter(np.angle(mean), np.abs(mean))
+        ax.set_thetamax(360)
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+        plt.savefig(spinet.path+"figures/complex_directions/"+str(i))
+
+def plot_orientations(spinet, orientations, rotations):
+    temp = np.zeros((orientations.shape[0]+1, orientations.shape[1]))
+    temp[:-1, :] = orientations
+    temp[-1, :] = orientations[0, :]
+    angles = np.append(rotations, 180) * np.pi / 180
+    spike_vector = temp
+    
+    for i in range(spike_vector.shape[1]):
+        mean = mean_response(spike_vector[:-1, i], angles[:-1])
+        
+        plt.figure()
+        ax = plt.subplot(111, polar=True)
+        ax.set_title("Cell"+str(i))
+        ax.plot(angles, spike_vector[:, i], "r")
+        ax.scatter(np.angle(mean), np.abs(mean))
+        ax.set_thetamax(180)
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+        plt.savefig(spinet.path+"figures/complex_orientations/"+str(i))
+        
+def mean_response(directions, angles):
+    return np.mean(directions * np.exp(1j * angles))
 
 def display_network(spinets, pooling=0):
     for spinet in spinets:
@@ -117,13 +172,14 @@ def display_network(spinets, pooling=0):
         if spinet.weight_sharing:
             for i in range(spinet.nb_cameras):
                 pdf = generate_pdf_weight_sharing(spinet, i)
-                pdf.output(spinet.path+"figures/weight_sharing_"+str(i)+".pdf", "F")
+                pdf.output(spinet.path+"figures/simple_figures/weight_sharing_"+str(i)+".pdf", "F")
         else:
-            for layer in range(spinet.l1depth):
-                pdf = generate_pdf_simple_cell(spinet, layer)
-                pdf.output(spinet.path+"figures/"+str(layer)+".pdf", "F")
-            pdf = generate_pdf_layers(spinet, spinet.l1height, spinet.l1width, spinet.neuron1_synapses, spinet.l1depth)
-            pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
+            for i in range(spinet.nb_cameras):
+                for layer in range(spinet.l1depth):
+                    pdf = generate_pdf_simple_cell(spinet, layer, i)
+                    pdf.output(spinet.path+"figures/simple_figures/"+str(layer)+"_"+str(i)+".pdf", "F")
+            # pdf = generate_pdf_layers(spinet, spinet.l1height, spinet.l1width, spinet.neuron1_synapses, spinet.l1depth)
+            # pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if pooling:
             p = Pool(10)

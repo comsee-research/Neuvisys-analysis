@@ -12,12 +12,15 @@ os.chdir("/home/alphat/neuvisys-analysis")
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from aedat_tools.aedat_tools import txt_to_events, build_mixed_file, remove_blank_space, write_npdat, write_aedat2_file, load_aedat4, convert_ros_to_aedat, concatenate_files
-from spiking_network import SpikingNetwork
-from neuvisys_statistics.display_weights import display_network, load_array_param
-from planning.planner import launch_spinet, launch_neuvisys_rotation, launch_neuvisys_multi_pass, launch_neuvisys_stereo
-from gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
-from gui import launch_gui
+
+from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, convert_ros_to_aedat, concatenate_files
+from graphical_interface.gui import launch_gui
+
+from spiking_network.spiking_network import SpikingNetwork
+from spiking_network.display import display_network, load_array_param, complex_cells_directions
+from spiking_network.network_statistics.network_statistics import spike_plots, direction_norm_length, orientation_norm_length
+from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
+from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
 # network_path = "/media/alphat/SSD Games/Thesis/Networks/network/"
 network_path = "/home/alphat/neuvisys-dv/configuration/network/"
@@ -35,6 +38,11 @@ launch_gui(spinet)
 #%% Display weights
 
 display_network([spinet], 0)
+
+
+#%% //!!!\\ Delete weights network
+
+spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 
 
 #%% Save aedat file as numpy array
@@ -103,11 +111,6 @@ plot_preferred_orientations(spinet, oris, oris_r)
 convert_ros_to_aedat("/home/thomas/Bureau/flash_135.bag", "/home/thomas/Bureau/flash_135.aedat", 346, 260)
 
 
-#%% //!!!\\ Delete weights network
-
-spinet.clean_network(simple_cells=1, complex_cells=1)
-
-
 #%% Load various neuron informations
 
 simpa_decay, compa_decay = load_array_param(spinet, "learning_decay")
@@ -124,25 +127,59 @@ y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
 #%% Launch
 
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_h.npy", 1)
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_-90.npy", 1)
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_180.npy", 1)
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_hv.npy", 1)
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_flip_v.npy", 1)
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_0.npy", 1)
-# launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/diverse_shapes/shapes_rot_90.npy", 1)
+# launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shape_hovering.npy", 30)
 
-# network_path = "/media/alphat/SSD Games/Thesis/Networks/network/"
-launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shape_hovering.npy", 30)
+for i in range(3):
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_h.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_-90.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_180.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_hv.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_v.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_0.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_90.npy", 2)
+
 spinet = SpikingNetwork(network_path)
+display_network([spinet], 0)
+toggle_learning(spinet, False)
+
+# Plot complex cells response directions
+
+sspikes = []
+cspikes = []
+
+rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
+
+for rot in rotations:
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npy", 5)
+    spinet = SpikingNetwork(network_path)
+    sspikes.append(spinet.sspikes)
+    cspikes.append(spinet.cspikes)
+    
+complex_cells_directions(spinet, rotations, cspikes)
+
+    
+#%%
+
+angles = np.pi * rotations / 180
+
+dirs = []
+for i in range(144):
+    dirs.append(direction_norm_length(spinet.directions[:, i], angles))
+    
+oris = []
+for i in range(144):
+    oris.append(orientation_norm_length(spinet.orientations[:, i], angles[0:8]))
 
 
 #%% launch spinet with stereo setup
 
-network_path = "/media/alphat/SSD Games/Thesis/Networks/network/"
-launch_neuvisys_stereo(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/left.npy", "/media/alphat/SSD Games/Thesis/videos/right.npy", 3)
+network_path = "/home/alphat/neuvisys-dv/configuration/network/"
+launch_neuvisys_stereo(network_path+"configs/network_config.json",
+                       "/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bars/disparity_bar_left.npy",
+                       "/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bars/disparity_bar_right.npy", 200)
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
+
 
 #%% Launch training of multiple networks
 
@@ -156,46 +193,6 @@ for i in range(0, n_iter):
     basis = spinet.generate_weight_mat()
 
 
-#%% Remove json files only
-
-for file in os.listdir("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"):
-    if file.endswith(".json"):
-        os.remove("/home/thomas/neuvisys-dv/configuration/network/weights/simple_cells/"+file)
-        
-#%%
-
-network_path = "/media/alphat/SSD Games/Thesis/configuration/network_1/"
-spinet = SpikingNetwork(network_path)
-spinet.generate_weight_images()
-create_gabor_basis(spinet, nb_ticks=8)
-oris, oris_r = hists_preferred_orientations(spinet)
-plot_preferred_orientations(spinet, oris, oris_r)
-
-
 #%% Spike plots
 
-plt.figure()
-plt.xlabel("time (µs)")
-plt.ylabel("neurons")
-
-indices = spinet.simple_cells[0].inhibition_connections
-colors1 = ['C{}'.format(i) for i in range(len(indices)+1)]
-
-eveplot = []
-for i in indices + [0]:
-    eveplot.append(spinet.sspikes[i][spinet.sspikes[i] != 0])
-    
-plt.eventplot(eveplot, colors=colors1)
-
-plt.figure()
-plt.xlabel("time (µs)")
-plt.ylabel("neurons")
-
-indices = spinet.complex_cells[0].inhibition_connections
-colors1 = ['C{}'.format(i) for i in range(len(indices)+1)]
-
-eveplot = []
-for i in indices + [0]:
-    eveplot.append(spinet.cspikes[i][spinet.cspikes[i] != 0])
-    
-plt.eventplot(eveplot, colors=colors1)
+spike_plots(spinet)

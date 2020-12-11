@@ -144,7 +144,13 @@ class SpikingNetwork:
             delete_files(self.path+"images/simple_cells/")
             delete_files(self.path+"images/complex_cells/")
         
-    def save_complex_directions(self, spike_vector):
+    def save_complex_directions(self, spikes, rotations):
+        spike_vector = []
+        for rot in range(rotations.size):
+            spike_vector.append(np.count_nonzero(spikes[rot], axis=1))
+        spike_vector = np.array(spike_vector)
+        
+        np.save(self.path+"gabors/data/direction_response", spike_vector)
         self.directions = spike_vector
         self.orientations = spike_vector[0:8] + spike_vector[8:16]
 

@@ -124,24 +124,8 @@ def orientation_norm_length(spike_vector, angles):
 def direction_norm_length(spike_vector, angles):
     return np.abs(np.sum(spike_vector * np.exp(1j*angles)) / np.sum(spike_vector))
     
-def direction_selectivity(dirs, dirs_r):
-    DIs = []
-    for dire in dirs:
-        dire = dire[:-1]
-        DIs.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
-
-    DIsr = []
-    for dire in dirs_r:
-        dire = dire[:-1]
-        DIsr.append((np.max(dire) - dire[(np.argmax(dire)+8)%16]) / np.max(dire))
+def direction_selectivity(spike_vector):
+    return (np.max(spike_vector) - spike_vector[(np.argmax(spike_vector)+8)%16]) / np.max(spike_vector)
         
-def orientation_selectivity(oris, oris_r):
-    OIs = []
-    for orie in oris:
-        orie = orie[:-1]
-        OIs.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
-
-    OIsr = []
-    for orie in oris_r:
-        orie = orie[:-1]
-        OIsr.append((np.max(orie) - orie[(np.argmax(orie)+4)%8]) / np.max(orie))
+def orientation_selectivity(spike_vector):
+    return (np.max(spike_vector) - spike_vector[(np.argmax(spike_vector)+4)%8]) / np.max(spike_vector)

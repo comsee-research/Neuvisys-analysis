@@ -18,7 +18,7 @@ from graphical_interface.gui import launch_gui
 
 from spiking_network.spiking_network import SpikingNetwork
 from spiking_network.display import display_network, load_array_param, complex_cells_directions
-from spiking_network.network_statistics.network_statistics import spike_plots, direction_norm_length, orientation_norm_length
+from spiking_network.network_statistics.network_statistics import spike_plots, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity
 from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
@@ -154,21 +154,25 @@ for rot in rotations:
     spinet = SpikingNetwork(network_path)
     sspikes.append(spinet.sspikes)
     cspikes.append(spinet.cspikes)
-    
-complex_cells_directions(spinet, rotations, cspikes)
+spinet.save_complex_directions(cspikes, rotations)
 
     
 #%%
 
+complex_cells_directions(spinet, rotations)
+
 angles = np.pi * rotations / 180
 
 dirs = []
+dis = []
 for i in range(144):
     dirs.append(direction_norm_length(spinet.directions[:, i], angles))
-    
+    dis.append(direction_selectivity(spinet.directions[:, i]))
 oris = []
+ois = []
 for i in range(144):
     oris.append(orientation_norm_length(spinet.orientations[:, i], angles[0:8]))
+    ois.append(orientation_selectivity(spinet.orientations[:, i]))
 
 
 #%% launch spinet with stereo setup

@@ -110,15 +110,7 @@ def load_array_param(spinet, param):
     
     return simple_array, complex_array
 
-def complex_cells_directions(spinet, rotations, spike_array):
-    spike_vector = []
-    for rot in range(rotations.size):
-        spike_vector.append(np.count_nonzero(spike_array[rot], axis=1))
-    spike_vector = np.array(spike_vector)
-    
-    spinet.save_complex_directions(spike_vector)
-    np.save(spinet.path+"gabors/data/direction_response", spike_vector)
-    
+def complex_cells_directions(spinet, rotations):    
     plot_directions(spinet, spinet.directions, rotations)
     plot_orientations(spinet, spinet.orientations, rotations[0:8])
 
@@ -136,7 +128,7 @@ def plot_directions(spinet, directions, rotations):
         ax = plt.subplot(111, polar=True)
         ax.set_title("Cell"+str(i))
         ax.plot(angles, spike_vector[:, i], "r")
-        ax.scatter(np.angle(mean), np.abs(mean))
+        ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.015, head_width=1, head_length=1, length_includes_head=True, edgecolor='black', facecolor='black', lw=2, zorder=5)
         ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
@@ -156,7 +148,7 @@ def plot_orientations(spinet, orientations, rotations):
         ax = plt.subplot(111, polar=True)
         ax.set_title("Cell"+str(i))
         ax.plot(angles, spike_vector[:, i], "r")
-        ax.scatter(np.angle(mean), np.abs(mean))
+        ax.arrow(np.angle(mean), 0, 0, np.abs(mean), width=0.015, head_width=1, head_length=1, length_includes_head=True, edgecolor='black', facecolor='black', lw=2, zorder=5)
         ax.set_thetamax(180)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)

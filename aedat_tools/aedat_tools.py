@@ -34,6 +34,12 @@ def load_aedat4(file_path):
         events = np.hstack([packet for packet in f['events'].numpy()])
     return events
 
+def load_aedat4_stereo(file_path):
+    with AedatFile(file_path) as f:
+        events1 = np.hstack([packet for packet in f['events'].numpy()])
+        events2 = np.hstack([packet for packet in f['events_1'].numpy()])
+    return events1, events2
+
 def load_aedat(file_path):
     with LegacyAedatFile(file_path) as f:
         for e in f:

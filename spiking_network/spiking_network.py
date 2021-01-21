@@ -152,7 +152,7 @@ class SpikingNetwork:
         
         np.save(self.path+"gabors/data/direction_response", spike_vector)
         self.directions = spike_vector
-        self.orientations = spike_vector[0:8] + spike_vector[8:16]
+        self.orientations = self.directions[0:8] + self.directions[8:16]
 
 class Neuron:
     """Spiking Neuron class"""

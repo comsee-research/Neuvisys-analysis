@@ -13,7 +13,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, convert_ros_to_aedat, concatenate_files
+from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, load_aedat4_stereo, convert_ros_to_aedat, concatenate_files
 from graphical_interface.gui import launch_gui
 
 from spiking_network.spiking_network import SpikingNetwork
@@ -47,8 +47,10 @@ spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 
 #%% Save aedat file as numpy array
 
-events = load_aedat4("/media/alphat/SSD Games/Thesis/videos/left.aedat4")
-write_npdat(events, "/media/alphat/SSD Games/Thesis/videos/left.npy")
+# events = load_aedat4("/home/alphat/Desktop/stereo_squares.aedat4")
+events1, events2 = load_aedat4_stereo("/home/alphat/Desktop/stereo_squares.aedat4")
+write_npdat(events1, "/home/alphat/Desktop/squares_left.npy")
+write_npdat(events2, "/home/alphat/Desktop/squares_right.npy")
 
 
 #%% Build npdat file made of chunck of other files
@@ -140,15 +142,18 @@ for i in range(3):
 
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
+
+
+#% Toggle learning
+
 toggle_learning(spinet, False)
 
-# Plot complex cells response directions
+
+#% Complex response to moving bars
 
 sspikes = []
 cspikes = []
-
 rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
-
 for rot in rotations:
     launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npy", 5)
     spinet = SpikingNetwork(network_path)
@@ -157,7 +162,7 @@ for rot in rotations:
 spinet.save_complex_directions(cspikes, rotations)
 
     
-#%%
+#%
 
 complex_cells_directions(spinet, rotations)
 
@@ -179,8 +184,8 @@ for i in range(144):
 
 network_path = "/home/alphat/neuvisys-dv/configuration/network/"
 launch_neuvisys_stereo(network_path+"configs/network_config.json",
-                       "/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bars/disparity_bar_left.npy",
-                       "/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bars/disparity_bar_right.npy", 200)
+                       "/home/alphat/Desktop/squares_right.npy",
+                       "/home/alphat/Desktop/squares_left.npy", 3)
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
 

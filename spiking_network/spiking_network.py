@@ -66,6 +66,10 @@ class SpikingNetwork:
         if np.array(self.cspikes).size > 0:
             self.cspikes = np.array(list(itertools.zip_longest(*self.cspikes, fillvalue=0))).T
             self.cspikes[self.cspikes != 0] -= np.min(self.cspikes[self.cspikes != 0])
+            
+        if os.path.exists(self.path+"gabors/data/direction_response.npy"):
+            self.directions = np.load(self.path+"gabors/data/direction_response.npy")
+            self.orientations = self.directions[0:8] + self.directions[8:16]
         
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):

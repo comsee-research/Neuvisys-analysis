@@ -14,6 +14,7 @@ import numpy as np
 import random
 import rosbag
 from bitarray import bitarray
+from PIL import Image
 
 def delete_files(path):
     for file in os.scandir(path):
@@ -55,15 +56,24 @@ def txt_to_events(file_path):
     events = events[events[:, 2].argsort()]
     return events
 
+def h5py_to_npy(events):
+    npy_events = np.zeros(events.shape[0], dtype=([("timestamp", "i8"), ("x", "i8"), ("y", "i8"), ("polarity", "i1")]))
+    npy_events["timestamp"] = np.array(1e7 * events[:, 2], dtype="i8")
+    npy_events["x"] = np.array(events[:, 0], dtype="i8")
+    npy_events["y"] = np.array(events[:, 1], dtype="i8")
+    npy_events["polarity"] = np.array((events[:, 3] + 1) / 2, dtype="i1")
+    
+    return npy_events
+
 def write_npdat(events, dest):    
-    arr = np.zeros((events.size, 4))
-    arr[:, 0] = events["timestamp"]
-    arr[:, 1] = events["x"]
-    arr[:, 2] = events["y"]
-    arr[:, 3] = events["polarity"]
+    npy_events = np.zeros(events.shape[0], dtype=([("timestamp", np.float64), ("x", np.int16), ("y", np.int16), ("polarity", np.bool)]))
+    npy_events["timestamp"] = events["timestamp"]
+    npy_events["x"] = events["x"]
+    npy_events["y"] = events["y"]
+    npy_events["polarity"] = events["polarity"]
     
     with open(dest, "wb") as file:
-        np.save(file, arr)
+        np.save(file, npy_events)
 
 def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
@@ -169,3 +179,30 @@ def build_mixed_file(files, chunk_size):
         split["timestamp"] += i * chunk_size + f_timestamps[0]
         
     return np.hstack(splits)
+
+def structured_arr_to_single_arr(events):
+    eve = np.zeros((events["timestamp"].shape[0], 4))
+    eve[:, 0] = events["timestamp"]
+    eve[:, 1] = events["x"]
+    eve[:, 2] = events["y"]
+    eve[:, 3] = events["polarity"]
+    return eve
+    
+def show_event_images(events, time_gap):
+    events = structured_arr_to_single_arr(events)
+    width = int(np.max(events[:, 1])) + 1
+    height = int(np.max(events[:, 2])) + 1
+    
+    cnt = 0
+    time = 0
+    img = np.zeros((height, width, 3))
+    
+    for time in range(int(events[0, 0]), int(events[-1, 0]), time_gap):
+        for event in events[(events[:, 0] >= time) & (events[:, 0] < time + time_gap)]:
+            img[int(event[2]), int(event[1]), int(event[3])] = 1
+        
+        time += time_gap
+        img = img.astype(np.uint8) * 255
+        Image.fromarray(img).save("/home/alphat/Desktop/temp/img"+str(cnt)+".png")
+        cnt += 1
+        img = np.zeros((height, width, 3))

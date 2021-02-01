@@ -144,27 +144,3 @@ events = pix2eve.run()
 events = events[events[:, 0].argsort()]
 
 np.save("/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bar_right.npy", events)
-
-imgs = []
-width = int(np.max(events[:, 1])) + 1
-height = int(np.max(events[:, 2])) + 1
-
-cnt = 0
-time = 0
-img = np.zeros((height, width, 3))
-
-gap = 1000
-for time in range(int(events[0, 0]), int(events[-1, 0]), gap):
-    for event in events[(events[:, 0] >= time) & (events[:, 0] < time + gap)]:
-        img[int(event[2]), int(event[1]), int(event[3])] = 1
-    
-    time += gap
-    img = img.astype(np.uint8) * 255
-    Image.fromarray(img).save("/home/alphat/Desktop/artificial_videos/disparity_bars_right/img"+str(cnt)+".png")
-    cnt += 1
-    img = np.zeros((height, width, 3))
-
-
-
-
-

@@ -82,7 +82,9 @@ def generate_pdf_complex_cell(spinet, layer):
                         
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
-                        path = "/media/alphat/SSD Games/Thesis/temp/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        path = "/home/alphat/Desktop/temp/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        if c == 3:
+                            Image.fromarray(img.astype('uint8')).save("/home/alphat/Desktop/temp_3/" + "{:.2f}".format(weight_sc) + "_" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png")
                         Image.fromarray(img.astype('uint8')).save(path)
                         
                         pos_x = xc * (11 * spinet.l1width + 10) + (xs - ox) * 11
@@ -112,7 +114,7 @@ def load_array_param(spinet, param):
 
 def complex_cells_directions(spinet, rotations):    
     plot_directions(spinet, spinet.directions, rotations)
-    plot_orientations(spinet, spinet.orientations, rotations[0:8])
+    plot_orientations(spinet, spinet.orientations, rotations)
 
 def plot_directions(spinet, directions, rotations):
     temp = np.zeros((directions.shape[0]+1, directions.shape[1]))
@@ -126,9 +128,9 @@ def plot_directions(spinet, directions, rotations):
         
         plt.figure()
         ax = plt.subplot(111, polar=True)
-        ax.set_title("Cell"+str(i))
-        ax.plot(angles, spike_vector[:, i], "r")
-        ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.015, head_width=1, head_length=1, length_includes_head=True, edgecolor='black', facecolor='black', lw=2, zorder=5)
+        # ax.set_title("Cell "+str(i))
+        ax.plot(angles, spike_vector[:, i], "darkslategrey")
+        ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.02, head_width=0, head_length=0, length_includes_head=True, edgecolor='firebrick', lw=2, zorder=5)
         ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
@@ -138,7 +140,7 @@ def plot_orientations(spinet, orientations, rotations):
     temp = np.zeros((orientations.shape[0]+1, orientations.shape[1]))
     temp[:-1, :] = orientations
     temp[-1, :] = orientations[0, :]
-    angles = np.append(rotations, 180) * np.pi / 180
+    angles = np.append(rotations[::2], 0) * np.pi / 180
     spike_vector = temp
     
     for i in range(spike_vector.shape[1]):
@@ -146,12 +148,13 @@ def plot_orientations(spinet, orientations, rotations):
         
         plt.figure()
         ax = plt.subplot(111, polar=True)
-        ax.set_title("Cell"+str(i))
-        ax.plot(angles, spike_vector[:, i], "r")
-        ax.arrow(np.angle(mean), 0, 0, np.abs(mean), width=0.015, head_width=1, head_length=1, length_includes_head=True, edgecolor='black', facecolor='black', lw=2, zorder=5)
-        ax.set_thetamax(180)
+        # ax.set_title("Cell "+str(i))
+        ax.plot(angles, spike_vector[:, i], "darkslategrey")
+        ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.02, head_width=0, head_length=0, length_includes_head=True, edgecolor='firebrick', lw=2, zorder=5)
+        ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
+        ax.set_xticklabels(['0°', '22.5°', '45°', '67.5°', '90°', '112.5°', '135°', '157.5°'])
         plt.savefig(spinet.path+"figures/complex_orientations/"+str(i))
         
 def mean_response(directions, angles):
@@ -178,11 +181,11 @@ def display_network(spinets, pooling=0):
             args = [(spinet, x) for x in list(np.arange(spinet.l2depth))]
             pdfs = p.starmap(generate_pdf_complex_cell, args)
 
-            proc = []
-            for i, pdf in enumerate(pdfs[0:4]):
-                process = Process(target=pdf.output, args=(spinet.path+"figures/complex_figures/"+str(i)+".pdf", "F"))
-                process.start()
-                proc.append(process)
-            for process in proc:
-                process.join()
+            # proc = []
+            # for i, pdf in enumerate(pdfs[0:4]):
+            #     process = Process(target=pdf.output, args=(spinet.path+"figures/complex_figures/"+str(i)+".pdf", "F"))
+            #     process.start()
+            #     proc.append(process)
+            # for process in proc:
+            #     process.join()
 

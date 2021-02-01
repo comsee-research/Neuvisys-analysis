@@ -12,8 +12,9 @@ os.chdir("/home/alphat/neuvisys-analysis")
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import h5py
 
-from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, load_aedat4_stereo, convert_ros_to_aedat, concatenate_files
+from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, load_aedat4_stereo, convert_ros_to_aedat, concatenate_files, h5py_to_npy, show_event_images
 from graphical_interface.gui import launch_gui
 
 from spiking_network.spiking_network import SpikingNetwork
@@ -37,7 +38,7 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 0)
+display_network([spinet], 1)
 
 
 #%% //!!!\\ Delete weights network
@@ -47,10 +48,20 @@ spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 
 #%% Save aedat file as numpy array
 
-# events = load_aedat4("/home/alphat/Desktop/stereo_squares.aedat4")
-events1, events2 = load_aedat4_stereo("/home/alphat/Desktop/stereo_squares.aedat4")
-write_npdat(events1, "/home/alphat/Desktop/squares_left.npy")
-write_npdat(events2, "/home/alphat/Desktop/squares_right.npy")
+events = load_aedat4("/media/alphat/SSD Games/Thesis/videos/stereo/right.aedat4")
+write_npdat(events, "/home/alphat/Desktop/npy_eve")
+
+
+#%% Save dataset to npy format
+
+with h5py.File('/media/alphat/SSD Games/Thesis/videos/stereo_driving/outdoor_day1_data.hdf5', 'r') as data:
+    left_events = np.array(data['davis']['left']['events'])
+    right_events = np.array(data['davis']['right']['events'])
+
+# l_events = h5py_to_npy(left_events)
+# np.savez("/home/alphat/Desktop/l_events", l_events["timestamp"], l_events["x"], l_events["y"], l_events["polarity"])
+# r_events = h5py_to_npy(right_events)
+# np.savez("/home/alphat/Desktop/r_events", r_events["timestamp"], r_events["x"], r_events["y"], r_events["polarity"])
 
 
 #%% Build npdat file made of chunck of other files
@@ -184,8 +195,8 @@ for i in range(144):
 
 network_path = "/home/alphat/neuvisys-dv/configuration/network/"
 launch_neuvisys_stereo(network_path+"configs/network_config.json",
-                       "/home/alphat/Desktop/squares_right.npy",
-                       "/home/alphat/Desktop/squares_left.npy", 3)
+                       "/home/alphat/Desktop/l_events.npz",
+                       "/home/alphat/Desktop/r_events.npz", 1)
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
 
@@ -205,3 +216,8 @@ for i in range(0, n_iter):
 #%% Spike plots
 
 spike_plots(spinet)
+
+
+#%% Plot event images
+
+show_event_images(l_events, 1000000)

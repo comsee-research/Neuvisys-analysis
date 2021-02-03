@@ -56,27 +56,33 @@ print("std:", np.std(srates))
 #%%
 from fpdf import FPDF
 from natsort import natsorted
+import random
 
-row = 5
-col = 35
+row = 6
+col = 6
+im_size = (20, 20)
+im_size_pad = (22, 22)
 
-pdf = FPDF("P", "mm", (col*11, row*11))
+pdf = FPDF("P", "mm", (col*im_size_pad[0], row*im_size_pad[1]))
 pdf.add_page()
 
-images = natsorted(os.listdir("/home/alphat/Desktop/temp_3/"))[::-1]
+path = "/home/alphat/neuvisys-dv/configuration/NETWORKS/complex_selectivity/figures/complex_directions/"
+
+images = natsorted(os.listdir(path))#[::-1]
+random.shuffle(images)
 
 count = 0
 for i in range(row):
     for j in range(col):
-        pdf.image("/home/alphat/Desktop/temp_3/"+images[count], x=j*11, y=i*11, w=10, h=10)
+        pdf.image(path+images[count], x=j*im_size_pad[0], y=i*im_size_pad[1], w=im_size[0], h=im_size[1])
         count += 1
         
-pdf.output("/home/alphat/Desktop/images/test.pdf", "F")
+pdf.output("/home/alphat/Desktop/images/directions.pdf", "F")
 
 #%%
 
 rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
-complex_cells_directions(spinet, rotations)
+dir_vec, ori_vec = complex_cells_directions(spinet, rotations)
 
 angles = np.pi * rotations / 180
 
@@ -90,3 +96,21 @@ ois = []
 for i in range(144):
     oris.append(orientation_norm_length(spinet.orientations[:, i], angles[0:8]))
     ois.append(orientation_selectivity(spinet.orientations[:, i]))
+    
+#%%
+
+fig, ax = plt.subplots()
+
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.yaxis.set_ticks_position('none')
+ax.grid(color='grey', axis='y', linestyle='-', linewidth=0.25, alpha=0.5)
+
+color1 = dict(color="#2C363F")
+color2 = dict(color="#9E7B9B")
+
+ax.set_ylabel("normalized vector length")
+ax.boxplot(np.abs(dir_vec), positions=[0], labels=["direction space"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(ori_vec), positions=[1], labels=["orientation space"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+plt.show()

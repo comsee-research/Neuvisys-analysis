@@ -71,6 +71,8 @@ def generate_pdf_complex_cell(spinet, layer):
     for c, complex_cell in enumerate(spinet.complex_cells):
         xc, yc, zc = complex_cell.position
         ox, oy, oz = complex_cell.offset
+        
+        heatmap = np.zeros((spinet.neuron2_width, spinet.neuron2_height))
             
         if zc == layer:
             maximum = np.max(complex_cell.weights)            
@@ -83,13 +85,15 @@ def generate_pdf_complex_cell(spinet, layer):
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
                         path = "/home/alphat/Desktop/temp/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
-                        if c == 3:
-                            Image.fromarray(img.astype('uint8')).save("/home/alphat/Desktop/temp_3/" + "{:.2f}".format(weight_sc) + "_" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png")
                         Image.fromarray(img.astype('uint8')).save(path)
+                        
+                        heatmap[ys - oy, xs - ox] += weight_sc
                         
                         pos_x = xc * (11 * spinet.l1width + 10) + (xs - ox) * 11
                         pos_y = yc * (11 * spinet.l1height * spinet.neuron2_depth + spinet.neuron2_depth * 2 + 10) + z * (11 * spinet.l1height + 2) + (ys - oy) * 11
                         pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
+            plt.matshow(heatmap)
+            plt.savefig("/home/alphat/Desktop/images/heatmaps/"+str(c))
     return pdf
 
 def sort_connections(spinet, complex_cell, oz):
@@ -113,8 +117,9 @@ def load_array_param(spinet, param):
     return simple_array, complex_array
 
 def complex_cells_directions(spinet, rotations):    
-    plot_directions(spinet, spinet.directions, rotations)
-    plot_orientations(spinet, spinet.orientations, rotations)
+    dir_vec = plot_directions(spinet, spinet.directions, rotations)
+    ori_vec = plot_orientations(spinet, spinet.orientations, rotations)
+    return dir_vec, ori_vec
 
 def plot_directions(spinet, directions, rotations):
     temp = np.zeros((directions.shape[0]+1, directions.shape[1]))
@@ -123,8 +128,11 @@ def plot_directions(spinet, directions, rotations):
     angles = np.append(rotations, 0) * np.pi / 180
     spike_vector = temp
     
+    vectors = []
+    
     for i in range(spike_vector.shape[1]):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
+        vectors.append(mean)
         
         plt.figure()
         ax = plt.subplot(111, polar=True)
@@ -134,7 +142,8 @@ def plot_directions(spinet, directions, rotations):
         ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
-        plt.savefig(spinet.path+"figures/complex_directions/"+str(i))
+        plt.savefig(spinet.path+"figures/complex_directions/"+str(i), bbox_inches='tight')
+    return vectors
 
 def plot_orientations(spinet, orientations, rotations):
     temp = np.zeros((orientations.shape[0]+1, orientations.shape[1]))
@@ -143,8 +152,11 @@ def plot_orientations(spinet, orientations, rotations):
     angles = np.append(rotations[::2], 0) * np.pi / 180
     spike_vector = temp
     
+    vectors = []
+    
     for i in range(spike_vector.shape[1]):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
+        vectors.append(mean)
         
         plt.figure()
         ax = plt.subplot(111, polar=True)
@@ -155,8 +167,9 @@ def plot_orientations(spinet, orientations, rotations):
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
         ax.set_xticklabels(['0°', '22.5°', '45°', '67.5°', '90°', '112.5°', '135°', '157.5°'])
-        plt.savefig(spinet.path+"figures/complex_orientations/"+str(i))
-        
+        plt.savefig(spinet.path+"figures/complex_orientations/"+str(i), bbox_inches='tight')
+    return vectors
+
 def mean_response(directions, angles):
     return np.mean(directions * np.exp(1j * angles))
 
@@ -177,10 +190,8 @@ def display_network(spinets, pooling=0):
             # pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if pooling:
-            p = Pool(10)
-            args = [(spinet, x) for x in list(np.arange(spinet.l2depth))]
-            pdfs = p.starmap(generate_pdf_complex_cell, args)
-
+            for layer in range(spinet.l2depth):
+                pdfs = generate_pdf_complex_cell(spinet, layer)
             # proc = []
             # for i, pdf in enumerate(pdfs[0:4]):
             #     process = Process(target=pdf.output, args=(spinet.path+"figures/complex_figures/"+str(i)+".pdf", "F"))
@@ -188,4 +199,3 @@ def display_network(spinets, pooling=0):
             #     proc.append(process)
             # for process in proc:
             #     process.join()
-

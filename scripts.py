@@ -23,8 +23,8 @@ from spiking_network.network_statistics.network_statistics import spike_plots, d
 from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
-# network_path = "/media/alphat/SSD Games/Thesis/Networks/network/"
-network_path = "/home/alphat/neuvisys-dv/configuration/network/"
+
+network_path = "/home/alphat/neuvisys-dv/configuration/NETWORKS/complex_selectivity/"
 
 #%% Generate Spiking Network
 

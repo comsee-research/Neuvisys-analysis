@@ -75,6 +75,10 @@ def write_npdat(events, dest):
     with open(dest, "wb") as file:
         np.save(file, npy_events)
 
+def write_npz(dest, events):
+    np.savez(dest, events[:, 0], events[:, 1], events[:, 2], events[:, 3])
+    
+    
 def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
     aedat_file.write(b'# This is a raw AE data file created by saveaerdat.m\r\n')

@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
-from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, load_aedat4_stereo, convert_ros_to_aedat, concatenate_files, h5py_to_npy, show_event_images
+from aedat_tools.aedat_tools import build_mixed_file, remove_blank_space, write_npdat, load_aedat4, load_aedat4_stereo, convert_ros_to_aedat, concatenate_files, h5py_to_npy, show_event_images, write_npz
 from graphical_interface.gui import launch_gui
 
 from spiking_network.spiking_network import SpikingNetwork
@@ -38,7 +38,7 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 1)
+display_network([spinet], 0)
 
 
 #%% //!!!\\ Delete weights network
@@ -63,6 +63,13 @@ with h5py.File('/media/alphat/SSD Games/Thesis/videos/stereo_driving/outdoor_day
 # r_events = h5py_to_npy(right_events)
 # np.savez("/home/alphat/Desktop/r_events", r_events["timestamp"], r_events["x"], r_events["y"], r_events["polarity"])
 
+
+#%%
+
+for rot in np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]):
+    events = np.load("/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npy")
+    write_npz("/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npz", events)
+    
 
 #%% Build npdat file made of chunck of other files
 
@@ -172,10 +179,10 @@ for rot in rotations:
     cspikes.append(spinet.cspikes)
 spinet.save_complex_directions(cspikes, rotations)
 
-    
+
 #%
 
-complex_cells_directions(spinet, rotations)
+dir_vec, ori_vec = complex_cells_directions(spinet, rotations)
 
 angles = np.pi * rotations / 180
 
@@ -220,4 +227,4 @@ spike_plots(spinet)
 
 #%% Plot event images
 
-show_event_images(l_events, 1000000)
+# show_event_images(l_events, 1000000)

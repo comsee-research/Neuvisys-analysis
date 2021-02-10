@@ -85,7 +85,7 @@ def generate_pdf_complex_cell(spinet, layer):
                         
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
-                        path = "/home/alphat/Desktop/temp/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        path = "/home/thomas/Bureau/temp/images/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
                         Image.fromarray(img.astype('uint8')).save(path)
                         
                         heatmap[ys - oy, xs - ox] += weight_sc
@@ -97,12 +97,12 @@ def generate_pdf_complex_cell(spinet, layer):
                         pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
             plt.figure()
             plt.matshow(heatmap)
-            plt.savefig("/home/alphat/Desktop/images/heatmaps/"+str(c))
+            plt.savefig("/home/thomas/Bureau/temp/heatmaps/"+str(c))
             h_max = np.max(heatmap.flatten())
             for i in range(4):
                 for j in range(4):
                     heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] = heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] * heatmap[i, j] / h_max
-            Image.fromarray(heatmap_rf.astype('uint8')).save("/home/alphat/Desktop/images/heatmaps/"+str(c)+"_rf.png")
+            Image.fromarray(heatmap_rf.astype('uint8')).save("/home/thomas/Bureau/temp/heatmaps/"+str(c)+"_rf.png")
     return pdf
 
 def sort_connections(spinet, complex_cell, oz):

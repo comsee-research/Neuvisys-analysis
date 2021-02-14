@@ -188,15 +188,15 @@ class Neuron:
         json = load_params(json_path)
         if self.type == "simple":
             self.min_thresh = json["MIN_THRESH"]
-            self.delta_sra = json["DELTA_SRA"]
-            self.delta_sr = json["ETA_SR"]
+            self.delta_sra = json["ETA_SRA"]
+            self.delta_sr = json["ETA_TA"]
             self.tau_sra = json["TAU_SRA"]
             self.target_spike_rate = json["TARGET_SPIKE_RATE"]
             self.synapse_delay = json["SYNAPSE_DELAY"]
             
         self.vthresh = json["VTHRESH"]
         self.vreset = json["VRESET"]
-        self.delta_rp = json["DELTA_RP"]
+        self.delta_rp = json["ETA_RP"]
         self.tau_rp = json["TAU_RP"]
         self.tau_m = json["TAU_M"]
         self.tau_ltp = json["TAU_LTP"]
@@ -204,7 +204,7 @@ class Neuron:
         self.norm_factor = json["NORM_FACTOR"]
         self.delta_vp = json["ETA_LTP"]
         self.delta_vd = json["ETA_LTD"]
-        self.delta_inh = json["DELTA_INH"]
+        self.delta_inh = json["ETA_INH"]
         self.decay_factor = json["DECAY_FACTOR"]
         self.stdp_learning = json["STDP_LEARNING"]
         self.tracking = json["TRACKING"]

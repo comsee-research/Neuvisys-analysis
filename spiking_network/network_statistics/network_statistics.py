@@ -60,30 +60,31 @@ def networks_stats(nb_networks, directory):
         df[i]["threshold"] = net_param["threshold"].mean()
     return pd.DataFrame(df)
 
-def spike_plots(spinet):
+def spike_plots_simple_cells(spinet, neuron_id):
     plt.figure()
     plt.xlabel("time (µs)")
     plt.ylabel("neurons")
     
-    indices = spinet.simple_cells[0].inhibition_connections
+    indices = spinet.simple_cells[neuron_id].inhibition_connections
     colors1 = ['C{}'.format(i) for i in range(len(indices)+1)]
     
     eveplot = []
-    for i in indices + [0]:
-        eveplot.append(spinet.sspikes[i][spinet.sspikes[i] != 0])
+    for i in indices + [neuron_id]:
+        eveplot.append(spinet.sspikes[i][spinet.sspikes[i] != neuron_id])
         
     plt.eventplot(eveplot, colors=colors1)
-    
+
+def spike_plots_complex_cells(spinet, neuron_id):
     plt.figure()
     plt.xlabel("time (µs)")
     plt.ylabel("neurons")
     
-    indices = spinet.complex_cells[0].inhibition_connections
+    indices = spinet.complex_cells[neuron_id].inhibition_connections
     colors1 = ['C{}'.format(i) for i in range(len(indices)+1)]
     
     eveplot = []
-    for i in indices + [0]:
-        eveplot.append(spinet.cspikes[i][spinet.cspikes[i] != 0])
+    for i in indices + [neuron_id]:
+        eveplot.append(spinet.cspikes[i][spinet.cspikes[i] != neuron_id])
         
     plt.eventplot(eveplot, colors=colors1)
     

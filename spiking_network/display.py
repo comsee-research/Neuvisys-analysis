@@ -85,7 +85,7 @@ def generate_pdf_complex_cell(spinet, layer):
                         
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
-                        path = "/home/alphat/Desktop/temp/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        path = "/home/thomas/Bureau/temp/images/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
                         Image.fromarray(img.astype('uint8')).save(path)
                         
                         heatmap[ys - oy, xs - ox] += weight_sc

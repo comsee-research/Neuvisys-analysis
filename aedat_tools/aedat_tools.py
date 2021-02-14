@@ -65,20 +65,15 @@ def h5py_to_npy(events):
     
     return npy_events
 
-def write_npdat(events, dest):    
-    npy_events = np.zeros(events.shape[0], dtype=([("timestamp", np.float64), ("x", np.int16), ("y", np.int16), ("polarity", np.bool)]))
-    npy_events["timestamp"] = events["timestamp"]
-    npy_events["x"] = events["x"]
-    npy_events["y"] = events["y"]
-    npy_events["polarity"] = events["polarity"]
-    
-    with open(dest, "wb") as file:
-        np.save(file, npy_events)
-
 def write_npz(dest, events):
-    np.savez(dest, events[:, 0].astype("i8"), events[:, 1].astype("i2"), events[:, 2].astype("i2"), events[:, 3].astype("i1"))
-    
-    
+    try:
+        np.savez(dest, events["timestamp"].astype('i8'), events["x"].astype('i2'), events["y"].astype('i2'), events["polarity"].astype('i1'))
+    except:
+        try:
+            np.savez(dest, events[:, 0].astype('i8'), events[:, 1].astype('i2'), events[:, 2].astype('i2'), events[:, 3].astype('i1'))
+        except:
+            raise
+
 def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
     aedat_file.write(b'# This is a raw AE data file created by saveaerdat.m\r\n')

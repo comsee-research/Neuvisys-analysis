@@ -38,7 +38,7 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 0)
+display_network([spinet], 1)
 
 
 #%% //!!!\\ Delete weights network
@@ -62,13 +62,6 @@ with h5py.File('/media/alphat/SSD Games/Thesis/videos/stereo_driving/outdoor_day
 # np.savez("/home/alphat/Desktop/l_events", l_events["timestamp"], l_events["x"], l_events["y"], l_events["polarity"])
 # r_events = h5py_to_npy(right_events)
 # np.savez("/home/alphat/Desktop/r_events", r_events["timestamp"], r_events["x"], r_events["y"], r_events["polarity"])
-
-
-#%%
-
-for rot in np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]):
-    events = np.load("/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npy")
-    write_npz("/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npz", events)
     
 
 #%% Build npdat file made of chunck of other files
@@ -149,20 +142,22 @@ y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
 # launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shape_hovering.npy", 30)
 
+toggle_learning(spinet, True)
+
 for i in range(3):
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_h.npy", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_-90.npy", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_180.npy", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_hv.npy", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_v.npy", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_0.npy", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_90.npy", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_v.npz", 3)
+    # launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_-90.npz", 2)
+    # launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_180.npz", 2)
+    # launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_hv.npz", 2)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_flip_v.npz", 3)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_0.npz", 3)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/diverse_shapes/shapes_rot_90.npz", 3)
 
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
 
 
-#% Toggle learning
+#%% Toggle learning
 
 toggle_learning(spinet, False)
 
@@ -173,7 +168,7 @@ sspikes = []
 cspikes = []
 rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
 for rot in rotations:
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npy", 5)
+    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npz", 5)
     spinet = SpikingNetwork(network_path)
     sspikes.append(spinet.sspikes)
     cspikes.append(spinet.cspikes)

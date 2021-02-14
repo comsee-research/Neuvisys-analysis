@@ -76,7 +76,7 @@ def write_npdat(events, dest):
         np.save(file, npy_events)
 
 def write_npz(dest, events):
-    np.savez(dest, events[:, 0], events[:, 1], events[:, 2], events[:, 3])
+    np.savez(dest, events[:, 0].astype("i8"), events[:, 1].astype("i2"), events[:, 2].astype("i2"), events[:, 3].astype("i1"))
     
     
 def write_aedat2_header(aedat_file):

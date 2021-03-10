@@ -7,13 +7,13 @@ Created on Thu Jul  2 16:58:28 2020
 """
 
 import os
-os.chdir("/home/thomas/neuvisys-analysis")
+os.chdir("/home/alphat/neuvisys-analysis")
 
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-from aedat_tools.aedat_tools import load_aedat4, load_aedat4_stereo, show_event_images, write_npz
+from aedat_tools.aedat_tools import load_aedat4, show_event_images, write_npz, load_frames, npz_to_arr, npaedat_to_np
 from graphical_interface.gui import launch_gui
 
 from spiking_network.spiking_network import SpikingNetwork
@@ -23,7 +23,7 @@ from spiking_network.network_planning.planner import launch_spinet, launch_neuvi
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
 
-network_path = "/home/thomas/neuvisys-dv/configuration/network/"
+network_path = "/home/alphat/neuvisys-dv/configuration/network/"
 
 #%% Generate Spiking Network
 
@@ -37,7 +37,7 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 1)
+display_network([spinet], 0)
 
 
 #%% //!!!\\ Delete weights network
@@ -173,4 +173,5 @@ spike_plots_simple_cells(spinet, 7639)
 
 #%% Plot event images
 
-# show_event_images(l_events, 1000000)
+temp = npaedat_to_np(l_events)
+show_event_images(temp, 100000, 346, 260, "/home/alphat/Desktop/temp/")

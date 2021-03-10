@@ -33,14 +33,32 @@ def load_params(param_path):
 def load_aedat4(file_path):
     with AedatFile(file_path) as f:
         events = np.hstack([packet for packet in f['events'].numpy()])
-    return events
-
-def load_aedat4_stereo(file_path):
-    with AedatFile(file_path) as f:
-        events1 = np.hstack([packet for packet in f['events'].numpy()])
-        events2 = np.hstack([packet for packet in f['events_1'].numpy()])
-    return events1, events2
-
+        try:
+            events2 = np.hstack([packet for packet in f['events_1'].numpy()])
+            return events, events2
+        except:
+            return events
+        
+def write_npz(dest, events):
+    if type(events) is tuple:
+        try:
+            np.savez(dest, events[0]["timestamp"].astype('i8'), events[0]["x"].astype('i2'), events[0]["y"].astype('i2'), events[0]["polarity"].astype('i1'),
+                     events[1]["timestamp"].astype('i8'), events[1]["x"].astype('i2'), events[1]["y"].astype('i2'), events[1]["polarity"].astype('i1'))
+        except:
+            try:
+                np.savez(dest, events[0][:, 0].astype('i8'), events[0][:, 1].astype('i2'), events[0][:, 2].astype('i2'), events[0][:, 3].astype('i1'),
+                         events[1][:, 0].astype('i8'), events[1][:, 1].astype('i2'), events[1][:, 2].astype('i2'), events[1][:, 3].astype('i1'))
+            except:
+                raise
+    else:        
+        try:
+            np.savez(dest, events["timestamp"].astype('i8'), events["x"].astype('i2'), events["y"].astype('i2'), events["polarity"].astype('i1'))
+        except:
+            try:
+                np.savez(dest, events[:, 0].astype('i8'), events[:, 1].astype('i2'), events[:, 2].astype('i2'), events[:, 3].astype('i1'))
+            except:
+                raise
+        
 def load_aedat(file_path):
     with LegacyAedatFile(file_path) as f:
         for e in f:
@@ -65,14 +83,7 @@ def h5py_to_npy(events):
     
     return npy_events
 
-def write_npz(dest, events):
-    try:
-        np.savez(dest, events["timestamp"].astype('i8'), events["x"].astype('i2'), events["y"].astype('i2'), events["polarity"].astype('i1'))
-    except:
-        try:
-            np.savez(dest, events[:, 0].astype('i8'), events[:, 1].astype('i2'), events[:, 2].astype('i2'), events[:, 3].astype('i1'))
-        except:
-            raise
+
 
 def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
@@ -179,19 +190,23 @@ def build_mixed_file(files, chunk_size):
         
     return np.hstack(splits)
 
-def structured_arr_to_single_arr(events):
+def npaedat_to_np(events):
     eve = np.zeros((events["timestamp"].shape[0], 4))
     eve[:, 0] = events["timestamp"]
     eve[:, 1] = events["x"]
     eve[:, 2] = events["y"]
     eve[:, 3] = events["polarity"]
     return eve
+
+def npz_to_arr(t, x, y, p):
+    eve = np.zeros((t.shape[0], 4))
+    eve[:, 0] = t
+    eve[:, 1] = x
+    eve[:, 2] = y
+    eve[:, 3] = p
+    return eve
     
-def show_event_images(events, time_gap):
-    events = structured_arr_to_single_arr(events)
-    width = int(np.max(events[:, 1])) + 1
-    height = int(np.max(events[:, 2])) + 1
-    
+def show_event_images(events, time_gap, width, height, dest):    
     cnt = 0
     time = 0
     img = np.zeros((height, width, 3))
@@ -202,6 +217,21 @@ def show_event_images(events, time_gap):
         
         time += time_gap
         img = img.astype(np.uint8) * 255
-        Image.fromarray(img).save("/home/alphat/Desktop/temp/img"+str(cnt)+".png")
+        Image.fromarray(img).save(dest+"img"+str(cnt)+".png")
         cnt += 1
         img = np.zeros((height, width, 3))
+        
+def load_frames(path):
+    with AedatFile(path) as f:
+        try:
+            lframes = []
+            rframes = []
+            for l, r in zip(f["frames"], f["frames_1"]):
+                lframes.append(l.image)
+                rframes.append(r.image)
+            return np.array(lframes), np.array(rframes)
+        except:
+            frames = []
+            for fr in f["frames"]:
+                frames.append(fr.image)
+            return np.array(frames)

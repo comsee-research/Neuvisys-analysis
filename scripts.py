@@ -37,7 +37,7 @@ launch_gui(spinet)
 
 #%% Display weights
 
-display_network([spinet], 1)
+display_network([spinet], 0)
 
 
 #%% //!!!\\ Delete weights network

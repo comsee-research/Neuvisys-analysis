@@ -109,7 +109,7 @@ class SpikingNetwork:
         
     def unpack_json(self, json_path):
         json = load_params(json_path)
-        self.weight_sharing = json["WeightSharing"]
+        self.weight_sharing = json["SharingType"]
         self.l1width = json["L1Width"]
         self.l1height = json["L1Height"]
         self.l1depth = json["L1Depth"]

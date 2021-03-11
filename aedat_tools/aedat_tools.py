@@ -12,7 +12,7 @@ import json
 import os, shutil
 import numpy as np
 import random
-import rosbag
+# import rosbag
 from bitarray import bitarray
 from PIL import Image
 

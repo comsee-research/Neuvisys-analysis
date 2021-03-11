@@ -91,7 +91,7 @@ class SpikingNetwork:
 
     def generate_weight_mat(self):
         weights = []
-        if self.weight_sharing:
+        if self.weight_sharing == "full" or self.weight_sharing == "partial":
             weights = [neuron.weights for neuron in self.simple_cells[0:self.l1depth]]
             # for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
             #     weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]

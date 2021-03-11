@@ -111,6 +111,24 @@ color1 = dict(color="#2C363F")
 color2 = dict(color="#9E7B9B")
 
 ax.set_ylabel("normalized vector length")
-ax.boxplot(np.abs(dir_vec), positions=[0], labels=["direction space"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
-ax.boxplot(np.abs(ori_vec), positions=[1], labels=["orientation space"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(des), positions=[0], labels=["direction exponential"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(oes), positions=[1], labels=["orientation exponential"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(dls), positions=[2], labels=["direction linear"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(ols), positions=[3], labels=["orientation linear"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(dsr), positions=[4], labels=["direction step left"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(osr), positions=[5], labels=["orientation step left"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(dsl), positions=[6], labels=["direction step right"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(osl), positions=[7], labels=["orientation step right"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(dss), positions=[8], labels=["direction step sym"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
+ax.boxplot(np.abs(oss), positions=[9], labels=["orientation step sym"], boxprops=color1, medianprops=color2, whiskerprops=color1, capprops=color1, flierprops=dict(markeredgecolor=color1["color"]))
 plt.show()
+
+#%%
+
+events[0]["x"] -= 4
+events[1]["x"] += 4
+events[0]["y"] += 9
+events[1]["y"] -= 8
+
+l_events = events[0][(events[0]["y"] < 260) & (events[0]["x"] >= 0)]
+r_events = events[1][(events[1]["y"] >= 0) & (events[1]["x"] < 346)]

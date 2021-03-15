@@ -60,10 +60,10 @@ class SpikingNetwork:
         self.layout1 = np.load(path + "weights/layout1.npy")
         # self.layout2 = np.load(path + "weights/layout2.npy")
         
-        if np.array(self.sspikes).size > 0:
+        if np.array(self.sspikes, dtype=object).size > 0:
             self.sspikes = np.array(list(itertools.zip_longest(*self.sspikes, fillvalue=0))).T
             self.sspikes[self.sspikes != 0] -= np.min(self.sspikes[self.sspikes != 0])
-        if np.array(self.cspikes).size > 0:
+        if np.array(self.cspikes, dtype=object).size > 0:
             self.cspikes = np.array(list(itertools.zip_longest(*self.cspikes, fillvalue=0))).T
             self.cspikes[self.cspikes != 0] -= np.min(self.cspikes[self.cspikes != 0])
             

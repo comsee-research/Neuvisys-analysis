@@ -130,3 +130,18 @@ def direction_selectivity(spike_vector):
         
 def orientation_selectivity(spike_vector):
     return (np.max(spike_vector) - spike_vector[(np.argmax(spike_vector)+4)%8]) / np.max(spike_vector)
+
+def weight_centroid(weight):
+    weight = weight[0] + weight[1]
+    weight /= np.max(weight)
+    (X, Y) = np.indices((weight.shape[0], weight.shape[1]))
+    x_coord = (X * weight).sum() / weight.sum()
+    y_coord = (Y * weight).sum() / weight.sum()
+    return x_coord, y_coord
+
+def centroids(spinet):
+    l_c, r_c = [], []
+    for cell in spinet.simple_cells:
+        l_c.append(weight_centroid(cell.weights[:, 0, 0]))
+        r_c.append(weight_centroid(cell.weights[:, 1, 0]))
+    return np.array(l_c), np.array(r_c)

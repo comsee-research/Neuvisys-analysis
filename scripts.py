@@ -7,7 +7,13 @@ Created on Thu Jul  2 16:58:28 2020
 """
 
 import os
-os.chdir("/home/alphat/neuvisys-analysis")
+
+if os.path.exists("/home/alphat"):
+    network_path = "/home/alphat/neuvisys-dv/configuration/network/"
+    os.chdir("/home/alphat/neuvisys-analysis")
+else:
+    network_path = "/home/thomas/neuvisys-dv/configuration/network/"
+    os.chdir("/home/thomas/neuvisys-analysis")
 
 import json
 import numpy as np
@@ -22,8 +28,6 @@ from spiking_network.network_statistics.network_statistics import spike_plots_si
 from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
-
-network_path = "/home/alphat/neuvisys-dv/configuration/network/"
 
 #%% Generate Spiking Network
 

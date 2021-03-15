@@ -132,3 +132,43 @@ events[1]["y"] -= 8
 
 l_events = events[0][(events[0]["y"] < 260) & (events[0]["x"] >= 0)]
 r_events = events[1][(events[1]["y"] >= 0) & (events[1]["x"] < 346)]
+
+
+#%%
+
+eta_ltp = 0.2
+eta_ltd = -0.2
+tau_ltp = 20
+tau_ltd = 20
+
+t = np.linspace(-80, 80, 10000)
+
+step = np.zeros(10000)
+step[(t > -tau_ltd) & (t <= 0)] = -eta_ltd
+step[(t >= 0) & (t < tau_ltd)] = eta_ltp
+
+lin = np.zeros(10000)
+lin[(t > -tau_ltd) & (t <= 0)] = -eta_ltd * -t[(t > -tau_ltd) & (t <= 0)][::-1] / np.max(-t[(t > -tau_ltd) & (t <= 0)][::-1])
+lin[(t >= 0) & (t < tau_ltd)] = eta_ltp * t[(t >= 0) & (t < tau_ltd)][::-1] / np.max(t[(t >= 0) & (t < tau_ltd)][::-1])
+
+exp = np.concatenate((eta_ltd * np.exp(t[t < 0] / tau_ltd), eta_ltp * np.exp(-t[t >= 0] / tau_ltp)))
+
+
+fig, axs = plt.subplots(3, 1)
+
+for ax in axs.flat:
+    ax.grid(alpha=.2, linestyle='--')
+    ax.axhline(0, alpha=0.3, linestyle='-', color='k')
+    ax.axvline(0, alpha=0.3, linestyle='-', color='k')
+    ax.xlim = [-0.5, 0.5]
+    ax.set_ylabel("Synaptic change (mV)")
+    ax.label_outer()
+
+axs[1].set_xlabel("Spike timing (ms)")
+
+axs[0].plot(t, step, color='k')
+axs[0].set_title("Step")
+axs[1].plot(t, lin, color='k')
+axs[1].set_title("Linear")
+axs[2].plot(t, exp, color='k')
+axs[2].set_title("Exponential")

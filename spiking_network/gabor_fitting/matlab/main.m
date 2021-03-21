@@ -1,8 +1,8 @@
 clear all;close all;clc
 
 addpath('Funcs Gabor Fit');
-folder = '/home/alphat/neuvisys-dv/configuration/network/gabors/data/';
-load_filename = [folder 'weights.mat'];
+folder = '/home/alphat/neuvisys-dv/configuration/network/gabors/data/right/';
+load_filename = [folder 'weights_right.mat'];
 load(load_filename);
 
 [mu_table, sigma_table, theta_table, phase_table, lambda_table, error_table] = gaborFit_onepatch(data, folder);

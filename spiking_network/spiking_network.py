@@ -91,21 +91,22 @@ class SpikingNetwork:
 
     def generate_weight_mat(self):
         weights = []
-        if self.weight_sharing == "full" or self.weight_sharing == "partial":
+        if self.weight_sharing == "full":
             weights = [neuron.weights for neuron in self.simple_cells[0:self.l1depth]]
-            # for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
-            #     weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
+        elif self.weight_sharing == "patch":
+            for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
+                weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
         else:
             weights = [neuron.weights for neuron in self.simple_cells]
 
-        basis = np.zeros((200, len(weights)))
-
-        for i, weight in enumerate(weights):    
-            basi = (weight[0, 0, 0] - weight[1, 0, 0]).flatten("F")
-            basis[0:100, i] = basi
-            basis[100:200, i] = basi
+        basis = [np.zeros((100, len(weights))), np.zeros((100, len(weights)))]
+        for c in range(self.nb_cameras):
+            for i, weight in enumerate(weights):
+                basis[c][:, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
+        sio.savemat(self.path+"gabors/data/weights_left.mat", {"data": basis[0]})
+        sio.savemat(self.path+"gabors/data/weights_right.mat", {"data": basis[1]})
         
-        sio.savemat(self.path+"gabors/data/weights.mat", {"data": basis})
+        return basis
         
     def unpack_json(self, json_path):
         json = load_params(json_path)
@@ -147,6 +148,7 @@ class SpikingNetwork:
             delete_files(self.path+"images/complex_connections/")
             delete_files(self.path+"images/simple_cells/")
             delete_files(self.path+"images/complex_cells/")
+            os.remove(self.path+"learning_trace.txt")
         
     def save_complex_directions(self, spikes, rotations):
         spike_vector = []

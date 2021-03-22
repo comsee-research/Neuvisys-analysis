@@ -99,12 +99,12 @@ class SpikingNetwork:
         else:
             weights = [neuron.weights for neuron in self.simple_cells]
 
-        basis = [np.zeros((100, len(weights))), np.zeros((100, len(weights)))]
+        w = self.neuron1_width * self.neuron1_height
+        basis = np.zeros((2 * w, len(weights)))
         for c in range(self.nb_cameras):
             for i, weight in enumerate(weights):
-                basis[c][:, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
-        sio.savemat(self.path+"gabors/data/weights_left.mat", {"data": basis[0]})
-        sio.savemat(self.path+"gabors/data/weights_right.mat", {"data": basis[1]})
+                basis[c*w:(c+1)*w, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
+        sio.savemat(self.path+"gabors/data/weights.mat", {"basis": basis})
         
         return basis
         

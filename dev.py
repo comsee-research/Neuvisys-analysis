@@ -149,22 +149,27 @@ axs[2].set_title("Exponential")
 
 g, d = centroids(spinet)
 gd = g - d
+epsi_error = 2.5
 
+cnt = 0
 fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
 for i in range(5):
-    for j in range(4):
-        # axes[j, i].suptitle("region: "+str(1+i)+", "+str(1+j) + "\n" + "mean (x, y):" + str(np.mean(gd[spinet.layout1[i, j, 0]:spinet.layout1[i+2, j+2, 0]], axis=0)) + "\n" + "std  (x, y):" + str(np.std(gd[spinet.layout1[i, j, 0]:spinet.layout1[i+2, j+2, 0]], axis=0)))
+    for j in range(4):     
+        axes[j, i].set_title("region: "+str(1+i)+", "+str(1+j) + ": " + str(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error].size) + "\n" + "mean (x, y):" + str(np.mean(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])) + "\n" + "std  (x, y):" + str(np.std(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])))
         # axes[j, i].set_xlim([-5, 5])
         # axes[j, i].set_ylim([0, 250])
-        axes[j, i].hist(gd[spinet.layout1[i*3, j*3, 0]:spinet.layout1[i*3+2, j*3+2, 0], 0])
-        
-fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
-for i in range(5):
-    for j in range(4):
-        # axes[j, i].suptitle("region: "+str(1+i)+", "+str(1+j) + "\n" + "mean (x, y):" + str(np.mean(gd[spinet.layout1[i, j, 0]:spinet.layout1[i+2, j+2, 0]], axis=0)) + "\n" + "std  (x, y):" + str(np.std(gd[spinet.layout1[i, j, 0]:spinet.layout1[i+2, j+2, 0]], axis=0)))
-        # axes[j, i].set_xlim([-5, 5])
-        # axes[j, i].set_ylim([0, 250])
-        axes[j, i].hist(gd[spinet.layout1[i*3, j*3, 0]:spinet.layout1[i*3+2, j*3+2, 0], 1])
+        axes[j, i].hist(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])
+        cnt += 1
+
+# cnt = 0
+# fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
+# for i in range(5):
+#     for j in range(4):
+#         axes[j, i].set_title("region: "+str(1+i)+", "+str(1+j) + "\n" + "mean (x, y):" + str(np.mean(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])) + "\n" + "std  (x, y):" + str(np.std(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])))
+#         # axes[j, i].set_xlim([-5, 5])
+#         # axes[j, i].set_ylim([0, 250])
+#         axes[j, i].hist(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])
+#         cnt += 1
         
 #%%
 
@@ -184,11 +189,13 @@ epsi_xsigma = 20
 epsi_ysigma = 60
 epsi_lambd = 3
 epsi_theta = 0.5
-epsi_error = 5
+epsi_error = 2.5
 
-id_disp = np.where((np.abs(xmu) < epsi_xmu) & (np.abs(ymu) < epsi_ymu) & (np.abs(xsigma) < epsi_xsigma) & (np.abs(ysigma) < epsi_ysigma) & (np.abs(lambd) < epsi_lambd) & (np.abs(theta) < epsi_theta) & (error < epsi_error))[1]
-disp_f = disp[(np.abs(xmu) < epsi_xmu) & (np.abs(ymu) < epsi_ymu) & (np.abs(xsigma) < epsi_xsigma) & (np.abs(ysigma) < epsi_ysigma) & (np.abs(lambd) < epsi_lambd) & (np.abs(theta) < epsi_theta) & (error < epsi_error)]
-final_disp = np.vstack((id_disp, disp_f))
+id_disp = np.where((np.abs(error) < epsi_error))[1]
+
+# id_disp = np.where((np.abs(xmu) < epsi_xmu) & (np.abs(ymu) < epsi_ymu) & (np.abs(xsigma) < epsi_xsigma) & (np.abs(ysigma) < epsi_ysigma) & (np.abs(lambd) < epsi_lambd) & (np.abs(theta) < epsi_theta) & (error < epsi_error))[1]
+# disp_f = disp[(np.abs(xmu) < epsi_xmu) & (np.abs(ymu) < epsi_ymu) & (np.abs(xsigma) < epsi_xsigma) & (np.abs(ysigma) < epsi_ysigma) & (np.abs(lambd) < epsi_lambd) & (np.abs(theta) < epsi_theta) & (error < epsi_error)]
+# final_disp = np.vstack((id_disp, disp_f))
 
 #%%
 

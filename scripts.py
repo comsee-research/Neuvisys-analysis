@@ -78,6 +78,7 @@ basis = spinet.generate_weight_mat()
 
 spinet.generate_weight_images()
 gabor_params_l = create_gabor_basis(spinet, "left", nb_ticks=8)
+gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
 
 
 #%% Create plots for preferred orientations and directions

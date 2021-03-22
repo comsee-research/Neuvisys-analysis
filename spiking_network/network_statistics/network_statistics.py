@@ -140,8 +140,17 @@ def weight_centroid(weight):
     return x_coord, y_coord
 
 def centroids(spinet):
+    weights = []
+    if spinet.weight_sharing == "full":
+        weights = [neuron.weights for neuron in spinet.simple_cells[0:spinet.l1depth]]
+    elif spinet.weight_sharing == "patch":
+        for i in range(0, spinet.nb_simple_cells, spinet.l1depth*spinet.l1width*spinet.l1height):
+            weights += [neuron.weights for neuron in spinet.simple_cells[i:i+spinet.l1depth]]
+    else:
+        weights = [neuron.weights for neuron in spinet.simple_cells]
+    
     l_c, r_c = [], []
-    for cell in spinet.simple_cells:
-        l_c.append(weight_centroid(cell.weights[:, 0, 0]))
-        r_c.append(weight_centroid(cell.weights[:, 1, 0]))
+    for weight in weights:
+        l_c.append(weight_centroid(weight[:, 0, 0]))
+        r_c.append(weight_centroid(weight[:, 1, 0]))
     return np.array(l_c), np.array(r_c)

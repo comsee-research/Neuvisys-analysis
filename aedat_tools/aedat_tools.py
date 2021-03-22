@@ -14,7 +14,8 @@ import numpy as np
 import random
 # import rosbag
 from bitarray import bitarray
-from PIL import Image
+from PIL import Image, ImageDraw
+import cv2 as cv
 
 def delete_files(path):
     for file in os.scandir(path):
@@ -82,8 +83,6 @@ def h5py_to_npy(events):
     npy_events["polarity"] = np.array((events[:, 3] + 1) / 2, dtype="i1")
     
     return npy_events
-
-
 
 def write_aedat2_header(aedat_file):
     aedat_file.write(b'#!AER-DAT2.0\r\n')
@@ -206,7 +205,7 @@ def npz_to_arr(t, x, y, p):
     eve[:, 3] = p
     return eve
     
-def show_event_images(events, time_gap, width, height, dest):    
+def show_event_images(events, time_gap, width, height, dest, rec, side):    
     cnt = 0
     time = 0
     img = np.zeros((height, width, 3))
@@ -215,10 +214,15 @@ def show_event_images(events, time_gap, width, height, dest):
         for event in events[(events[:, 0] >= time) & (events[:, 0] < time + time_gap)]:
             img[int(event[2]), int(event[1]), int(event[3])] = 1
         
-        time += time_gap
         img = img.astype(np.uint8) * 255
-        Image.fromarray(img).save(dest+"img"+str(cnt)+".png")
+        pilim = Image.fromarray(img)
+        draw = ImageDraw.Draw(pilim)
+        for x in rec[0]:
+            for y in rec[1]:
+                draw.rectangle([x, y, x + 31, y + 31], outline=(255, 255, 255, 0))
+        pilim.save(dest+"img"+str(cnt)+side+"_"+str(time)+".png")
         cnt += 1
+        time += time_gap
         img = np.zeros((height, width, 3))
         
 def load_frames(path):
@@ -235,3 +239,52 @@ def load_frames(path):
             for fr in f["frames"]:
                 frames.append(fr.image)
             return np.array(frames)
+        
+def rectify_events(events, lx, ly, rx, ry):
+    events[0]["x"] += lx
+    events[0]["y"] += ly
+    events[1]["x"] += rx
+    events[1]["y"] += ry
+    
+    l_events = events[0][(events[0]["x"] < 346) & (events[0]["x"] >= 0) & (events[0]["y"] < 260) & (events[0]["y"] >= 0)]
+    r_events = events[1][(events[1]["x"] < 346) & (events[1]["x"] >= 0) & (events[1]["y"] < 260) & (events[1]["y"] >= 0)]
+    
+    return l_events, r_events
+
+def rectify_frames(frames, lx, ly, rx, ry):
+    rect_frames = np.array(frames).copy()
+    rect_frames[0] = shift(rect_frames[0], ly, 1)
+    rect_frames[0] = shift(rect_frames[0], lx, 2)
+    rect_frames[1] = shift(rect_frames[1], ry, 1)
+    rect_frames[1] = shift(rect_frames[1], rx, 2)
+    
+    return rect_frames
+
+def shift(arr, num, axis, fill_value=0):
+    arr = np.roll(arr, num, axis=axis)
+    if num < 0:
+        if axis == 1:
+            arr[:, num:] = fill_value
+        if axis == 2:
+            arr[:, :, num:] = fill_value
+    elif num > 0:
+        if axis == 1:
+            arr[:, :num] = fill_value
+        if axis == 2:
+            arr[:, :, :num] = fill_value
+    return arr
+
+def remove_events(events, tss, tse):    
+    l_events = events[0]
+    r_events = events[1]
+    
+    for i, j in zip(tss, tse):
+        l_events = np.delete(l_events, (l_events["timestamp"] >= i) & (l_events["timestamp"] <= j))
+        r_events = np.delete(r_events, (r_events["timestamp"] >= i) & (r_events["timestamp"] <= j))
+        
+    return l_events, r_events
+
+def write_frames(dest, frames):
+    for i in range(frames.shape[1]):
+        cv.imwrite(dest+"img"+str(i)+"_left.jpg", frames[0][i])
+        cv.imwrite(dest+"img"+str(i)+"_right.jpg", frames[1][i])

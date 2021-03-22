@@ -11,20 +11,21 @@ import os
 if os.path.exists("/home/alphat"):
     network_path = "/home/alphat/neuvisys-dv/configuration/network/"
     os.chdir("/home/alphat/neuvisys-analysis")
+    home = "/home/alphat/"
 else:
     network_path = "/home/thomas/neuvisys-dv/configuration/network/"
     os.chdir("/home/thomas/neuvisys-analysis")
+    home = "/home/thomas/"
 
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-from aedat_tools.aedat_tools import load_aedat4, show_event_images, write_npz, load_frames, npz_to_arr, npaedat_to_np
-from graphical_interface.gui import launch_gui
+from aedat_tools.aedat_tools import load_aedat4, show_event_images, write_npz, load_frames, npz_to_arr, npaedat_to_np, rectify_events, rectify_frames, remove_events, write_frames
 
 from spiking_network.spiking_network import SpikingNetwork
 from spiking_network.display import display_network, load_array_param, complex_cells_directions
-from spiking_network.network_statistics.network_statistics import spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity
+from spiking_network.network_statistics.network_statistics import spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity, centroids
 from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
@@ -32,11 +33,6 @@ from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, his
 #%% Generate Spiking Network
 
 spinet = SpikingNetwork(network_path)
-
-
-#%% GUI
-
-launch_gui(spinet)
 
 
 #%% Display weights
@@ -49,10 +45,19 @@ display_network([spinet], 0)
 spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 
 
+#%% Load events
+
+events = load_aedat4(home+"Desktop/Events/pavin-3-5.aedat4")
+
+
 #%% Save aedat file as numpy npz file
 
-events = load_aedat4("/home/thomas/Vidéos/real_videos/aedat4/diverse_shapes/shapes_rot_180.aedat4")
-write_npz("/home/thomas/Vidéos/real_videos/npz/diverse_shapes/shapes_rot_180.npz", events)
+write_npz(home+"Desktop/Events/pavin-3-1", events)
+
+
+#%% Load frames
+
+frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
 #%% Launch training script
@@ -72,7 +77,8 @@ basis = spinet.generate_weight_mat()
 #%% Load and create gabor basis
 
 spinet.generate_weight_images()
-create_gabor_basis(spinet, nb_ticks=8)
+gabor_params_l = create_gabor_basis(spinet, "left", nb_ticks=8)
+gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
 
 
 #%% Create plots for preferred orientations and directions
@@ -115,6 +121,7 @@ display_network([spinet], 0)
 #%% Toggle learning
 
 toggle_learning(spinet, False)
+
 
 #%% Complex response to moving bars
 
@@ -175,7 +182,23 @@ spike_plots_simple_cells(spinet, 7639)
 # spike_plots_complex_cells(spinet, 100)
 
 
-#%% Plot event images
+#%% Rectify and Plot event images
 
-temp = npaedat_to_np(l_events)
-show_event_images(temp, 100000, 346, 260, "/home/alphat/Desktop/temp/")
+rect_events = rectify_events((events[0].copy(), events[1].copy()), -5, -16, 5, 16)
+
+show_event_images(npaedat_to_np(rect_events[0]), 100000, 346, 260, "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/", ([10, 84, 158, 232, 306], [20, 83, 146, 209]), "_l")
+show_event_images(npaedat_to_np(rect_events[1]), 100000, 346, 260, "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/", ([10, 84, 158, 232, 306], [20, 83, 146, 209]), "_r")
+
+#%% Plot frames
+
+rect_frames = rectify_frames(frames, -4, 8, 4, -8)
+
+write_frames("/home/alphat/Desktop/im2/", rect_frames)
+
+
+#%%
+
+tss = [1615820915344885, 1615820923944885, 1615820925444885, 1615820944844885, 1615820947944885]
+tse = [1615820916544885, 1615820924344885, 1615820925544885, 1615820945244885, 1615820948144885]
+
+l_events, r_events = remove_events(rect_events, tss, tse)

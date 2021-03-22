@@ -14,42 +14,45 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.image as mpimg
 
-def plot_gabor_image(neuron, est_basis, error, path, count):
+def plot_gabor_image(neuron, est_basis, error, path, count, side):
     gabor = -1 * est_basis[:, count].reshape(10, 10, order="F")
     fig, axes = plt.subplots(2, 1)
     axes[0].axis('off')
     axes[1].axis('off')
-    axes[0].imshow(mpimg.imread(neuron.weight_images[0]))
+    if side == "left":
+        axes[0].imshow(mpimg.imread(neuron.weight_images[0]))
+    elif side == "right":
+        axes[0].imshow(mpimg.imread(neuron.weight_images[1]))
     axes[1].imshow(gabor)
     plt.savefig(path, bbox_inches="tight")
     plt.close(fig)
 
-def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest):
+def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, side):
     cnt = 0
-    # indices = np.arange(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth)
-    if spinet.weight_sharing:
+    indices = np.arange(0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth)
+    if spinet.weight_sharing == "full":
         for i in range(spinet.l1depth):
-            path = dest + str(i) + "_" + str(round(error[0, i], 2)) + ".png"
-            plot_gabor_image(spinet.simple_cells[i], est_basis, error, path, i)
+            path = dest + "{0:.2f}".format(error[0, i]) + str(i) + "_" + side + ".png"
+            plot_gabor_image(spinet.simple_cells[i], est_basis, error, path, i, side)
         for neuron in spinet.simple_cells:
             x, y, z = neuron.position
-            path = dest + str(z) + "_" + str(round(error[0, z], 2)) + ".png"
+            path = dest + "{0:.2f}".format(error[0, z]) + str(z) + "_" + side + ".png"
             neuron.add_gabor(path, mu[0, z], sigma[0, z], lambd[0, z], phase[0, z], theta[0, z], error[0, z])
-         
-        # for i, ind in enumerate(indices):
-        #     for neuron in spinet.simple_cells[ind:ind+spinet.l1depth]:
-        #         path = dest + str(cnt) + "_" + str(round(error[0, cnt], 2)) + ".png"
-        #         plot_gabor_image(neuron, est_basis, error, path, cnt)
-        #         neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
-        #         cnt += 1
-        #     for j, neuron in enumerate(spinet.simple_cells[ind+spinet.l1depth:ind+spinet.l1width*spinet.l1height*spinet.l1depth]):
-        #         c = i * spinet.l1depth + j % spinet.l1depth
-        #         path = dest + str(c) + "_" + str(round(error[0, c], 2)) + ".png"
-        #         neuron.add_gabor(path, mu[0, c], sigma[0, c], lambd[0, c], phase[0, c], theta[0, c], error[0, c])
+    elif spinet.weight_sharing == "patch":
+        for i, ind in enumerate(indices):
+            for neuron in spinet.simple_cells[ind:ind+spinet.l1depth]:
+                path = dest + "{0:.2f}".format(error[0, cnt]) + str(cnt) + "_" + side + ".png"
+                plot_gabor_image(neuron, est_basis, error, path, cnt, side)
+                neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
+                cnt += 1
+            for j, neuron in enumerate(spinet.simple_cells[ind+spinet.l1depth:ind+spinet.l1width*spinet.l1height*spinet.l1depth]):
+                c = i * spinet.l1depth + j % spinet.l1depth
+                path = dest + "{0:.2f}".format(error[0, c]) + str(c) + "_" + side + ".png"
+                neuron.add_gabor(path, mu[0, c], sigma[0, c], lambd[0, c], phase[0, c], theta[0, c], error[0, c])
     else:
         for neuron in spinet.simple_cells:
             neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
-            plot_gabor_image(neuron, est_basis, error, dest, cnt)
+            plot_gabor_image(neuron, est_basis, error, dest, cnt, side)
             cnt += 1
     
 def plot_polar_chart(depth, nb_ticks, theta, error, err_thresh, dest):
@@ -86,20 +89,22 @@ def error_percentage(theta, error, max_error, dest):
     plt.ylabel("proportion of accepted gabors (%)")
     plt.savefig(dest+"error_proportion", bbox_inches="tight")
     
-def create_gabor_basis(spinet, nb_ticks):
-    mu = sio.loadmat(spinet.path+"gabors/data/mu.mat")["mu_table"]
-    sigma = sio.loadmat(spinet.path+"gabors/data/sigma.mat")["sigma_table"]
-    lambd = sio.loadmat(spinet.path+"gabors/data/lambda.mat")["lambda_table"]
-    phase = sio.loadmat(spinet.path+"gabors/data/phase.mat")["phase_table"]
-    theta = sio.loadmat(spinet.path+"gabors/data/theta.mat")["theta_table"]
-    error = sio.loadmat(spinet.path+"gabors/data/error.mat")["error_table"]
-    est_basis = sio.loadmat(spinet.path+"gabors/data/EstBasis.mat")["EstBasis"]
+def create_gabor_basis(spinet, side, nb_ticks):
+    mu = sio.loadmat(spinet.path+"gabors/data/"+side+"/mu.mat")["mu_table"]
+    sigma = sio.loadmat(spinet.path+"gabors/data/"+side+"/sigma.mat")["sigma_table"]
+    lambd = sio.loadmat(spinet.path+"gabors/data/"+side+"/lambda.mat")["lambda_table"]
+    phase = sio.loadmat(spinet.path+"gabors/data/"+side+"/phase.mat")["phase_table"]
+    theta = sio.loadmat(spinet.path+"gabors/data/"+side+"/theta.mat")["theta_table"]
+    error = sio.loadmat(spinet.path+"gabors/data/"+side+"/error.mat")["error_table"]
+    est_basis = sio.loadmat(spinet.path+"gabors/data/"+side+"/EstBasis.mat")["EstBasis"]
     
     theta = (theta + np.pi / 2) % np.pi
     
-    plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, spinet.path+"gabors/figures/")
+    plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, spinet.path+"gabors/figures/", side)
     plot_polar_chart(spinet.l1depth, nb_ticks, theta[0], error[0], 20, spinet.path+"gabors/hists/")
     error_percentage(theta[0], error[0], 20, spinet.path+"gabors/hists/")
+    
+    return mu, sigma, lambd, phase, theta, error
     
 def compute_histogram(directions, thet_max, nb_ticks=8, weights=None):
     bins = list(np.arange((180/nb_ticks)/2, thet_max, 180/nb_ticks))

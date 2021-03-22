@@ -154,13 +154,13 @@ lin[(t >= 0) & (t < tau_ltd)] = eta_ltp * t[(t >= 0) & (t < tau_ltd)][::-1] / np
 exp = np.concatenate((eta_ltd * np.exp(t[t < 0] / tau_ltd), eta_ltp * np.exp(-t[t >= 0] / tau_ltp)))
 
 
-fig, axs = plt.subplots(3, 1)
+fig, axs = plt.subplots(1, 3)
 
 for ax in axs.flat:
     ax.grid(alpha=.2, linestyle='--')
     ax.axhline(0, alpha=0.3, linestyle='-', color='k')
     ax.axvline(0, alpha=0.3, linestyle='-', color='k')
-    ax.xlim = [-0.5, 0.5]
+    ax.set_ylim(-0.3, 0.3)
     ax.set_ylabel("Synaptic change (mV)")
     ax.label_outer()
 

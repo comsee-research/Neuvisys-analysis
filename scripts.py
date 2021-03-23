@@ -25,7 +25,7 @@ from aedat_tools.aedat_tools import load_aedat4, show_event_images, write_npz, l
 
 from spiking_network.spiking_network import SpikingNetwork
 from spiking_network.display import display_network, load_array_param, complex_cells_directions
-from spiking_network.network_statistics.network_statistics import spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity, centroids
+from spiking_network.network_statistics.network_statistics import rf_matching, spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity
 from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
@@ -79,6 +79,49 @@ basis = spinet.generate_weight_mat()
 spinet.generate_weight_images()
 gabor_params_l = create_gabor_basis(spinet, "left", nb_ticks=8)
 gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
+
+
+#%%
+
+weights = spinet.get_weights("simple")
+residuals, disparity = rf_matching(weights)
+
+# error = (gabor_params_l[5] + gabor_params_r[5]) / 2
+# epsi_error = 5
+
+# cnt = 0
+# fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
+# for i in range(5):
+#     for j in range(4):
+#         axes[j, i].set_title("nb rf:" + str(error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error].size) + 
+#                              "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])))
+#         axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error], np.arange(-0.5, 10.5), histtype='stepfilled')
+#         cnt += 1
+
+# cnt = 0
+# fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
+# for i in range(5):
+#     for j in range(4):
+#         axes[j, i].set_title("nb rf:" + str(error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error].size) +
+#                              "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])))
+#         axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error], np.arange(-0.5, 10.5), histtype='stepfilled')
+#         cnt += 1
+
+cnt = 0
+fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
+for i in range(5):
+    for j in range(4):
+        axes[j, i].set_title("mean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0])))
+        axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0], np.arange(-0.5, 10.5), histtype='stepfilled')
+        cnt += 1
+
+cnt = 0
+fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
+for i in range(5):
+    for j in range(4):
+        axes[j, i].set_title("mean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1])))
+        axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1], np.arange(-0.5, 10.5), histtype='stepfilled')
+        cnt += 1
 
 
 #%% Create plots for preferred orientations and directions
@@ -202,3 +245,4 @@ tss = [1615820915344885, 1615820923944885, 1615820925444885, 1615820944844885, 1
 tse = [1615820916544885, 1615820924344885, 1615820925544885, 1615820945244885, 1615820948144885]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
+

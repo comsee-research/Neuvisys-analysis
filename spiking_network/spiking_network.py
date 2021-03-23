@@ -88,16 +88,20 @@ class SpikingNetwork:
                 compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
                 neuron.weight_images.append(path)
 
+    def get_weights(self, neuron_type):
+        if neuron_type == "simple":
+            weights = []
+            if self.weight_sharing == "full":
+                weights = [neuron.weights for neuron in self.simple_cells[0:self.l1depth]]
+            elif self.weight_sharing == "patch":
+                for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
+                    weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
+            else:
+                weights = [neuron.weights for neuron in self.simple_cells]
+            return np.array(weights)
 
     def generate_weight_mat(self):
-        weights = []
-        if self.weight_sharing == "full":
-            weights = [neuron.weights for neuron in self.simple_cells[0:self.l1depth]]
-        elif self.weight_sharing == "patch":
-            for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
-                weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
-        else:
-            weights = [neuron.weights for neuron in self.simple_cells]
+        weights = self.get_weights()
 
         w = self.neuron1_width * self.neuron1_height
         basis = np.zeros((2 * w, len(weights)))

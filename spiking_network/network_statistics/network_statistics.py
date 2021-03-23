@@ -139,18 +139,31 @@ def weight_centroid(weight):
     y_coord = (Y * weight).sum() / weight.sum()
     return x_coord, y_coord
 
-def centroids(spinet):
-    weights = []
-    if spinet.weight_sharing == "full":
-        weights = [neuron.weights for neuron in spinet.simple_cells[0:spinet.l1depth]]
-    elif spinet.weight_sharing == "patch":
-        for i in range(0, spinet.nb_simple_cells, spinet.l1depth*spinet.l1width*spinet.l1height):
-            weights += [neuron.weights for neuron in spinet.simple_cells[i:i+spinet.l1depth]]
-    else:
-        weights = [neuron.weights for neuron in spinet.simple_cells]
-    
-    l_c, r_c = [], []
+def rf_matching(weights):
+    residuals = []
+    disparity = []
     for weight in weights:
-        l_c.append(weight_centroid(weight[:, 0, 0]))
-        r_c.append(weight_centroid(weight[:, 1, 0]))
-    return np.array(l_c), np.array(r_c)
+        res_ref = np.inf
+        xmax, ymax = 0, 0
+        for x in range(weight.shape[3]):
+            for y in range(weight.shape[4]):
+                res = weight[:, 0, 0] - np.roll(weight[:, 1, 0], (x, y), axis=(1, 2))
+
+                # fig, ax = plt.subplots(2, 3)
+                # fig.suptitle(str(np.sum(np.abs(res))))
+                # ax[0, 0].imshow(weight[0, 0, 0])
+                # ax[0, 1].imshow(np.roll(weight[0, 1, 0], (x, y), axis=(0, 1)))
+                # ax[1, 0].imshow(weight[1, 0, 0])
+                # ax[1, 1].imshow(np.roll(weight[1, 1, 0], (x, y), axis=(0, 1)))
+                # ax[0, 2].imshow(np.abs(res[0]))
+                # ax[1, 2].imshow(np.abs(res[1]))
+                
+                res = np.sum(np.abs(res))
+                if res < res_ref:
+                    res_ref = res
+                    xmax = x
+                    ymax = y
+        residuals.append(res_ref)
+        disparity.append((xmax, ymax))
+    return np.array(residuals), np.array(disparity)
+  

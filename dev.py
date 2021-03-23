@@ -147,58 +147,6 @@ axs[2].set_title("Exponential")
 
 #%%
 
-g, d = centroids(spinet)
-gd = g - d
-epsi_error = 2.5
-
-cnt = 0
-fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
-for i in range(5):
-    for j in range(4):     
-        axes[j, i].set_title("region: "+str(1+i)+", "+str(1+j) + ": " + str(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error].size) + "\n" + "mean (x, y):" + str(np.mean(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])) + "\n" + "std  (x, y):" + str(np.std(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])))
-        # axes[j, i].set_xlim([-5, 5])
-        # axes[j, i].set_ylim([0, 250])
-        axes[j, i].hist(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])
-        cnt += 1
-
-# cnt = 0
-# fig, axes = plt.subplots(4, 5, sharex=True, sharey=True)
-# for i in range(5):
-#     for j in range(4):
-#         axes[j, i].set_title("region: "+str(1+i)+", "+str(1+j) + "\n" + "mean (x, y):" + str(np.mean(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])) + "\n" + "std  (x, y):" + str(np.std(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])))
-#         # axes[j, i].set_xlim([-5, 5])
-#         # axes[j, i].set_ylim([0, 250])
-#         axes[j, i].hist(gd[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error])
-#         cnt += 1
-        
-#%%
-
-xmu = gabor_params_l[0][0] - gabor_params_r[0][0]
-ymu = gabor_params_l[0][1] - gabor_params_r[0][1]
-xsigma = gabor_params_l[1][0] - gabor_params_r[1][0]
-ysigma = gabor_params_l[1][1] - gabor_params_r[1][1]
-lambd = gabor_params_l[2] - gabor_params_r[2]
-theta = gabor_params_l[4] - gabor_params_r[4]
-error = (gabor_params_l[5] + gabor_params_r[5]) / 2
-
-disp = (gabor_params_l[3] - gabor_params_r[3]) / (2 * np.pi * ((gabor_params_l[2] + gabor_params_r[2]) / 2) * np.cos(((gabor_params_l[4] + gabor_params_r[4]) / 2)))
-
-epsi_xmu = 80
-epsi_ymu = 60
-epsi_xsigma = 20
-epsi_ysigma = 60
-epsi_lambd = 3
-epsi_theta = 0.5
-epsi_error = 2.5
-
-id_disp = np.where((np.abs(error) < epsi_error))[1]
-
-# id_disp = np.where((np.abs(xmu) < epsi_xmu) & (np.abs(ymu) < epsi_ymu) & (np.abs(xsigma) < epsi_xsigma) & (np.abs(ysigma) < epsi_ysigma) & (np.abs(lambd) < epsi_lambd) & (np.abs(theta) < epsi_theta) & (error < epsi_error))[1]
-# disp_f = disp[(np.abs(xmu) < epsi_xmu) & (np.abs(ymu) < epsi_ymu) & (np.abs(xsigma) < epsi_xsigma) & (np.abs(ysigma) < epsi_ysigma) & (np.abs(lambd) < epsi_lambd) & (np.abs(theta) < epsi_theta) & (error < epsi_error)]
-# final_disp = np.vstack((id_disp, disp_f))
-
-#%%
-
 block_size = 3
 min_disp = 0
 num_disp = 16

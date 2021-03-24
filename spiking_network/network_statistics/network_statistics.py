@@ -158,7 +158,7 @@ def rf_matching(weights):
                 # ax[0, 2].imshow(np.abs(res[0]))
                 # ax[1, 2].imshow(np.abs(res[1]))
                 
-                res = np.sum(np.abs(res))
+                res = np.sum(res**2)
                 if res < res_ref:
                     res_ref = res
                     xmax = x
@@ -166,4 +166,29 @@ def rf_matching(weights):
         residuals.append(res_ref)
         disparity.append((xmax, ymax))
     return np.array(residuals), np.array(disparity)
+
+def compute_disparity(spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual):
+    cnt = 0
+    fig, axes = plt.subplots(3, 4, sharex=True, sharey=True)
+    for i in range(5):
+        for j in range(4):
+            mask_residual = residual[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_residual
+            mask_theta = (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] > np.pi/2+epsi_theta) | (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < np.pi/2-epsi_theta)
+            mask_error = error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error
+            if i != 4 and j != 3:
+                axes[j, i].set_title("nb rf:" + str(np.count_nonzero(mask_error & mask_theta & mask_residual)) + "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])))
+                axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error & mask_residual], np.arange(-5.5, 6.5), density=True)
+            cnt += 1
+    
+    cnt = 0
+    fig, axes = plt.subplots(3, 4, sharex=True, sharey=True)
+    for i in range(5):
+        for j in range(4):
+            mask_residual = residual[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_residual
+            mask_theta = (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] > epsi_theta) & (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < np.pi-epsi_theta)
+            mask_error = error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error
+            if i != 4 and j != 3:
+                axes[j, i].set_title("nb rf:" + str(np.count_nonzero(mask_error & mask_theta & mask_residual)) + "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])))
+                axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][mask_theta & mask_error & mask_residual], np.arange(-5.5, 6.5), density=True)
+            cnt += 1
   

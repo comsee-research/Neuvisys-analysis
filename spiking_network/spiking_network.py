@@ -101,7 +101,7 @@ class SpikingNetwork:
             return np.array(weights)
 
     def generate_weight_mat(self):
-        weights = self.get_weights()
+        weights = self.get_weights("simple")
 
         w = self.neuron1_width * self.neuron1_height
         basis = np.zeros((2 * w, len(weights)))

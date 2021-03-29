@@ -1,9 +1,10 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 
 
-left = cv2.VideoCapture('/home/alphat/Desktop/im/left.mp4')
-right = cv2.VideoCapture('/home/alphat/Desktop/im/right.mp4')
+left = cv2.VideoCapture('/home/alphat/Desktop/pavin_images/im3/left.mp4')
+right = cv2.VideoCapture('/home/alphat/Desktop/pavin_images/im3/right.mp4')
 
 # Create Detector and descriptor, ORB pour changer
 orb = cv2.ORB_create(nfeatures=1000)
@@ -55,7 +56,7 @@ while(True):
         src_pts = np.float32([kp_left[m.queryIdx].pt for m in matches[0:n_matchs]]).reshape(-1, 1, 2)
         dst_pts = np.float32([kp_right[m.trainIdx].pt for m in matches[0:n_matchs]]).reshape(-1, 1, 2)
         H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC)
-        print('H = ',H)
+        print('H = ', H)
       
     #---------------------------------
     # Compute rectangle

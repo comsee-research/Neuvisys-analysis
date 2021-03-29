@@ -41,13 +41,13 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
     elif spinet.weight_sharing == "patch":
         for i, ind in enumerate(indices):
             for neuron in spinet.simple_cells[ind:ind+spinet.l1depth]:
-                path = dest + "{0:.2f}".format(error[0, cnt]) + str(cnt) + "_" + side + ".png"
+                path = dest + str(cnt) + "_{0:.2f}".format(error[0, cnt]) + "_" + side + ".png"
                 plot_gabor_image(neuron, est_basis, error, path, cnt, side)
                 neuron.add_gabor(path, mu[0, cnt], sigma[0, cnt], lambd[0, cnt], phase[0, cnt], theta[0, cnt], error[0, cnt])
                 cnt += 1
             for j, neuron in enumerate(spinet.simple_cells[ind+spinet.l1depth:ind+spinet.l1width*spinet.l1height*spinet.l1depth]):
                 c = i * spinet.l1depth + j % spinet.l1depth
-                path = dest + "{0:.2f}".format(error[0, c]) + str(c) + "_" + side + ".png"
+                path = dest + str(c) + "_{0:.2f}".format(error[0, c]) + "_" + side + ".png"
                 neuron.add_gabor(path, mu[0, c], sigma[0, c], lambd[0, c], phase[0, c], theta[0, c], error[0, c])
     else:
         for neuron in spinet.simple_cells:

@@ -9,23 +9,23 @@ Created on Thu Jul  2 16:58:28 2020
 import os
 
 if os.path.exists("/home/alphat"):
-    network_path = "/home/alphat/neuvisys-dv/configuration/network/"
     os.chdir("/home/alphat/neuvisys-analysis")
     home = "/home/alphat/"
 else:
-    network_path = "/home/thomas/neuvisys-dv/configuration/network/"
     os.chdir("/home/thomas/neuvisys-analysis")
     home = "/home/thomas/"
+
+network_path = home+"/neuvisys-dv/configuration/network/"
 
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-from aedat_tools.aedat_tools import load_aedat4, show_event_images, write_npz, load_frames, npz_to_arr, npaedat_to_np, rectify_events, rectify_frames, remove_events, write_frames
+from aedat_tools.aedat_tools import stereo_matching, load_aedat4, show_event_images, write_npz, load_frames, npz_to_arr, npaedat_to_np, rectify_events, rectify_frames, remove_events, write_frames
 
 from spiking_network.spiking_network import SpikingNetwork
 from spiking_network.display import display_network, load_array_param, complex_cells_directions
-from spiking_network.network_statistics.network_statistics import spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity, centroids
+from spiking_network.network_statistics.network_statistics import compute_disparity, rf_matching, spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity
 from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
 from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
 
@@ -79,6 +79,21 @@ basis = spinet.generate_weight_mat()
 spinet.generate_weight_images()
 gabor_params_l = create_gabor_basis(spinet, "left", nb_ticks=8)
 gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
+
+
+#%% Compute receptive field disparity
+
+weights = spinet.get_weights("simple")
+residuals, disparity = rf_matching(weights)
+
+disparity[disparity >= 5] -= 10
+compute_disparity(spinet, disparity, gabor_params_l[4], (gabor_params_l[5] + gabor_params_r[5]) / 2, residuals, 0, 500, 120.5)
+
+
+#%% Stereo matching
+
+# disp_frames, disp_nb_frames = stereo_matching("/home/alphat/Desktop/pavin_images/im3/", [10, 84, 158, 232], [20, 83, 146], range(900, 1100))
+disp_frames, disp_nb_frames = stereo_matching("/home/alphat/Desktop/pavin_images/im1/", [10, 84, 158, 232], [20, 83, 146], range(0, 200))
 
 
 #%% Create plots for preferred orientations and directions
@@ -189,11 +204,12 @@ rect_events = rectify_events((events[0].copy(), events[1].copy()), -5, -16, 5, 1
 show_event_images(npaedat_to_np(rect_events[0]), 100000, 346, 260, "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/", ([10, 84, 158, 232, 306], [20, 83, 146, 209]), "_l")
 show_event_images(npaedat_to_np(rect_events[1]), 100000, 346, 260, "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/", ([10, 84, 158, 232, 306], [20, 83, 146, 209]), "_r")
 
+
 #%% Plot frames
 
 rect_frames = rectify_frames(frames, -4, 8, 4, -8)
 
-write_frames("/home/alphat/Desktop/im2/", rect_frames)
+write_frames("/home/alphat/Desktop/pavin_images/im1/", rect_frames)
 
 
 #%%
@@ -202,3 +218,60 @@ tss = [1615820915344885, 1615820923944885, 1615820925444885, 1615820944844885, 1
 tse = [1615820916544885, 1615820924344885, 1615820925544885, 1615820945244885, 1615820948144885]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
+
+
+#%%
+
+import cv2 as cv
+folder, xs, ys = "/home/alphat/Desktop/Bundle/pavin_images/im1_rect/", [10, 84, 158, 232], [20, 83, 146]
+
+mat = np.zeros((346, 260))
+ind = 1
+for x in xs:
+    for y in ys:
+        mat[x:x+30, y:y+30] = ind
+        ind += 1
+        
+vec = {}
+for i in range(21):
+    vec[i] = []
+
+for i in np.arange(0, 824):
+    lframe = cv.imread(folder+"img"+str(i)+"_left.jpg")
+    rframe = cv.imread(folder+"img"+str(i)+"_right.jpg")
+    
+    orb = cv.ORB_create(nfeatures=1000)
+    
+    kp_left, ds_left = orb.detectAndCompute(lframe, None)
+    kp_right, ds_right = orb.detectAndCompute(rframe, None)
+    
+    bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(ds_left, ds_right)
+    
+    matches = sorted(matches, key = lambda x:x.distance)
+    
+    for match in matches:
+        lp = kp_left[match.queryIdx].pt
+        rp = kp_right[match.trainIdx].pt
+        
+        x_shift = lp[0] - rp[0]
+        y_shift = lp[1] - rp[1]
+        # print("{:.1f}, {:.1f}".format(*lp), "|", "{:.1f}, {:.1f}".format(*rp), "->", "{:.2f}".format(x_shift), "|", "{:.2f}".format(y_shift))
+        
+        if np.abs(x_shift) < 20 and np.abs(y_shift) < 20:
+            vec[mat[int(np.round((lp[0]))), int(np.round(lp[1]))]].append([x_shift, y_shift])
+            
+        # imgmatching = cv.drawMatches(lframe, kp_left, rframe, kp_right, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        # plt.imshow(imgmatching)
+
+fig, axes = plt.subplots(3, 4, sharex=True, sharey=True)
+fin = np.zeros((len(ys), len(xs), 2))
+nb_fin = np.zeros((len(ys), len(xs)))
+ind = 1
+for i in range(len(xs)):
+    for j in range(len(ys)):
+        axes[j, i].set_title("nb : " + str(np.array(vec[ind])[:, 0].shape[0]))
+        axes[j, i].hist(np.array(vec[ind])[:, 0], np.arange(-25.5, 26.5), density=True)
+        fin[j, i] = np.mean(vec[ind], axis=0)
+        nb_fin[j, i] = len(vec[ind])
+        ind += 1

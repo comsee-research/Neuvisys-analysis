@@ -8,20 +8,25 @@ Created on Wed May 13 14:20:36 2020
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 from utils.utils import load_params
+
 
 def spike_train(directory):
     return np.array(load_params(directory)["spike_train"])
 
+
 def spike_count(directory, neuron_id):
-    return load_params(directory+"weights/neuron_"+str(neuron_id)+".json")["count_spike"]
+    return load_params(directory + "weights/neuron_" + str(neuron_id) + ".json")[
+        "count_spike"
+    ]
+
 
 def std_spikes(spike_counts):
     print("average number of spikes standard deviation for inhibited neurons")
-    nb_spikes_inh = [spike_counts[i:i+4] for i in range(0, len(spike_counts), 4)]
+    nb_spikes_inh = [spike_counts[i : i + 4] for i in range(0, len(spike_counts), 4)]
     print(np.mean([np.std(a) for a in nb_spikes_inh]))
     return nb_spikes_inh
+
 
 def spike_rate_histogram(spike_counts, time):
     plt.figure()
@@ -29,27 +34,31 @@ def spike_rate_histogram(spike_counts, time):
     plt.xlabel("spiking rate (spikes/s)")
     plt.hist(np.array(spike_counts) / time)
 
+
 def isi_histogram(spike_train):
     isi = (spike_train[1:] - spike_train[:-1]) / 1000
     return isi[isi >= 0]
 
+
 def plot_isi_histogram(directory):
     isi = isi_histogram(spike_train(directory))
-    
+
     fig = plt.figure()
     plt.title("Neuron ISI histogram")
     plt.xlabel("interspike interval (ms)")
     plt.hist(isi, bins=np.arange(0, 700, 25))
     return isi, fig
-    
+
+
 def plot_isi_histograms(directory):
     isis = []
-    
+
     for i in range(nb_neurons):
-        fig, isi = plot_isi_histogram(directory+"weights/neuron_"+str(i)+".json")
-        plt.savefig(directory+"figures/isi_hist/isi_"+str(i))
+        fig, isi = plot_isi_histogram(directory + "weights/neuron_" + str(i) + ".json")
+        plt.savefig(directory + "figures/isi_hist/isi_" + str(i))
         isis += list(isi)
     return isis
+
 
 ####
 

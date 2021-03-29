@@ -12,71 +12,104 @@ from PIL import Image
 import scipy.io as sio
 import numpy as np
 import itertools
-
 from aedat_tools.aedat_tools import load_params, delete_files
+
 
 def compress_weight(weights, path):
     img = np.array(255 * (weights / weights.max()), dtype=np.uint8)
     img = Image.fromarray(img).save(path)
-    
+
+
 def reshape_weights(weights, width, height):
     weights = np.concatenate((weights, np.zeros((1, width, height))), axis=0)
     return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
-    
+
+
 class SpikingNetwork:
     """Spiking Neural Network class"""
-    
+
     def __init__(self, path):
         self.path = path
-        self.unpack_json(path+"configs/network_config.json")
+        self.unpack_json(path + "configs/network_config.json")
         self.neurons = []
         self.simple_cells = []
         self.complex_cells = []
-        
+
         self.sspikes = []
         self.cspikes = []
-        
+
         neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
-        for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("complex", path+"configs/complex_cell_config.json", path+"weights/complex_cells/", *paths)
+        for paths in [
+            neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)
+        ]:
+            neuron = Neuron(
+                "complex",
+                path + "configs/complex_cell_config.json",
+                path + "weights/complex_cells/",
+                *paths
+            )
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
             if neuron.tracking:
                 self.cspikes.append(neuron.spike_train)
-        
+
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
-        for paths in [neurons_paths[i:i+2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron("simple", path+"configs/simple_cell_config.json", path+"weights/simple_cells/", *paths)
+        for paths in [
+            neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)
+        ]:
+            neuron = Neuron(
+                "simple",
+                path + "configs/simple_cell_config.json",
+                path + "weights/simple_cells/",
+                *paths
+            )
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
-            
+
             if neuron.tracking:
                 self.sspikes.append(neuron.spike_train)
-                
+
         self.nb_neurons = len(self.neurons)
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
-        
+
         self.layout1 = np.load(path + "weights/layout1.npy")
         # self.layout2 = np.load(path + "weights/layout2.npy")
-        
+
         if np.array(self.sspikes, dtype=object).size > 0:
-            self.sspikes = np.array(list(itertools.zip_longest(*self.sspikes, fillvalue=0))).T
+            self.sspikes = np.array(
+                list(itertools.zip_longest(*self.sspikes, fillvalue=0))
+            ).T
             self.sspikes[self.sspikes != 0] -= np.min(self.sspikes[self.sspikes != 0])
         if np.array(self.cspikes, dtype=object).size > 0:
-            self.cspikes = np.array(list(itertools.zip_longest(*self.cspikes, fillvalue=0))).T
+            self.cspikes = np.array(
+                list(itertools.zip_longest(*self.cspikes, fillvalue=0))
+            ).T
             self.cspikes[self.cspikes != 0] -= np.min(self.cspikes[self.cspikes != 0])
-            
-        if os.path.exists(self.path+"gabors/data/direction_response.npy"):
-            self.directions = np.load(self.path+"gabors/data/direction_response.npy")
+
+        if os.path.exists(self.path + "gabors/data/direction_response.npy"):
+            self.directions = np.load(self.path + "gabors/data/direction_response.npy")
             self.orientations = self.directions[0:8] + self.directions[8:16]
-        
+
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
             for synapse in range(self.neuron1_synapses):
                 for camera in range(self.nb_cameras):
-                    weights = reshape_weights(neuron.weights[:, camera, synapse], self.neuron1_width, self.neuron1_height)
-                    path = self.path+"images/simple_cells/"+str(i)+"_syn"+str(synapse)+"_cam"+str(camera)+".png"
+                    weights = reshape_weights(
+                        neuron.weights[:, camera, synapse],
+                        self.neuron1_width,
+                        self.neuron1_height,
+                    )
+                    path = (
+                        self.path
+                        + "images/simple_cells/"
+                        + str(i)
+                        + "_syn"
+                        + str(synapse)
+                        + "_cam"
+                        + str(camera)
+                        + ".png"
+                    )
                     compress_weight(weights, path)
                     neuron.weight_images.append(path)
 
@@ -84,7 +117,14 @@ class SpikingNetwork:
             for lay in range(self.neuron2_depth):
                 dim = np.zeros((self.neuron2_width, self.neuron2_height))
                 weight = np.stack((neuron.weights[:, :, lay], dim, dim), axis=2)
-                path = self.path+"images/complex_cells/"+str(i)+"_lay_"+str(lay)+".png"
+                path = (
+                    self.path
+                    + "images/complex_cells/"
+                    + str(i)
+                    + "_lay_"
+                    + str(lay)
+                    + ".png"
+                )
                 compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
                 neuron.weight_images.append(path)
 
@@ -92,10 +132,17 @@ class SpikingNetwork:
         if neuron_type == "simple":
             weights = []
             if self.weight_sharing == "full":
-                weights = [neuron.weights for neuron in self.simple_cells[0:self.l1depth]]
+                weights = [
+                    neuron.weights for neuron in self.simple_cells[0 : self.l1depth]
+                ]
             elif self.weight_sharing == "patch":
-                for i in range(0, self.nb_simple_cells, self.l1depth*self.l1width*self.l1height):
-                    weights += [neuron.weights for neuron in self.simple_cells[i:i+self.l1depth]]
+                for i in range(
+                    0, self.nb_simple_cells, self.l1depth * self.l1width * self.l1height
+                ):
+                    weights += [
+                        neuron.weights
+                        for neuron in self.simple_cells[i : i + self.l1depth]
+                    ]
             else:
                 weights = [neuron.weights for neuron in self.simple_cells]
             return np.array(weights)
@@ -107,11 +154,13 @@ class SpikingNetwork:
         basis = np.zeros((2 * w, len(weights)))
         for c in range(self.nb_cameras):
             for i, weight in enumerate(weights):
-                basis[c*w:(c+1)*w, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
-        sio.savemat(self.path+"gabors/data/weights.mat", {"basis": basis})
-        
+                basis[c * w : (c + 1) * w, i] = (
+                    weight[0, c, 0] - weight[1, c, 0]
+                ).flatten("F")
+        sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
+
         return basis
-        
+
     def unpack_json(self, json_path):
         json = load_params(json_path)
         self.weight_sharing = json["SharingType"]
@@ -123,7 +172,7 @@ class SpikingNetwork:
         self.neuron1_width = json["Neuron1Width"]
         self.neuron1_height = json["Neuron1Height"]
         self.neuron1_synapses = json["Neuron1Synapses"]
-        
+
         self.l2width = json["L2Width"]
         self.l2height = json["L2Height"]
         self.l2depth = json["L2Depth"]
@@ -133,40 +182,41 @@ class SpikingNetwork:
         self.neuron2_height = json["Neuron2Height"]
         self.neuron2_depth = json["Neuron2Depth"]
         self.nb_cameras = json["NbCameras"]
-        
+
     def clean_network(self, simple_cells, complex_cells, json_only):
         if json_only:
             if simple_cells:
-                for file in os.listdir(self.path+"weights/simple_cells/"):
+                for file in os.listdir(self.path + "weights/simple_cells/"):
                     if file.endswith(".json"):
-                        os.remove(self.path+"weights/simple_cells/"+file)
+                        os.remove(self.path + "weights/simple_cells/" + file)
             if complex_cells:
-                for file in os.listdir(self.path+"weights/complex_cells/"):
+                for file in os.listdir(self.path + "weights/complex_cells/"):
                     if file.endswith(".json"):
-                        os.remove(self.path+"weights/complex_cells/"+file)
+                        os.remove(self.path + "weights/complex_cells/" + file)
         else:
             if simple_cells:
-                delete_files(self.path+"weights/simple_cells/")
+                delete_files(self.path + "weights/simple_cells/")
             if complex_cells:
-                delete_files(self.path+"weights/complex_cells/")
-            delete_files(self.path+"images/complex_connections/")
-            delete_files(self.path+"images/simple_cells/")
-            delete_files(self.path+"images/complex_cells/")
-            os.remove(self.path+"learning_trace.txt")
-        
+                delete_files(self.path + "weights/complex_cells/")
+            delete_files(self.path + "images/complex_connections/")
+            delete_files(self.path + "images/simple_cells/")
+            delete_files(self.path + "images/complex_cells/")
+            os.remove(self.path + "learning_trace.txt")
+
     def save_complex_directions(self, spikes, rotations):
         spike_vector = []
         for rot in range(rotations.size):
             spike_vector.append(np.count_nonzero(spikes[rot], axis=1))
         spike_vector = np.array(spike_vector)
-        
-        np.save(self.path+"gabors/data/direction_response", spike_vector)
+
+        np.save(self.path + "gabors/data/direction_response", spike_vector)
         self.directions = spike_vector
         self.orientations = self.directions[0:8] + self.directions[8:16]
 
+
 class Neuron:
     """Spiking Neuron class"""
-    
+
     def __init__(self, neuron_type, config_path, path, param_path, weight_path):
         self.type = neuron_type
         self.unpack_json_config(config_path)
@@ -179,7 +229,7 @@ class Neuron:
         self.phase = 0
         self.sigma = 0
         self.error = 0
-        
+
     def add_gabor(self, image, mu, sigma, lambd, phase, theta, error):
         self.gabor_image = image
         self.mu = mu
@@ -189,7 +239,7 @@ class Neuron:
         self.theta = theta
         self.error = error
         self.orientation = self.theta
-        
+
     def unpack_json_config(self, json_path):
         json = load_params(json_path)
         if self.type == "simple":
@@ -199,14 +249,14 @@ class Neuron:
             self.tau_sra = json["TAU_SRA"]
             self.target_spike_rate = json["TARGET_SPIKE_RATE"]
             self.synapse_delay = json["SYNAPSE_DELAY"]
-            
+
         self.vthresh = json["VTHRESH"]
         self.vreset = json["VRESET"]
         self.delta_rp = json["ETA_RP"]
         self.tau_rp = json["TAU_RP"]
         self.tau_m = json["TAU_M"]
         self.tau_ltp = json["TAU_LTP"]
-        self.tau_ltd= json["TAU_LTD"]
+        self.tau_ltd = json["TAU_LTD"]
         self.norm_factor = json["NORM_FACTOR"]
         self.delta_vp = json["ETA_LTP"]
         self.delta_vd = json["ETA_LTD"]
@@ -214,7 +264,7 @@ class Neuron:
         self.decay_factor = json["DECAY_FACTOR"]
         self.stdp_learning = json["STDP_LEARNING"]
         self.tracking = json["TRACKING"]
-        
+
     def unpack_json_params(self, json_path):
         json = load_params(json_path)
         self.count_spike = json["count_spike"]

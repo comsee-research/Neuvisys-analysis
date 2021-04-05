@@ -1,5 +1,12 @@
-import flatbuffers
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr  8 03:46:47 2020
 
+@author: thomas
+"""
+
+import flatbuffers
 import re
 import sys
 import dv.fb.IOHeader
@@ -12,7 +19,6 @@ import dv.fb.TriggerPacket
 import xml.etree.ElementTree as ET
 import lz4.frame
 import zstd
-
 from dv import Event, Frame, Trigger, IMU
 
 
@@ -41,7 +47,9 @@ html_info = builder.CreateString(html_info)
 dv.fb.IOHeader.IOHeaderStart(builder)
 
 # Compression choice
-dv.fb.IOHeader.IOHeaderAddCompression(builder, dv.fb.CompressionType.CompressionType().NONE)
+dv.fb.IOHeader.IOHeaderAddCompression(
+    builder, dv.fb.CompressionType.CompressionType().NONE
+)
 
 # Offset for the FileDataTable position
 dv.fb.IOHeader.IOHeaderAddDataTablePosition(builder, -1)

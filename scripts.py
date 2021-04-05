@@ -15,19 +15,53 @@ else:
     os.chdir("/home/thomas/neuvisys-analysis")
     home = "/home/thomas/"
 
-network_path = home+"/neuvisys-dv/configuration/network/"
+network_path = home + "/neuvisys-dv/configuration/network/"
 
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-from aedat_tools.aedat_tools import stereo_matching, load_aedat4, show_event_images, write_npz, load_frames, npz_to_arr, npaedat_to_np, rectify_events, rectify_frames, remove_events, write_frames
-
 from spiking_network.spiking_network import SpikingNetwork
-from spiking_network.display import display_network, load_array_param, complex_cells_directions
-from spiking_network.network_statistics.network_statistics import compute_disparity, rf_matching, spike_plots_simple_cells, spike_plots_complex_cells, direction_norm_length, orientation_norm_length, direction_selectivity, orientation_selectivity
-from spiking_network.network_planning.planner import launch_spinet, launch_neuvisys_multi_pass, launch_neuvisys_stereo, toggle_learning
-from spiking_network.gabor_fitting.gabbor_fitting import create_gabor_basis, hists_preferred_orientations, plot_preferred_orientations
+from aedat_tools.aedat_tools import (
+    stereo_matching,
+    load_aedat4,
+    show_event_images,
+    write_npz,
+    load_frames,
+    npz_to_arr,
+    npaedat_to_np,
+    rectify_events,
+    rectify_frames,
+    remove_events,
+    write_frames,
+)
+from spiking_network.display import (
+    display_network,
+    load_array_param,
+    complex_cells_directions,
+)
+from event_statistics.frame_analysis import stereo_matching
+from spiking_network.network_statistics.network_statistics import (
+    compute_disparity,
+    rf_matching,
+    spike_plots_simple_cells,
+    spike_plots_complex_cells,
+    direction_norm_length,
+    orientation_norm_length,
+    direction_selectivity,
+    orientation_selectivity,
+)
+from spiking_network.network_planning.planner import (
+    launch_spinet,
+    launch_neuvisys_multi_pass,
+    launch_neuvisys_stereo,
+    toggle_learning,
+)
+from spiking_network.gabor_fitting.gabbor_fitting import (
+    create_gabor_basis,
+    hists_preferred_orientations,
+    plot_preferred_orientations,
+)
 
 
 #%% Generate Spiking Network
@@ -47,12 +81,12 @@ spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 
 #%% Load events
 
-events = load_aedat4(home+"Desktop/Events/pavin-3-5.aedat4")
+events = load_aedat4(home + "Desktop/Events/pavin-3-5.aedat4")
 
 
 #%% Save aedat file as numpy npz file
 
-write_npz(home+"Desktop/Events/pavin-3-1", events)
+write_npz(home + "Desktop/Events/pavin-3-1", events)
 
 
 #%% Load frames
@@ -63,7 +97,10 @@ frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 #%% Launch training script
 
 directory = "/home/thomas/neuvisys-dv/configuration/"
-files = ["/home/thomas/Vidéos/driving_dataset/npy/mix_12.npy", "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy"]
+files = [
+    "/home/thomas/Vidéos/driving_dataset/npy/mix_12.npy",
+    "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy",
+]
 files = ["/home/thomas/Bureau/concat.npy"]
 
 launch_spinet(directory, files, 1)
@@ -88,13 +125,27 @@ weights = spinet.get_weights("simple")
 residuals, disparity = rf_matching(weights)
 
 disparity[disparity >= 5] -= 10
-compute_disparity(spinet, disparity, gabor_params_l[4], (gabor_params_l[5] + gabor_params_r[5]) / 2, residuals, 0, 500, 120.5)
+compute_disparity(
+    spinet,
+    disparity,
+    gabor_params_l[4],
+    (gabor_params_l[5] + gabor_params_r[5]) / 2,
+    residuals,
+    0,
+    500,
+    120.5,
+)
 
 
 #%% Stereo matching
 
 # disp_frames, disp_nb_frames = stereo_matching("/home/alphat/Desktop/pavin_images/im3/", [10, 84, 158, 232], [20, 83, 146], range(900, 1100))
-disp_frames, disp_nb_frames = stereo_matching("/home/alphat/Desktop/pavin_images/im1/", [10, 84, 158, 232], [20, 83, 146], range(0, 200))
+disp_frames, disp_nb_frames = stereo_matching(
+    "/home/alphat/Desktop/pavin_images/im1/",
+    [10, 84, 158, 232],
+    [20, 83, 146],
+    range(0, 200),
+)
 
 
 #%% Create plots for preferred orientations and directions
@@ -122,13 +173,41 @@ y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 toggle_learning(spinet, True)
 
 for i in range(3):
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_h.npz", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_-90.npz", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_180.npz", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_hv.npz", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_v.npz", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_0.npz", 2)
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_90.npz", 2)
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_h.npz",
+        2,
+    )
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_-90.npz",
+        2,
+    )
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_180.npz",
+        2,
+    )
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_hv.npz",
+        2,
+    )
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_v.npz",
+        2,
+    )
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_0.npz",
+        2,
+    )
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_90.npz",
+        2,
+    )
 
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
@@ -143,9 +222,17 @@ toggle_learning(spinet, False)
 
 sspikes = []
 cspikes = []
-rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
+rotations = np.array(
+    [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
+)
 for rot in rotations:
-    launch_neuvisys_multi_pass(network_path+"configs/network_config.json", "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"+str(rot)+".npz", 5)
+    launch_neuvisys_multi_pass(
+        network_path + "configs/network_config.json",
+        "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"
+        + str(rot)
+        + ".npz",
+        5,
+    )
     spinet = SpikingNetwork(network_path)
     sspikes.append(spinet.sspikes)
     cspikes.append(spinet.cspikes)
@@ -173,9 +260,12 @@ for i in range(144):
 #%% launch spinet with stereo setup
 
 network_path = "/home/alphat/neuvisys-dv/configuration/network/"
-launch_neuvisys_stereo(network_path+"configs/network_config.json",
-                       "/home/alphat/Desktop/l_events.npz",
-                       "/home/alphat/Desktop/r_events.npz", 1)
+launch_neuvisys_stereo(
+    network_path + "configs/network_config.json",
+    "/home/alphat/Desktop/l_events.npz",
+    "/home/alphat/Desktop/r_events.npz",
+    1,
+)
 spinet = SpikingNetwork(network_path)
 display_network([spinet], 0)
 
@@ -185,9 +275,17 @@ display_network([spinet], 0)
 n_iter = 20
 launch_spinet("/media/alphat/SSD Games/Thesis/configuration/", n_iter)
 for i in range(0, n_iter):
-    launch_neuvisys_multi_pass("/media/alphat/SSD Games/Thesis/configuration/network_"+str(i)+"/configs/network_config.json", "/media/alphat/SSD Games/Thesis/diverse_shapes/shape_hovering.npy", 25)
-    
-    spinet = SpikingNetwork("/media/alphat/SSD Games/Thesis/configuration/network_"+str(i)+"/")
+    launch_neuvisys_multi_pass(
+        "/media/alphat/SSD Games/Thesis/configuration/network_"
+        + str(i)
+        + "/configs/network_config.json",
+        "/media/alphat/SSD Games/Thesis/diverse_shapes/shape_hovering.npy",
+        25,
+    )
+
+    spinet = SpikingNetwork(
+        "/media/alphat/SSD Games/Thesis/configuration/network_" + str(i) + "/"
+    )
     display_network([spinet], 0)
     basis = spinet.generate_weight_mat()
 
@@ -202,8 +300,24 @@ spike_plots_simple_cells(spinet, 7639)
 
 rect_events = rectify_events((events[0].copy(), events[1].copy()), -5, -16, 5, 16)
 
-show_event_images(npaedat_to_np(rect_events[0]), 100000, 346, 260, "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/", ([10, 84, 158, 232, 306], [20, 83, 146, 209]), "_l")
-show_event_images(npaedat_to_np(rect_events[1]), 100000, 346, 260, "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/", ([10, 84, 158, 232, 306], [20, 83, 146, 209]), "_r")
+show_event_images(
+    npaedat_to_np(rect_events[0]),
+    100000,
+    346,
+    260,
+    "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/",
+    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
+    "_l",
+)
+show_event_images(
+    npaedat_to_np(rect_events[1]),
+    100000,
+    346,
+    260,
+    "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/",
+    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
+    "_r",
+)
 
 
 #%% Plot frames
@@ -215,14 +329,27 @@ write_frames("/home/alphat/Desktop/im1/", rect_frames, ([10, 84, 158, 232, 306],
 
 #%%
 
-tss = [1615820915344885, 1615820923944885, 1615820925444885, 1615820944844885, 1615820947944885]
-tse = [1615820916544885, 1615820924344885, 1615820925544885, 1615820945244885, 1615820948144885]
+tss = [
+    1615820915344885,
+    1615820923944885,
+    1615820925444885,
+    1615820944844885,
+    1615820947944885,
+]
+tse = [
+    1615820916544885,
+    1615820924344885,
+    1615820925544885,
+    1615820945244885,
+    1615820948144885,
+]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
 
 
-#%%
+#%% reference points on stereo frames
 
+<<<<<<< HEAD
 import cv2 as cv
 import seaborn as sns
 
@@ -298,3 +425,6 @@ for i in range(5):
 axes[1].set_xlabel("Disparity (px)", fontsize=18)
 axes[0].set_ylabel("Density", fontsize=18)
 plt.savefig("/home/alphat/Desktop/images/orb_disparity.png", bbox_inches="tight")
+=======
+stereo_matching("", [10, 84, 158, 232, 306], [20, 83, 146, 209], 0, 824)
+>>>>>>> 42e75731a7db33072acad624d8cd5b235e986530

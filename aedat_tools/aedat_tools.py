@@ -285,10 +285,18 @@ def remove_events(events, tss, tse):
         
     return l_events, r_events
 
-def write_frames(dest, frames):
+def write_frames(dest, frames, rec):
     for i in range(frames.shape[1]):
-        cv.imwrite(dest+"img"+str(i)+"_left.jpg", frames[0][i])
-        cv.imwrite(dest+"img"+str(i)+"_right.jpg", frames[1][i])
+        lim = Image.fromarray(np.squeeze(frames[0][i], axis=2))
+        rim = Image.fromarray(np.squeeze(frames[1][i], axis=2))
+        ldraw = ImageDraw.Draw(lim)
+        rdraw = ImageDraw.Draw(rim)
+        for x in rec[0]:
+            for y in rec[1]:
+                ldraw.rectangle([x, y, x + 31, y + 31], outline=255)
+                rdraw.rectangle([x, y, x + 31, y + 31], outline=255)
+        lim.save(dest+"img"+str(i)+"_left.jpg")
+        rim.save(dest+"img"+str(i)+"_right.jpg")
         
 def stereo_matching(folder, xs, ys, range_imgs):
     mat = np.zeros((346, 260))

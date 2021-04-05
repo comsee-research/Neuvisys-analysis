@@ -120,7 +120,7 @@ def pdf_complex_cell(spinet, layer):
                         
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
-                        path = "/home/thomas/Bureau/temp/images/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
+                        path = "/home/alphat/Desktop/temp/images/" + str(c)+"_simple_"+str(spinet.layout1[i, j, k])+".png"
                         Image.fromarray(img.astype('uint8')).save(path)
                         
                         heatmap[ys - oy, xs - ox] += weight_sc
@@ -178,15 +178,15 @@ def plot_directions(spinet, directions, rotations):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
         vectors.append(mean)
         
-        # plt.figure()
-        # ax = plt.subplot(111, polar=True)
-        # # ax.set_title("Cell "+str(i))
-        # ax.plot(angles, spike_vector[:, i], "darkslategrey")
-        # ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.02, head_width=0, head_length=0, length_includes_head=True, edgecolor='firebrick', lw=2, zorder=5)
-        # ax.set_thetamax(360)
-        # ax.set_theta_zero_location("N")
-        # ax.set_theta_direction(-1)
-        # plt.savefig(spinet.path+"figures/complex_directions/"+str(i), bbox_inches='tight')
+        plt.figure()
+        ax = plt.subplot(111, polar=True)
+        # ax.set_title("Cell "+str(i))
+        ax.plot(angles, spike_vector[:, i], "darkslategrey")
+        ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.02, head_width=0, head_length=0, length_includes_head=True, edgecolor='firebrick', lw=2, zorder=5)
+        ax.set_thetamax(360)
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+        plt.savefig(spinet.path+"figures/complex_directions/"+str(i), bbox_inches='tight')
     return vectors
 
 def plot_orientations(spinet, orientations, rotations):
@@ -202,16 +202,16 @@ def plot_orientations(spinet, orientations, rotations):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
         vectors.append(mean)
         
-        # plt.figure()
-        # ax = plt.subplot(111, polar=True)
-        # # ax.set_title("Cell "+str(i))
-        # ax.plot(angles, spike_vector[:, i], "darkslategrey")
-        # ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.02, head_width=0, head_length=0, length_includes_head=True, edgecolor='firebrick', lw=2, zorder=5)
-        # ax.set_thetamax(360)
-        # ax.set_theta_zero_location("N")
-        # ax.set_theta_direction(-1)
-        # ax.set_xticklabels(['0°', '22.5°', '45°', '67.5°', '90°', '112.5°', '135°', '157.5°'])
-        # plt.savefig(spinet.path+"figures/complex_orientations/"+str(i), bbox_inches='tight')
+        plt.figure()
+        ax = plt.subplot(111, polar=True)
+        # ax.set_title("Cell "+str(i))
+        ax.plot(angles, spike_vector[:, i], "darkslategrey")
+        ax.arrow(np.angle(mean), 0, 0, 2*np.abs(mean), width=0.02, head_width=0, head_length=0, length_includes_head=True, edgecolor='firebrick', lw=2, zorder=5)
+        ax.set_thetamax(360)
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+        ax.set_xticklabels(['0°', '22.5°', '45°', '67.5°', '90°', '112.5°', '135°', '157.5°'])
+        plt.savefig(spinet.path+"figures/complex_orientations/"+str(i), bbox_inches='tight')
     return vectors
 
 def mean_response(directions, angles):

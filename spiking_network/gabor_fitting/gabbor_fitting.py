@@ -90,13 +90,22 @@ def error_percentage(theta, error, max_error, dest):
     plt.savefig(dest+"error_proportion", bbox_inches="tight")
     
 def create_gabor_basis(spinet, side, nb_ticks):
-    mu = sio.loadmat(spinet.path+"gabors/data/"+side+"/mu.mat")["mu_table"]
-    sigma = sio.loadmat(spinet.path+"gabors/data/"+side+"/sigma.mat")["sigma_table"]
-    lambd = sio.loadmat(spinet.path+"gabors/data/"+side+"/lambda.mat")["lambda_table"]
-    phase = sio.loadmat(spinet.path+"gabors/data/"+side+"/phase.mat")["phase_table"]
-    theta = sio.loadmat(spinet.path+"gabors/data/"+side+"/theta.mat")["theta_table"]
-    error = sio.loadmat(spinet.path+"gabors/data/"+side+"/error.mat")["error_table"]
-    est_basis = sio.loadmat(spinet.path+"gabors/data/"+side+"/EstBasis.mat")["EstBasis"]
+    if side == "None":
+        mu = sio.loadmat(spinet.path+"gabors/data/mu.mat")["mu_table"]
+        sigma = sio.loadmat(spinet.path+"gabors/data/sigma.mat")["sigma_table"]
+        lambd = sio.loadmat(spinet.path+"gabors/data/lambda.mat")["lambda_table"]
+        phase = sio.loadmat(spinet.path+"gabors/data/phase.mat")["phase_table"]
+        theta = sio.loadmat(spinet.path+"gabors/data/theta.mat")["theta_table"]
+        error = sio.loadmat(spinet.path+"gabors/data/error.mat")["error_table"]
+        est_basis = sio.loadmat(spinet.path+"gabors/data/EstBasis.mat")["EstBasis"]
+    else:
+        mu = sio.loadmat(spinet.path+"gabors/data/"+side+"/mu.mat")["mu_table"]
+        sigma = sio.loadmat(spinet.path+"gabors/data/"+side+"/sigma.mat")["sigma_table"]
+        lambd = sio.loadmat(spinet.path+"gabors/data/"+side+"/lambda.mat")["lambda_table"]
+        phase = sio.loadmat(spinet.path+"gabors/data/"+side+"/phase.mat")["phase_table"]
+        theta = sio.loadmat(spinet.path+"gabors/data/"+side+"/theta.mat")["theta_table"]
+        error = sio.loadmat(spinet.path+"gabors/data/"+side+"/error.mat")["error_table"]
+        est_basis = sio.loadmat(spinet.path+"gabors/data/"+side+"/EstBasis.mat")["EstBasis"]
     
     theta = (theta + np.pi / 2) % np.pi
     

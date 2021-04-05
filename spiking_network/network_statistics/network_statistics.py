@@ -10,6 +10,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 from itertools import combinations
 from PIL import Image
@@ -169,26 +170,32 @@ def rf_matching(weights):
 
 def compute_disparity(spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual):
     cnt = 0
-    fig, axes = plt.subplots(3, 4, sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, 3, sharex=False, sharey=True, figsize=(16, 12))
     for i in range(5):
         for j in range(4):
             mask_residual = residual[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_residual
             mask_theta = (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] > np.pi/2+epsi_theta) | (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < np.pi/2-epsi_theta)
             mask_error = error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error
-            if i != 4 and j != 3:
-                axes[j, i].set_title("nb rf:" + str(np.count_nonzero(mask_error & mask_theta & mask_residual)) + "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])))
-                axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error & mask_residual], np.arange(-5.5, 6.5), density=True)
+            if i < 3 and j < 2:
+                axes[j, i].set_title("mean: " + "{:.2f}".format(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])), fontsize=20)
+                ax = sns.histplot(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error & mask_residual], bins=np.arange(-5.5, 6.5), stat="density", ax=axes[j, i])
+                ax.set_xticks(np.arange(-5, 6))
+                plt.setp(ax.get_xticklabels(), fontsize=15)
+                plt.setp(ax.get_yticklabels(), fontsize=15)
             cnt += 1
+    axes[1, 1].set_xlabel("Disparity (px)", fontsize=18)
+    axes[0, 0].set_ylabel("Density", fontsize=18)
+    axes[1, 0].set_ylabel("Density", fontsize=18)
+    plt.savefig("/home/alphat/Desktop/images/sse_disparity.png", bbox_inches="tight")
     
-    cnt = 0
-    fig, axes = plt.subplots(3, 4, sharex=True, sharey=True)
-    for i in range(5):
-        for j in range(4):
-            mask_residual = residual[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_residual
-            mask_theta = (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] > epsi_theta) & (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < np.pi-epsi_theta)
-            mask_error = error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error
-            if i != 4 and j != 3:
-                axes[j, i].set_title("nb rf:" + str(np.count_nonzero(mask_error & mask_theta & mask_residual)) + "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])))
-                axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][mask_theta & mask_error & mask_residual], np.arange(-5.5, 6.5), density=True)
-            cnt += 1
-  
+    # cnt = 0
+    # fig, axes = plt.subplots(2, 3, sharex=True, sharey=True)
+    # for i in range(5):
+    #     for j in range(4):
+    #         mask_residual = residual[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_residual
+    #         mask_theta = (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] > epsi_theta) & (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < np.pi-epsi_theta)
+    #         mask_error = error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error
+    #         if i < 3 and j < 2:
+    #             axes[j, i].set_title("nb rf:" + str(np.count_nonzero(mask_error & mask_theta & mask_residual)) + "\nmean: " + str(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])))
+    #             axes[j, i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 1][mask_theta & mask_error & mask_residual], np.arange(-5.5, 6.5), density=True)
+    #         cnt += 1

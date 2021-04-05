@@ -50,6 +50,7 @@ from spiking_network.network_statistics.network_statistics import (
     orientation_norm_length,
     direction_selectivity,
     orientation_selectivity,
+    spike_rate_evolution,
 )
 from spiking_network.network_planning.planner import (
     launch_spinet,
@@ -292,8 +293,14 @@ for i in range(0, n_iter):
 
 #%% Spike plots
 
-spike_plots_simple_cells(spinet, 7639)
+spike_plots_simple_cells(spinet, 7986)
 # spike_plots_complex_cells(spinet, 100)
+
+
+#%% Spike rate evolution
+
+for i in range(10):
+    spike_rate_evolution(spinet, i)
 
 
 #%% Rectify and Plot event images
@@ -324,7 +331,11 @@ show_event_images(
 
 rect_frames = rectify_frames(frames, -4, 8, 4, -8)
 
-write_frames("/home/alphat/Desktop/im1/", rect_frames, ([10, 84, 158, 232, 306], [20, 83, 146, 209]))
+write_frames(
+    "/home/alphat/Desktop/im1/",
+    rect_frames,
+    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
+)
 
 
 #%%
@@ -345,86 +356,3 @@ tse = [
 ]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
-
-
-#%% reference points on stereo frames
-
-<<<<<<< HEAD
-import cv2 as cv
-import seaborn as sns
-
-folder, xs, ys = "/home/alphat/Desktop/Bundle/pavin_images/im1_rect/", [10, 84, 158], [20]
-
-mat = np.zeros((346, 260))
-ind = 1
-for x in xs:
-    for y in ys:
-        mat[x:x+30, y:y+30] = ind
-        ind += 1
-        
-vec = {}
-for i in range(21):
-    vec[i] = []
-
-for i in np.arange(0, 824):
-    lframe = cv.imread(folder+"img"+str(i)+"_left.jpg")
-    rframe = cv.imread(folder+"img"+str(i)+"_right.jpg")
-    
-    orb = cv.ORB_create(nfeatures=10000)
-    
-    kp_left, ds_left = orb.detectAndCompute(lframe, None)
-    kp_right, ds_right = orb.detectAndCompute(rframe, None)
-    
-    bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(ds_left, ds_right)
-    
-    matches = sorted(matches, key = lambda x:x.distance)
-    
-    for match in matches:
-        lp = kp_left[match.queryIdx].pt
-        rp = kp_right[match.trainIdx].pt
-        
-        x_shift = lp[0] - rp[0]
-        y_shift = lp[1] - rp[1]
-        # print("{:.1f}, {:.1f}".format(*lp), "|", "{:.1f}, {:.1f}".format(*rp), "->", "{:.2f}".format(x_shift), "|", "{:.2f}".format(y_shift))
-        
-        if np.abs(x_shift) < 5 and np.abs(y_shift) < 5:
-            vec[mat[int(np.round((lp[0]))), int(np.round(lp[1]))]].append([x_shift, y_shift])
-            
-        # imgmatching = cv.drawMatches(lframe, kp_left, rframe, kp_right, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-        # plt.imshow(imgmatching)
-
-fig, axes = plt.subplots(1, 3, sharex=False, sharey=True, figsize=(16, 12))
-fin = np.zeros((len(ys), len(xs), 2))
-nb_fin = np.zeros((len(ys), len(xs)))
-ind = 1
-for i in range(len(xs)):
-    for j in range(len(ys)):
-        # axes[i].set_title("mean: " + "{:.2f}".format(np.mean(vec[ind], axis=0)[0]), fontsize=20)
-        axes[i].hist(np.array(vec[ind])[:, 0], bins=np.arange(-5.5, 6.5), density=True, alpha=0.85, color="#16697A")
-        plt.setp(axes[i].get_xticklabels(), fontsize=16)
-        plt.setp(axes[i].get_yticklabels(), fontsize=16)
-        axes[i].set_xticks(np.arange(-5, 6))
-        fin[j, i] = np.mean(vec[ind], axis=0)
-        nb_fin[j, i] = len(vec[ind])
-        ind += 1
-
-theta = gabor_params_l[4]
-error = (gabor_params_l[5] + gabor_params_r[5]) / 2
-epsi_theta, epsi_error, epsi_residual = 0, 500, 120.5
-cnt = 0
-for i in range(5):
-    for j in range(4):
-        mask_residual = residuals[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_residual
-        mask_theta = (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] > np.pi/2+epsi_theta) | (theta[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < np.pi/2-epsi_theta)
-        mask_error = error[0, cnt*spinet.l1depth:(cnt+1)*spinet.l1depth] < epsi_error
-        if i < 3 and j < 1:
-            # axes[i].set_title("mean: " + "{:.2f}".format(np.mean(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error])), fontsize=20)
-            axes[i].hist(disparity[cnt*spinet.l1depth:(cnt+1)*spinet.l1depth, 0][mask_theta & mask_error & mask_residual], bins=np.arange(-5.5, 6.5), density=True, alpha=0.7, color="#FFA62B")
-        cnt += 1
-axes[1].set_xlabel("Disparity (px)", fontsize=18)
-axes[0].set_ylabel("Density", fontsize=18)
-plt.savefig("/home/alphat/Desktop/images/orb_disparity.png", bbox_inches="tight")
-=======
-stereo_matching("", [10, 84, 158, 232, 306], [20, 83, 146, 209], 0, 824)
->>>>>>> 42e75731a7db33072acad624d8cd5b235e986530

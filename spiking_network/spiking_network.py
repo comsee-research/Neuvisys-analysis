@@ -50,7 +50,7 @@ class SpikingNetwork:
             )
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
-            if neuron.tracking:
+            if neuron.tracking == "partial":
                 self.cspikes.append(neuron.spike_train)
 
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
@@ -66,7 +66,7 @@ class SpikingNetwork:
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
 
-            if neuron.tracking:
+            if neuron.tracking == "partial":
                 self.sspikes.append(neuron.spike_train)
 
         self.nb_neurons = len(self.neurons)
@@ -275,7 +275,7 @@ class Neuron:
         self.out_connections = json["out_connections"]
         self.position = json["position"]
         self.potential = json["potential"]
-        self.potential_train = json["potential_train"]
+        # self.potential_train = json["potential_train"]
         self.recent_spikes = json["recent_spikes"]
         self.spike_train = json["spike_train"]
         self.spiking_rate = json["spiking_rate"]

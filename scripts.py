@@ -53,9 +53,8 @@ from spiking_network.network_statistics.network_statistics import (
     spike_rate_evolution,
 )
 from spiking_network.network_planning.planner import (
-    launch_spinet,
+    generate_networks,
     launch_neuvisys_multi_pass,
-    launch_neuvisys_stereo,
     toggle_learning,
 )
 from spiking_network.gabor_fitting.gabbor_fitting import (
@@ -258,37 +257,24 @@ for i in range(144):
     ois.append(orientation_selectivity(spinet.orientations[:, i]))
 
 
-#%% launch spinet with stereo setup
-
-network_path = "/home/alphat/neuvisys-dv/configuration/network/"
-launch_neuvisys_stereo(
-    network_path + "configs/network_config.json",
-    "/home/alphat/Desktop/l_events.npz",
-    "/home/alphat/Desktop/r_events.npz",
-    1,
-)
-spinet = SpikingNetwork(network_path)
-display_network([spinet], 0)
-
-
 #%% Launch training of multiple networks
 
-n_iter = 20
-launch_spinet("/media/alphat/SSD Games/Thesis/configuration/", n_iter)
-for i in range(0, n_iter):
+n_networks = 1
+networks_path = "/home/alphat/Desktop/Networks/"
+event_path = "/home/alphat/Desktop/shapes.npz"
+generate_networks(networks_path, n_networks)
+nb_iterations = 20
+
+for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
-        "/media/alphat/SSD Games/Thesis/configuration/network_"
-        + str(i)
-        + "/configs/network_config.json",
-        "/media/alphat/SSD Games/Thesis/diverse_shapes/shape_hovering.npy",
-        25,
+        networks_path + "network_" + str(i) + "/configs/network_config.json",
+        event_path,
+        nb_iterations,
     )
 
-    spinet = SpikingNetwork(
-        "/media/alphat/SSD Games/Thesis/configuration/network_" + str(i) + "/"
-    )
+    spinet = SpikingNetwork(networks_path + "network_" + str(i) + "/")
     display_network([spinet], 0)
-    basis = spinet.generate_weight_mat()
+    # basis = spinet.generate_weight_mat()
 
 
 #%% Spike plots

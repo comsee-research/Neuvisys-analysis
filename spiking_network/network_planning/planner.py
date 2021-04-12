@@ -148,40 +148,12 @@ def execute(cmd):
         raise subprocess.CalledProcessError(return_code, cmd)
 
 
-def launch_neuvisys_rotation(network_path, event_file, rotation):
-    for path in execute(
-        [
-            "/home/alphat/neuvisys-dv/cmake-build-release/event-analysis",
-            network_path,
-            "rotation",
-            event_file,
-            str(rotation),
-        ]
-    ):
-        print(path, end="")
-
-
 def launch_neuvisys_multi_pass(network_path, event_file, nb_pass):
     for path in execute(
         [
-            "/home/alphat/neuvisys-dv/cmake-build-release/event-analysis",
+            "/home/alphat/neuvisys-dv/cmake-build-release/neuvisys",
             network_path,
-            "multi-pass",
             event_file,
-            str(nb_pass),
-        ]
-    ):
-        print(path, end="")
-
-
-def launch_neuvisys_stereo(network_path, left_file, right_file, nb_pass):
-    for path in execute(
-        [
-            "/home/alphat/neuvisys-dv/cmake-build-release/event-analysis",
-            network_path,
-            "stereo",
-            left_file,
-            right_file,
             str(nb_pass),
         ]
     ):

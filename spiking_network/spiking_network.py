@@ -52,7 +52,7 @@ class SpikingNetwork:
             )
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
-            if neuron.tracking:
+            if neuron.tracking == "partial":
                 self.cspikes.append(neuron.spike_train)
 
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
@@ -68,7 +68,7 @@ class SpikingNetwork:
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
 
-            if neuron.tracking:
+            if neuron.tracking == "partial":
                 self.sspikes.append(neuron.spike_train)
 
         self.nb_neurons = len(self.neurons)
@@ -225,3 +225,48 @@ class Neuron:
         self.theta = theta
         self.error = error
         self.orientation = self.theta
+<<<<<<< HEAD
+=======
+
+    def unpack_json_config(self, json_path):
+        json = load_params(json_path)
+        if self.type == "simple":
+            self.min_thresh = json["MIN_THRESH"]
+            self.delta_sra = json["ETA_SRA"]
+            self.delta_sr = json["ETA_TA"]
+            self.tau_sra = json["TAU_SRA"]
+            self.target_spike_rate = json["TARGET_SPIKE_RATE"]
+            self.synapse_delay = json["SYNAPSE_DELAY"]
+
+        self.vthresh = json["VTHRESH"]
+        self.vreset = json["VRESET"]
+        self.delta_rp = json["ETA_RP"]
+        self.tau_rp = json["TAU_RP"]
+        self.tau_m = json["TAU_M"]
+        self.tau_ltp = json["TAU_LTP"]
+        self.tau_ltd = json["TAU_LTD"]
+        self.norm_factor = json["NORM_FACTOR"]
+        self.delta_vp = json["ETA_LTP"]
+        self.delta_vd = json["ETA_LTD"]
+        self.delta_inh = json["ETA_INH"]
+        self.decay_factor = json["DECAY_FACTOR"]
+        self.stdp_learning = json["STDP_LEARNING"]
+        self.tracking = json["TRACKING"]
+
+    def unpack_json_params(self, json_path):
+        json = load_params(json_path)
+        self.count_spike = json["count_spike"]
+        self.creation_time = json["creation_time"]
+        self.in_connections = json["in_connections"]
+        self.learning_decay = json["learning_decay"]
+        self.offset = json["offset"]
+        self.out_connections = json["out_connections"]
+        self.position = json["position"]
+        self.potential = json["potential"]
+        # self.potential_train = json["potential_train"]
+        self.recent_spikes = json["recent_spikes"]
+        self.spike_train = json["spike_train"]
+        self.spiking_rate = json["spiking_rate"]
+        self.threshold = json["threshold"]
+        self.inhibition_connections = json["inhibition_connections"]
+>>>>>>> c5bfe1b884c13ac77e737cd4e82e8b8887ab8546

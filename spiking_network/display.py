@@ -73,13 +73,19 @@ def pdf_layers(spinet, rows, cols, nb_synapses, nb_layers):
 
 
 def pdf_weight_sharing(spinet, camera):
-    side = int(np.sqrt(spinet.l1depth))
+    if spinet.weight_sharing == "full":
+        side = int(np.sqrt(spinet.l1depth))
+        xpatch = 1
+        ypatch = 1
+    elif spinet.weight_sharing == "patch":
+        xpatch = len(spinet.l1xanchor)
+        ypatch = len(spinet.l1xanchor)
     pdf = FPDF(
         "P",
         "mm",
         (
-            11 * len(spinet.l1xanchor) * side + (len(spinet.l1xanchor) - 1) * 10,
-            11 * len(spinet.l1yanchor) * side + (len(spinet.l1yanchor) - 1) * 10,
+            11 * xpatch * side + (xpatch - 1) * 10,
+            11 * ypatch * side + (ypatch - 1) * 10,
         ),
     )
     pdf.add_page()
@@ -87,9 +93,13 @@ def pdf_weight_sharing(spinet, camera):
     pos_x = 0
     pos_y = 0
     shift = np.arange(spinet.l1depth).reshape((side, side))
-    for i in range(
-        0, spinet.nb_simple_cells, spinet.l1depth * spinet.l1width * spinet.l1height
-    ):
+    if spinet.weight_sharing == "full":
+        cell_range = range(spinet.l1depth)
+    elif spinet.weight_sharing == "patch":
+        cell_range = range(
+            0, spinet.nb_simple_cells, spinet.l1depth * spinet.l1width * spinet.l1height
+        )
+    for i in cell_range:
         for neuron in spinet.simple_cells[i : i + spinet.l1depth]:
             x, y, z = neuron.position
             pos_x = (
@@ -272,7 +282,6 @@ def plot_directions(spinet, directions, rotations):
     for i in range(spike_vector.shape[1]):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
         vectors.append(mean)
-
         plt.figure()
         ax = plt.subplot(111, polar=True)
         # ax.set_title("Cell "+str(i))
@@ -311,7 +320,6 @@ def plot_orientations(spinet, orientations, rotations):
     for i in range(spike_vector.shape[1]):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
         vectors.append(mean)
-
         plt.figure()
         ax = plt.subplot(111, polar=True)
         # ax.set_title("Cell "+str(i))
@@ -349,7 +357,7 @@ def display_network(spinets, pooling=0):
     for spinet in spinets:
         spinet.generate_weight_images()
 
-        if spinet.weight_sharing == "patch":
+        if spinet.weight_sharing == "patch" or spinet.weight_sharing == "full":
             for i in range(spinet.nb_cameras):
                 pdf = pdf_weight_sharing(spinet, i)
                 pdf.output(
@@ -359,11 +367,12 @@ def display_network(spinets, pooling=0):
                     + ".pdf",
                     "F",
                 )
-
-            pdf = pdf_weight_sharing_left_right_combined(spinet)
-            pdf.output(
-                spinet.path + "figures/simple_figures/weight_sharing_combined.pdf", "F"
-            )
+            if spinet.nb_cameras == 2:
+                pdf = pdf_weight_sharing_left_right_combined(spinet)
+                pdf.output(
+                    spinet.path + "figures/simple_figures/weight_sharing_combined.pdf",
+                    "F",
+                )
         elif spinet.weight_sharing == "none":
             for layer in range(spinet.l1depth):
                 for i in range(spinet.nb_cameras):

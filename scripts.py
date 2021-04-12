@@ -15,7 +15,7 @@ else:
     os.chdir("/home/thomas/neuvisys-analysis")
     home = "/home/thomas/"
 
-network_path = home + "/neuvisys-dv/configuration/network/"
+network_path = home + "neuvisys-dv/configuration/network/"
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,6 +39,7 @@ from spiking_network.display import (
 )
 from event_statistics.frame_analysis import stereo_matching
 from spiking_network.network_statistics.network_statistics import (
+    network_params,
     compute_disparity,
     rf_matching,
     spike_plots_simple_cells,
@@ -47,11 +48,11 @@ from spiking_network.network_statistics.network_statistics import (
     orientation_norm_length,
     direction_selectivity,
     orientation_selectivity,
+    spike_rate_evolution,
 )
 from spiking_network.network_planning.planner import (
-    launch_spinet,
+    generate_networks,
     launch_neuvisys_multi_pass,
-    launch_neuvisys_stereo,
     toggle_learning,
 )
 from spiking_network.gabor_fitting.gabbor_fitting import (
@@ -68,7 +69,7 @@ spinet = SpikingNetwork(network_path)
 
 #%% Display weights
 
-display_network([spinet], 0)
+display_network([spinet], 1)
 
 
 #%% //!!!\\ Delete weights network
@@ -91,16 +92,11 @@ write_npz(home + "Desktop/Events/pavin-3-1", events)
 frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
-#%% Launch training script
+#%% Load network params
 
-directory = "/home/thomas/neuvisys-dv/configuration/"
-files = [
-    "/home/thomas/Vidéos/driving_dataset/npy/mix_12.npy",
-    "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy",
-]
-files = ["/home/thomas/Bureau/concat.npy"]
-
-launch_spinet(directory, files, 1)
+network_path = "/home/alphat/Desktop/Networks/network_"
+nb_networks = 15
+ndf, sdf, cdf = network_params(network_path, nb_networks, trim_sim_val=True)
 
 
 #%% Create Matlab weight.mat
@@ -111,6 +107,7 @@ basis = spinet.generate_weight_mat()
 #%% Load and create gabor basis
 
 spinet.generate_weight_images()
+# gabor_params_l = create_gabor_basis(spinet, "None", nb_ticks=8)
 gabor_params_l = create_gabor_basis(spinet, "left", nb_ticks=8)
 gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
 
@@ -253,43 +250,36 @@ for i in range(144):
     ois.append(orientation_selectivity(spinet.orientations[:, i]))
 
 
-#%% launch spinet with stereo setup
-
-network_path = "/home/alphat/neuvisys-dv/configuration/network/"
-launch_neuvisys_stereo(
-    network_path + "configs/network_config.json",
-    "/home/alphat/Desktop/l_events.npz",
-    "/home/alphat/Desktop/r_events.npz",
-    1,
-)
-spinet = SpikingNetwork(network_path)
-display_network([spinet], 0)
-
-
 #%% Launch training of multiple networks
 
-n_iter = 20
-launch_spinet("/media/alphat/SSD Games/Thesis/configuration/", n_iter)
-for i in range(0, n_iter):
+n_networks = 15
+networks_path = "/home/alphat/Desktop/Networks/"
+event_path = "/home/alphat/Desktop/shapes.npz"
+generate_networks(networks_path, n_networks)
+nb_iterations = 50
+
+for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
-        "/media/alphat/SSD Games/Thesis/configuration/network_"
-        + str(i)
-        + "/configs/network_config.json",
-        "/media/alphat/SSD Games/Thesis/diverse_shapes/shape_hovering.npy",
-        25,
+        networks_path + "network_" + str(i) + "/configs/network_config.json",
+        event_path,
+        nb_iterations,
     )
 
-    spinet = SpikingNetwork(
-        "/media/alphat/SSD Games/Thesis/configuration/network_" + str(i) + "/"
-    )
+    spinet = SpikingNetwork(networks_path + "network_" + str(i) + "/")
     display_network([spinet], 0)
-    basis = spinet.generate_weight_mat()
+    # basis = spinet.generate_weight_mat()
 
 
 #%% Spike plots
 
 spike_plots_simple_cells(spinet, 7639)
 spike_plots_complex_cells(spinet, 100)
+
+
+#%% Spike rate evolution
+
+for i in range(10):
+    spike_rate_evolution(spinet, i)
 
 
 #%% Rectify and Plot event images
@@ -320,7 +310,11 @@ show_event_images(
 
 rect_frames = rectify_frames(frames, -4, 8, 4, -8)
 
-write_frames("/home/alphat/Desktop/pavin_images/im1/", rect_frames)
+write_frames(
+    "/home/alphat/Desktop/im1/",
+    rect_frames,
+    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
+)
 
 
 #%%
@@ -341,8 +335,3 @@ tse = [
 ]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
-
-
-#%% reference points on stereo frames
-
-stereo_matching("", [10, 84, 158, 232, 306], [20, 83, 146, 209], 0, 824)

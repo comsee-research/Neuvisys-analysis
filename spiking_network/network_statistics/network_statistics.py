@@ -10,11 +10,12 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
+import json
 
 from itertools import combinations
 from PIL import Image
 from natsort import natsorted
-from aedat_tools.aedat_tools import load_params
 
 
 def inhibition_boxplot(directory):
@@ -46,24 +47,37 @@ def inhibition_boxplot(directory):
     plt.savefig("boxplots.pdf", bbox_inches="tight")
 
 
-def params_network(directory):
-    params = []
-    for entry in natsorted(os.listdir(directory + "weights/")):
-        if entry.endswith(".json"):
-            params.append(load_params(directory + "weights/" + entry))
-    return pd.DataFrame(params)
+def network_params(network_path, nb_networks, trim_sim_val=False):
+    conf_list = []
+    for conf_name in [
+        "/configs/network_config.json",
+        "/configs/simple_cell_config.json",
+        "/configs/complex_cell_config.json",
+    ]:
+        net_list = []
+        for i in range(nb_networks):
+            with open(network_path + str(i) + conf_name) as file:
+                net_list.append(json.load(file))
+
+        df = pd.DataFrame(net_list)
+
+        if trim_sim_val:
+            try:
+                nunique = df.apply(pd.Series.nunique)
+                cols_to_drop = nunique[nunique == 1].index
+                df = df.drop(cols_to_drop, axis=1)
+            except:
+                pass
+        conf_list.append(df)
+    return conf_list
 
 
-def networks_stats(nb_networks, directory):
-    df = []
-    for i in range(nb_networks):
-        df.append(load_params(directory + "network_" + str(i) + "/configs/config.json"))
+def network_spike_rate(spinet):
+    time = np.max(spinet.sspikes)
 
-        net_param = params_network(directory + "network_" + str(i) + "/")
-        df[i]["count_spike"] = net_param["count_spike"].mean()
-        df[i]["learning_decay"] = net_param["learning_decay"].mean()
-        df[i]["threshold"] = net_param["threshold"].mean()
-    return pd.DataFrame(df)
+    srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
+    print("mean:", np.mean(srates))
+    print("std:", np.std(srates))
 
 
 def spike_plots_simple_cells(spinet, neuron_id):
@@ -75,8 +89,8 @@ def spike_plots_simple_cells(spinet, neuron_id):
     colors1 = ["C{}".format(i) for i in range(len(indices) + 1)]
 
     eveplot = []
-    for i in indices + [neuron_id]:
-        eveplot.append(spinet.sspikes[i][spinet.sspikes[i] != neuron_id])
+    for i in np.sort(indices + [neuron_id]):
+        eveplot.append(spinet.sspikes[i][spinet.sspikes[i] != 0])
 
     plt.eventplot(eveplot, colors=colors1)
 
@@ -91,7 +105,7 @@ def spike_plots_complex_cells(spinet, neuron_id):
 
     eveplot = []
     for i in indices + [neuron_id]:
-        eveplot.append(spinet.cspikes[i][spinet.cspikes[i] != neuron_id])
+        eveplot.append(spinet.cspikes[i][spinet.cspikes[i] != 0])
 
     plt.eventplot(eveplot, colors=colors1)
 
@@ -195,7 +209,7 @@ def compute_disparity(
     spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual
 ):
     cnt = 0
-    fig, axes = plt.subplots(3, 4, sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, 3, sharex=False, sharey=True, figsize=(16, 12))
     for i in range(5):
         for j in range(4):
             mask_residual = (
@@ -272,3 +286,24 @@ def compute_disparity(
                     density=True,
                 )
             cnt += 1
+
+
+def spike_rate_evolution(spinet, neuron_id):
+    spikes = spinet.sspikes[neuron_id][spinet.sspikes[neuron_id] != 0]
+
+    if spikes.size:
+        hist = np.histogram(
+            spikes,
+            bins=np.arange(spikes[0], spikes[-1], 100000000),
+        )[0]
+        hist = hist / 100
+        plt.figure()
+        plt.plot(hist)
+
+        plt.figure()
+        plt.hist(
+            spikes,
+            bins=np.arange(spikes[0], spikes[-1], 1000000),
+            density=True,
+            cumulative=True,
+        )

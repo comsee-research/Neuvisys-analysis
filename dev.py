@@ -7,42 +7,31 @@ Created on Mon Nov 16 12:47:24 2020
 """
 
 import os
+from shutil import copyfile
 from fpdf import FPDF
 from natsort import natsorted
 import random
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-import panda as pd
+import pandas as pd
 import cv2 as cv
 from spiking_network.spiking_network import SpikingNetwork
 
+
 #%%
 
-path = "/media/alphat/SSD Games/Thesis/configuration/network_"
-
-a = []
-for i in range(8):
-    with open(path + str(i) + "/configs/pooling_neuron_config.json") as file:
-        a.append(json.load(file))
-
-df = pd.DataFrame(a)
+# for i in range(nb_networks):
+#     copyfile(
+#         network_path + str(i) + "/figures/simple_figures/weight_sharing_0.pdf",
+#         "/home/alphat/Desktop/net_figs/" + str(i) + ".pdf",
+#     )
 
 
 #%%
 
 network_path = ""
 spinet = SpikingNetwork(network_path)
-
-
-#%% Spike rate
-
-network_path = "/home/alphat/neuvisys-dv/configuration/network/"
-time = np.max(spinet.sspikes)
-
-srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
-print("mean:", np.mean(srates))
-print("std:", np.std(srates))
 
 
 #%%
@@ -191,6 +180,58 @@ ax.boxplot(
 )
 plt.show()
 
+
+#%%
+
+fig, ax = plt.subplots(figsize=(8, 12))
+
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_visible(False)
+ax.yaxis.set_ticks_position("none")
+ax.grid(color="grey", axis="y", linestyle="-", linewidth=0.25, alpha=0.5)
+
+color1 = dict(color="#2C363F")
+color2 = dict(color="#9E7B9B")
+ax.boxplot(
+    np.abs(dir_vec),
+    positions=[0],
+    labels=["direction space"],
+    boxprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=1.7, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    flierprops=dict(markeredgecolor=color1["color"]),
+)
+ax.boxplot(
+    np.abs(ori_vec),
+    positions=[1],
+    labels=["orientation space"],
+    boxprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=1.7, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    flierprops=dict(markeredgecolor=color1["color"]),
+)
+ax.set_ylabel("Normalized vector length", fontsize=18)
+plt.setp(ax.get_xticklabels(), fontsize=18)
+plt.setp(ax.get_yticklabels(), fontsize=18)
+plt.savefig("/home/alphat/Desktop/images/boxplot_ori_dir.png", bbox_inches="tight")
+
+#%%
+
+plt.figure(figsize=(8, 12))
+ax = sns.histplot(
+    (np.angle(ori_vec)) * 180 / np.pi, bins=np.linspace(-180, 180, 16), color="#2C363F"
+)
+ax.set_xlabel("Orientation (degree)", fontsize=18)
+ax.set_ylabel("Count", fontsize=18)
+ax.set_xticks(np.arange(-180, 181, 45))
+ax.set_xtickslabels(np.arange(-90, 91, 45))
+plt.setp(ax.get_xticklabels(), fontsize=16)
+plt.setp(ax.get_yticklabels(), fontsize=16)
+
+plt.savefig("/home/alphat/Desktop/images/hist_ori.png", bbox_inches="tight")
 
 #%%
 

@@ -15,7 +15,7 @@ else:
     os.chdir("/home/thomas/neuvisys-analysis")
     home = "/home/thomas/"
 
-network_path = home + "/neuvisys-dv/configuration/network/"
+network_path = home + "neuvisys-dv/configuration/network/"
 
 import json
 import numpy as np
@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt
 
 from spiking_network.spiking_network import SpikingNetwork
 from aedat_tools.aedat_tools import (
-    stereo_matching,
     load_aedat4,
     show_event_images,
     write_npz,
@@ -42,6 +41,7 @@ from spiking_network.display import (
 )
 from event_statistics.frame_analysis import stereo_matching
 from spiking_network.network_statistics.network_statistics import (
+    network_params,
     compute_disparity,
     rf_matching,
     spike_plots_simple_cells,
@@ -94,16 +94,11 @@ write_npz(home + "Desktop/Events/pavin-3-1", events)
 frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
-#%% Launch training script
+#%% Load network params
 
-directory = "/home/thomas/neuvisys-dv/configuration/"
-files = [
-    "/home/thomas/Vidéos/driving_dataset/npy/mix_12.npy",
-    "/home/thomas/Vidéos/driving_dataset/npy/mix_17.npy",
-]
-files = ["/home/thomas/Bureau/concat.npy"]
-
-launch_spinet(directory, files, 1)
+network_path = "/home/alphat/Desktop/Networks/network_"
+nb_networks = 15
+ndf, sdf, cdf = network_params(network_path, nb_networks, trim_sim_val=True)
 
 
 #%% Create Matlab weight.mat
@@ -259,11 +254,11 @@ for i in range(144):
 
 #%% Launch training of multiple networks
 
-n_networks = 1
+n_networks = 15
 networks_path = "/home/alphat/Desktop/Networks/"
 event_path = "/home/alphat/Desktop/shapes.npz"
 generate_networks(networks_path, n_networks)
-nb_iterations = 20
+nb_iterations = 50
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(

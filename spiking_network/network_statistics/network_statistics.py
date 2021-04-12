@@ -11,11 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import json
 
 from itertools import combinations
 from PIL import Image
 from natsort import natsorted
-from aedat_tools.aedat_tools import load_params
 
 
 def inhibition_boxplot(directory):
@@ -47,24 +47,37 @@ def inhibition_boxplot(directory):
     plt.savefig("boxplots.pdf", bbox_inches="tight")
 
 
-def params_network(directory):
-    params = []
-    for entry in natsorted(os.listdir(directory + "weights/")):
-        if entry.endswith(".json"):
-            params.append(load_params(directory + "weights/" + entry))
-    return pd.DataFrame(params)
+def network_params(network_path, nb_networks, trim_sim_val=False):
+    conf_list = []
+    for conf_name in [
+        "/configs/network_config.json",
+        "/configs/simple_cell_config.json",
+        "/configs/complex_cell_config.json",
+    ]:
+        net_list = []
+        for i in range(nb_networks):
+            with open(network_path + str(i) + conf_name) as file:
+                net_list.append(json.load(file))
+
+        df = pd.DataFrame(net_list)
+
+        if trim_sim_val:
+            try:
+                nunique = df.apply(pd.Series.nunique)
+                cols_to_drop = nunique[nunique == 1].index
+                df = df.drop(cols_to_drop, axis=1)
+            except:
+                pass
+        conf_list.append(df)
+    return conf_list
 
 
-def networks_stats(nb_networks, directory):
-    df = []
-    for i in range(nb_networks):
-        df.append(load_params(directory + "network_" + str(i) + "/configs/config.json"))
+def network_spike_rate(spinet):
+    time = np.max(spinet.sspikes)
 
-        net_param = params_network(directory + "network_" + str(i) + "/")
-        df[i]["count_spike"] = net_param["count_spike"].mean()
-        df[i]["learning_decay"] = net_param["learning_decay"].mean()
-        df[i]["threshold"] = net_param["threshold"].mean()
-    return pd.DataFrame(df)
+    srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
+    print("mean:", np.mean(srates))
+    print("std:", np.std(srates))
 
 
 def spike_plots_simple_cells(spinet, neuron_id):

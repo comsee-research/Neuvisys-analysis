@@ -78,6 +78,7 @@ def pdf_weight_sharing(spinet, camera):
         xpatch = 1
         ypatch = 1
     elif spinet.weight_sharing == "patch":
+        side = int(np.sqrt(spinet.l1depth))
         xpatch = len(spinet.l1xanchor)
         ypatch = len(spinet.l1xanchor)
     pdf = FPDF(

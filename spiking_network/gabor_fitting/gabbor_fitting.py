@@ -29,14 +29,16 @@ def plot_gabor_image(neuron, est_basis, error, path, count, side):
 def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, side):
     cnt = 0
     indices = np.arange(
-        0, spinet.nb_simple_cells, spinet.l1width * spinet.l1height * spinet.l1depth
+        0,
+        spinet.nb_simple_cells,
+        spinet.conf["L1Depth"] * spinet.conf["L1Width"] * spinet.conf["L1Height"],
     )
-    if spinet.weight_sharing == "full":
-        for i in range(spinet.l1depth):
+    if spinet.conf["SharingType"] == "full":
+        for i in range(spinet.conf["L1Depth"]):
             path = dest + "{0:.2f}".format(error[0, i]) + str(i) + "_" + side + ".png"
             plot_gabor_image(spinet.simple_cells[i], est_basis, error, path, i, side)
         for neuron in spinet.simple_cells:
-            x, y, z = neuron.position
+            x, y, z = neuron.params["position"]
             path = dest + "{0:.2f}".format(error[0, z]) + str(z) + "_" + side + ".png"
             neuron.add_gabor(
                 path,
@@ -47,9 +49,9 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
                 theta[0, z],
                 error[0, z],
             )
-    elif spinet.weight_sharing == "patch":
+    elif spinet.conf["SharingType"] == "patch":
         for i, ind in enumerate(indices):
-            for neuron in spinet.simple_cells[ind : ind + spinet.l1depth]:
+            for neuron in spinet.simple_cells[ind : ind + spinet.conf["L1Depth"]]:
                 path = (
                     dest
                     + str(cnt)
@@ -72,11 +74,13 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
             for j, neuron in enumerate(
                 spinet.simple_cells[
                     ind
-                    + spinet.l1depth : ind
-                    + spinet.l1width * spinet.l1height * spinet.l1depth
+                    + spinet.conf["L1Depth"] : ind
+                    + spinet.conf["L1Depth"]
+                    * spinet.conf["L1Width"]
+                    * spinet.conf["L1Height"]
                 ]
             ):
-                c = i * spinet.l1depth + j % spinet.l1depth
+                c = i * spinet.conf["L1Depth"] + j % spinet.conf["L1Depth"]
                 path = (
                     dest + str(c) + "_{0:.2f}".format(error[0, c]) + "_" + side + ".png"
                 )

@@ -41,7 +41,7 @@ from spiking_network.display import (
 from event_statistics.frame_analysis import stereo_matching
 from spiking_network.network_statistics.network_statistics import (
     network_params,
-    compute_disparity,
+    compute_disparity_0,
     rf_matching,
     spike_plots_simple_cells,
     spike_plots_complex_cells,
@@ -83,14 +83,19 @@ spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 events = load_aedat4(home + "Desktop/Events/pavin-3-5.aedat4")
 
 
-#%% Save aedat file as numpy npz file
-
-write_npz(home + "Desktop/mvsec", events)
-
-
 #%% Load rosbag and convert it to npdat
 
-events = ros_to_npy("/home/thomas/Downloads/outdoor_day1_data.bag", topic="/davis/left/events")
+left_events = ros_to_npy(
+    home + "Desktop/indoor_flying1_data.bag", topic="/davis/left/events"
+)
+right_events = ros_to_npy(
+    home + "Desktop/indoor_flying1_data.bag", topic="/davis/right/events"
+)
+
+
+#%% Save aedat file as numpy npz file
+
+write_npz(home + "Desktop/mvsec_drone", (left_events, right_events))
 
 
 #%% Load frames
@@ -122,18 +127,9 @@ gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
 
 weights = spinet.get_weights("simple")
 residuals, disparity = rf_matching(weights)
-
 disparity[disparity >= 5] -= 10
-compute_disparity(
-    spinet,
-    disparity,
-    gabor_params_l[4],
-    (gabor_params_l[5] + gabor_params_r[5]) / 2,
-    residuals,
-    0,
-    500,
-    120.5,
-)
+
+compute_disparity_0(spinet, disparity, residuals, min_resi=0.5, max_resi=10)
 
 
 #%% Stereo matching
@@ -258,11 +254,11 @@ for i in range(144):
 
 #%% Launch training of multiple networks
 
-n_networks = 15
+n_networks = 5
 networks_path = "/home/alphat/Desktop/Networks/"
-event_path = "/home/alphat/Desktop/shapes.npz"
+event_path = "/home/alphat/Desktop/mvsec_car.npz"
 generate_networks(networks_path, n_networks)
-nb_iterations = 50
+nb_iterations = 5
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(

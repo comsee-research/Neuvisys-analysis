@@ -27,6 +27,7 @@ from aedat_tools.aedat_tools import (
     write_npz,
     load_frames,
     npaedat_to_np,
+    ros_to_npy,
     rectify_events,
     rectify_frames,
     remove_events,
@@ -84,7 +85,12 @@ events = load_aedat4(home + "Desktop/Events/pavin-3-5.aedat4")
 
 #%% Save aedat file as numpy npz file
 
-write_npz(home + "Desktop/Events/pavin-3-1", events)
+write_npz(home + "Desktop/mvsec", events)
+
+
+#%% Load rosbag and convert it to npdat
+
+events = ros_to_npy("/home/thomas/Downloads/outdoor_day1_data.bag", topic="/davis/left/events")
 
 
 #%% Load frames

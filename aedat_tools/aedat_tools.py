@@ -12,6 +12,7 @@ import json
 import os, shutil
 import numpy as np
 import random
+import rosbag
 
 from PIL import Image, ImageDraw
 import cv2 as cv
@@ -123,6 +124,14 @@ def h5py_to_npy(events):
 
     return npy_events
 
+def ros_to_npy(bag_file, topic):
+    bag = rosbag.Bag(bag_file)
+    npy_events = []
+    
+    for topic, msg, t in bag.read_messages(topics=[topic]):
+        for event in msg.events:
+            npy_events.append([event.ts.to_nsec(), event.x, event.y, event.polarity])
+    return np.array(npy_events)
 
 def concatenate_files(aedat4_files):
     list_events = []

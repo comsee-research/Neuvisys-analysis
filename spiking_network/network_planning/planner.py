@@ -151,7 +151,6 @@ def launch_neuvisys_multi_pass(network_path, event_file, nb_pass):
         [
             "/home/alphat/neuvisys-dv/cmake-build-release/neuvisys",
             network_path,
-            "multi-pass",
             event_file,
             str(nb_pass),
         ]

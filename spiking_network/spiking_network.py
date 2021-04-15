@@ -7,12 +7,13 @@ Created on Mon Jun 29 18:32:36 2020
 """
 
 from natsort import natsorted
+import json
 import os
 from PIL import Image
 import scipy.io as sio
 import numpy as np
 import itertools
-from aedat_tools.aedat_tools import load_params, delete_files
+from aedat_tools.aedat_tools import delete_files
 
 
 def compress_weight(weights, path):
@@ -30,7 +31,8 @@ class SpikingNetwork:
 
     def __init__(self, path):
         self.path = path
-        self.unpack_json(path + "configs/network_config.json")
+        with open(path + "configs/network_config.json") as file:
+            self.conf = json.load(file)
         self.neurons = []
         self.simple_cells = []
         self.complex_cells = []
@@ -66,8 +68,8 @@ class SpikingNetwork:
             self.neurons.append(neuron)
             self.simple_cells.append(neuron)
 
-            if neuron.tracking == "partial":
-                self.sspikes.append(neuron.spike_train)
+            if neuron.conf["TRACKING"] == "partial":
+                self.sspikes.append(neuron.params["spike_train"])
 
         self.nb_neurons = len(self.neurons)
         self.nb_simple_cells = len(self.simple_cells)
@@ -93,12 +95,12 @@ class SpikingNetwork:
 
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
-            for synapse in range(self.neuron1_synapses):
-                for camera in range(self.nb_cameras):
+            for synapse in range(self.conf["neuron1_synapses"]):
+                for camera in range(self.conf["nb_cameras"]):
                     weights = reshape_weights(
                         neuron.weights[:, camera, synapse],
-                        self.neuron1_width,
-                        self.neuron1_height,
+                        self.conf["neuron1_width"],
+                        self.conf["neuron1_height"],
                     )
                     path = (
                         self.path
@@ -115,7 +117,9 @@ class SpikingNetwork:
 
         for i, neuron in enumerate(self.complex_cells):
             for lay in range(self.neuron2_depth):
-                dim = np.zeros((self.neuron2_width, self.neuron2_height))
+                dim = np.zeros(
+                    (self.conf["neuron2_width"], self.conf["neuron2_height"])
+                )
                 weight = np.stack((neuron.weights[:, :, lay], dim, dim), axis=2)
                 path = (
                     self.path
@@ -133,15 +137,18 @@ class SpikingNetwork:
             weights = []
             if self.weight_sharing == "full":
                 weights = [
-                    neuron.weights for neuron in self.simple_cells[0 : self.l1depth]
+                    neuron.weights
+                    for neuron in self.simple_cells[0 : self.conf["l1depth"]]
                 ]
             elif self.weight_sharing == "patch":
                 for i in range(
-                    0, self.nb_simple_cells, self.l1depth * self.l1width * self.l1height
+                    0,
+                    self.nb_simple_cells,
+                    self.conf["l1depth"] * self.conf["l1width"] * self.conf["l1height"],
                 ):
                     weights += [
                         neuron.weights
-                        for neuron in self.simple_cells[i : i + self.l1depth]
+                        for neuron in self.simple_cells[i : i + self.conf["l1depth"]]
                     ]
             else:
                 weights = [neuron.weights for neuron in self.simple_cells]
@@ -150,9 +157,9 @@ class SpikingNetwork:
     def generate_weight_mat(self):
         weights = self.get_weights("simple")
 
-        w = self.neuron1_width * self.neuron1_height
+        w = self.conf["neuron1_width"] * self.conf["neuron1_height"]
         basis = np.zeros((2 * w, len(weights)))
-        for c in range(self.nb_cameras):
+        for c in range(self.conf["nb_cameras"]):
             for i, weight in enumerate(weights):
                 basis[c * w : (c + 1) * w, i] = (
                     weight[0, c, 0] - weight[1, c, 0]
@@ -160,28 +167,6 @@ class SpikingNetwork:
         sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
 
         return basis
-
-    def unpack_json(self, json_path):
-        json = load_params(json_path)
-        self.weight_sharing = json["SharingType"]
-        self.l1width = json["L1Width"]
-        self.l1height = json["L1Height"]
-        self.l1depth = json["L1Depth"]
-        self.l1xanchor = json["L1XAnchor"]
-        self.l1yanchor = json["L1YAnchor"]
-        self.neuron1_width = json["Neuron1Width"]
-        self.neuron1_height = json["Neuron1Height"]
-        self.neuron1_synapses = json["Neuron1Synapses"]
-
-        self.l2width = json["L2Width"]
-        self.l2height = json["L2Height"]
-        self.l2depth = json["L2Depth"]
-        self.l2xanchor = json["L2XAnchor"]
-        self.l2yanchor = json["L2YAnchor"]
-        self.neuron2_width = json["Neuron2Width"]
-        self.neuron2_height = json["Neuron2Height"]
-        self.neuron2_depth = json["Neuron2Depth"]
-        self.nb_cameras = json["NbCameras"]
 
     def clean_network(self, simple_cells, complex_cells, json_only):
         if json_only:
@@ -219,9 +204,11 @@ class Neuron:
 
     def __init__(self, neuron_type, config_path, path, param_path, weight_path):
         self.type = neuron_type
-        self.unpack_json_config(config_path)
+        with open(config_path) as file:
+            self.conf = json.load(file)
+        with open(path + param_path) as file:
+            self.params = json.load(file)
         self.weights = np.load(path + weight_path)
-        self.unpack_json_params(path + param_path)
         self.weight_images = []
         self.gabor_image = 0
         self.lambd = 0
@@ -239,45 +226,3 @@ class Neuron:
         self.theta = theta
         self.error = error
         self.orientation = self.theta
-
-    def unpack_json_config(self, json_path):
-        json = load_params(json_path)
-        if self.type == "simple":
-            self.min_thresh = json["MIN_THRESH"]
-            self.delta_sra = json["ETA_SRA"]
-            self.delta_sr = json["ETA_TA"]
-            self.tau_sra = json["TAU_SRA"]
-            self.target_spike_rate = json["TARGET_SPIKE_RATE"]
-            self.synapse_delay = json["SYNAPSE_DELAY"]
-
-        self.vthresh = json["VTHRESH"]
-        self.vreset = json["VRESET"]
-        self.delta_rp = json["ETA_RP"]
-        self.tau_rp = json["TAU_RP"]
-        self.tau_m = json["TAU_M"]
-        self.tau_ltp = json["TAU_LTP"]
-        self.tau_ltd = json["TAU_LTD"]
-        self.norm_factor = json["NORM_FACTOR"]
-        self.delta_vp = json["ETA_LTP"]
-        self.delta_vd = json["ETA_LTD"]
-        self.delta_inh = json["ETA_INH"]
-        self.decay_factor = json["DECAY_FACTOR"]
-        self.stdp_learning = json["STDP_LEARNING"]
-        self.tracking = json["TRACKING"]
-
-    def unpack_json_params(self, json_path):
-        json = load_params(json_path)
-        self.count_spike = json["count_spike"]
-        self.creation_time = json["creation_time"]
-        self.in_connections = json["in_connections"]
-        self.learning_decay = json["learning_decay"]
-        self.offset = json["offset"]
-        self.out_connections = json["out_connections"]
-        self.position = json["position"]
-        self.potential = json["potential"]
-        # self.potential_train = json["potential_train"]
-        self.recent_spikes = json["recent_spikes"]
-        self.spike_train = json["spike_train"]
-        self.spiking_rate = json["spiking_rate"]
-        self.threshold = json["threshold"]
-        self.inhibition_connections = json["inhibition_connections"]

@@ -17,7 +17,6 @@ else:
 
 network_path = home + "neuvisys-dv/configuration/network/"
 
-import json
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -27,7 +26,6 @@ from aedat_tools.aedat_tools import (
     show_event_images,
     write_npz,
     load_frames,
-    npz_to_arr,
     npaedat_to_np,
     rectify_events,
     rectify_frames,
@@ -234,7 +232,7 @@ for rot in rotations:
 spinet.save_complex_directions(cspikes, rotations)
 
 
-#%%
+#%% direction and orientation selectivity
 
 dir_vec, ori_vec = complex_cells_directions(spinet, rotations)
 
@@ -274,8 +272,8 @@ for i in range(0, n_networks):
 
 #%% Spike plots
 
-spike_plots_simple_cells(spinet, 7986)
-# spike_plots_complex_cells(spinet, 100)
+spike_plots_simple_cells(spinet, 7639)
+spike_plots_complex_cells(spinet, 100)
 
 
 #%% Spike rate evolution

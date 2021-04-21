@@ -52,8 +52,8 @@ class SpikingNetwork:
             )
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
-            if neuron.tracking == "partial":
-                self.cspikes.append(neuron.spike_train)
+            if neuron.conf["TRACKING"] == "partial":
+                self.cspikes.append(neuron.params["spike_train"])
 
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
         for paths in [
@@ -116,7 +116,7 @@ class SpikingNetwork:
                     neuron.weight_images.append(path)
 
         for i, neuron in enumerate(self.complex_cells):
-            for lay in range(self.neuron2_depth):
+            for lay in range(self.conf["Neuron2Depth"]):
                 dim = np.zeros((self.conf["Neuron2Width"], self.conf["Neuron2Height"]))
                 weight = np.stack((neuron.weights[:, :, lay], dim, dim), axis=2)
                 path = (

@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import cv2 as cv
 from spiking_network.spiking_network import SpikingNetwork
+import seaborn as sns
 
 
 #%%
@@ -44,7 +45,7 @@ im_size_pad = (22, 22)
 pdf = FPDF("P", "mm", (col * im_size_pad[0], row * im_size_pad[1]))
 pdf.add_page()
 
-path = "/home/alphat/neuvisys-dv/configuration/NETWORKS/complex_selectivity/figures/complex_directions/"
+path = "/home/alphat/Desktop/complex_selectivity/figures/complex_directions/"
 
 images = natsorted(os.listdir(path))  # [::-1]
 random.shuffle(images)
@@ -66,119 +67,140 @@ pdf.output("/home/alphat/Desktop/images/directions.pdf", "F")
 
 #%%
 
-fig, ax = plt.subplots()
+des = np.load("/home/alphat/Desktop/images/dir_exp_sym.npy")
+oes = np.load("/home/alphat/Desktop/images/ori_exp_sym.npy")
+dls = np.load("/home/alphat/Desktop/images/dir_lin_sym.npy")
+ols = np.load("/home/alphat/Desktop/images/ori_lin_sym.npy")
+dsl = np.load("/home/alphat/Desktop/images/dir_step_left.npy")
+osl = np.load("/home/alphat/Desktop/images/ori_step_left.npy")
+dss = np.load("/home/alphat/Desktop/images/dir_step_sym.npy")
+oss = np.load("/home/alphat/Desktop/images/ori_step_sym.npy")
+dsr = np.load("/home/alphat/Desktop/images/dir_network.npy")
+osr = np.load("/home/alphat/Desktop/images/ori_network.npy")
 
+# fig, ax = plt.subplots(figsize=(16, 12))
+# ax.spines["top"].set_visible(False)
+# ax.spines["right"].set_visible(False)
+# ax.spines["left"].set_visible(False)
+# ax.yaxis.set_ticks_position("none")
+# ax.grid(color="grey", axis="y", linestyle="-", linewidth=0.3, alpha=0.5)
+
+# color1 = dict(color="#2C363F")
+# color2 = dict(color="#9E7B9B")
+
+# ax.set_ylabel("normalized vector length")
+# ax.boxplot(
+#     np.abs(des),
+#     positions=[0],
+#     labels=["direction exponential"],
+#     boxprops=color1,
+#     medianprops=color2,
+#     whiskerprops=color1,
+#     capprops=color1,
+#     flierprops=dict(markeredgecolor=color1["color"]),
+# )
+# ax.boxplot(
+#     np.abs(dls),
+#     positions=[2],
+#     labels=["direction linear"],
+#     boxprops=color1,
+#     medianprops=color2,
+#     whiskerprops=color1,
+#     capprops=color1,
+#     flierprops=dict(markeredgecolor=color1["color"]),
+# )
+# ax.boxplot(
+#     np.abs(dsr),
+#     positions=[4],
+#     labels=["direction step left"],
+#     boxprops=color1,
+#     medianprops=color2,
+#     whiskerprops=color1,
+#     capprops=color1,
+#     flierprops=dict(markeredgecolor=color1["color"]),
+# )
+# ax.boxplot(
+#     np.abs(dsl),
+#     positions=[6],
+#     labels=["direction step right"],
+#     boxprops=color1,
+#     medianprops=color2,
+#     whiskerprops=color1,
+#     capprops=color1,
+#     flierprops=dict(markeredgecolor=color1["color"]),
+# )
+# ax.boxplot(
+#     np.abs(dss),
+#     positions=[8],
+#     labels=["direction step sym"],
+#     boxprops=color1,
+#     medianprops=color2,
+#     whiskerprops=color1,
+#     capprops=color1,
+#     flierprops=dict(markeredgecolor=color1["color"]),
+# )
+
+fig, ax = plt.subplots(figsize=(14, 12))
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_visible(False)
 ax.yaxis.set_ticks_position("none")
-ax.grid(color="grey", axis="y", linestyle="-", linewidth=0.25, alpha=0.5)
+ax.grid(color="grey", axis="y", linestyle="-", linewidth=0.5, alpha=0.5)
 
-color1 = dict(color="#2C363F")
-color2 = dict(color="#9E7B9B")
-
-ax.set_ylabel("normalized vector length")
-ax.boxplot(
-    np.abs(des),
-    positions=[0],
-    labels=["direction exponential"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
-    flierprops=dict(markeredgecolor=color1["color"]),
-)
 ax.boxplot(
     np.abs(oes),
     positions=[1],
-    labels=["orientation exponential"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
-    flierprops=dict(markeredgecolor=color1["color"]),
-)
-ax.boxplot(
-    np.abs(dls),
-    positions=[2],
-    labels=["direction linear"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
+    labels=["Exponential"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
 ax.boxplot(
     np.abs(ols),
     positions=[3],
-    labels=["orientation linear"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
-    flierprops=dict(markeredgecolor=color1["color"]),
-)
-ax.boxplot(
-    np.abs(dsr),
-    positions=[4],
-    labels=["direction step left"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
+    labels=["Linear"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
 ax.boxplot(
     np.abs(osr),
     positions=[5],
-    labels=["orientation step left"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
-    flierprops=dict(markeredgecolor=color1["color"]),
-)
-ax.boxplot(
-    np.abs(dsl),
-    positions=[6],
-    labels=["direction step right"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
+    labels=["Step left"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
 ax.boxplot(
     np.abs(osl),
     positions=[7],
-    labels=["orientation step right"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
-    flierprops=dict(markeredgecolor=color1["color"]),
-)
-ax.boxplot(
-    np.abs(dss),
-    positions=[8],
-    labels=["direction step sym"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
+    labels=["Step right"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
 ax.boxplot(
     np.abs(oss),
     positions=[9],
-    labels=["orientation step sym"],
-    boxprops=color1,
-    medianprops=color2,
-    whiskerprops=color1,
-    capprops=color1,
+    labels=["Step"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
-plt.show()
+ax.set_ylabel("Normalized vector length", fontsize=26)
+plt.setp(ax.get_xticklabels(), fontsize=26)
+plt.setp(ax.get_yticklabels(), fontsize=26)
+plt.savefig("/home/alphat/Desktop/images/stdp_windows.png", bbox_inches="tight")
 
 
 #%%
@@ -196,26 +218,26 @@ color2 = dict(color="#9E7B9B")
 ax.boxplot(
     np.abs(dir_vec),
     positions=[0],
-    labels=["direction space"],
-    boxprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
-    medianprops=dict(linestyle="-", linewidth=1.7, color="#9E7B9B"),
-    whiskerprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
-    capprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    labels=["direction"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
 ax.boxplot(
     np.abs(ori_vec),
     positions=[1],
-    labels=["orientation space"],
-    boxprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
-    medianprops=dict(linestyle="-", linewidth=1.7, color="#9E7B9B"),
-    whiskerprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
-    capprops=dict(linestyle="-", linewidth=1.7, color="#2C363F"),
+    labels=["orientation"],
+    boxprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    medianprops=dict(linestyle="-", linewidth=2, color="#9E7B9B"),
+    whiskerprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
+    capprops=dict(linestyle="-", linewidth=2, color="#2C363F"),
     flierprops=dict(markeredgecolor=color1["color"]),
 )
-ax.set_ylabel("Normalized vector length", fontsize=18)
-plt.setp(ax.get_xticklabels(), fontsize=18)
-plt.setp(ax.get_yticklabels(), fontsize=18)
+ax.set_ylabel("Normalized vector length", fontsize=26)
+plt.setp(ax.get_xticklabels(), fontsize=22)
+plt.setp(ax.get_yticklabels(), fontsize=22)
 plt.savefig("/home/alphat/Desktop/images/boxplot_ori_dir.png", bbox_inches="tight")
 
 #%%
@@ -224,12 +246,12 @@ plt.figure(figsize=(8, 12))
 ax = sns.histplot(
     (np.angle(ori_vec)) * 180 / np.pi, bins=np.linspace(-180, 180, 16), color="#2C363F"
 )
-ax.set_xlabel("Orientation (degree)", fontsize=18)
-ax.set_ylabel("Count", fontsize=18)
+ax.set_xlabel("Orientation (degree)", fontsize=22)
+ax.set_ylabel("Count", fontsize=22)
 ax.set_xticks(np.arange(-180, 181, 45))
-ax.set_xtickslabels(np.arange(-90, 91, 45))
-plt.setp(ax.get_xticklabels(), fontsize=16)
-plt.setp(ax.get_yticklabels(), fontsize=16)
+# ax.set_xtickslabels(np.arange(-90, 91, 45))
+plt.setp(ax.get_xticklabels(), fontsize=20)
+plt.setp(ax.get_yticklabels(), fontsize=20)
 
 plt.savefig("/home/alphat/Desktop/images/hist_ori.png", bbox_inches="tight")
 

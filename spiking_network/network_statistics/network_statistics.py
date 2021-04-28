@@ -207,9 +207,9 @@ def rf_matching(weights):
 
 def compute_disparity_0(spinet, disparity, residual, min_resi, max_resi):
     cnt = 0
-    fig, axes = plt.subplots(4, 5, sharex=False, sharey=True, figsize=(16, 12))
-    for i in range(5):
-        for j in range(4):
+    fig, axes = plt.subplots(len(spinet.conf["L1YAnchor"])-1, len(spinet.conf["L1XAnchor"]), sharex=False, sharey=True, figsize=(14, 8))
+    for i in range(len(spinet.conf["L1XAnchor"])):
+        for j in range(len(spinet.conf["L1YAnchor"])):
             mask_residual = (
                 residual[
                     cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
@@ -221,71 +221,64 @@ def compute_disparity_0(spinet, disparity, residual, min_resi, max_resi):
                 ]
                 > min_resi
             )
-            # if i != 4 and j != 3:
-            axes[j, i].set_title(
-                "nb rf:"
-                + str(np.count_nonzero(mask_residual))
-                + "\nmean: "
-                + str(
-                    np.mean(
-                        disparity[
-                            cnt
-                            * spinet.conf["L1Depth"] : (cnt + 1)
-                            * spinet.conf["L1Depth"],
-                            0,
-                        ][mask_residual]
-                    )
+            if j != 2:
+                sns.histplot(
+                    disparity[
+                        cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"],
+                        0,
+                    ][mask_residual],
+                    ax=axes[j, i],
+                    bins=[4.46, 5.575, 7.43, 11.15, 22.3, 50],
+                    stat="density",
                 )
-            )
-            axes[j, i].hist(
-                disparity[
-                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"],
-                    0,
-                ][mask_residual],
-                np.arange(-5.5, 6.5),
-                density=True,
-            )
+                plt.setp(axes[j, i].get_xticklabels(), fontsize=15)
+                plt.setp(axes[j, i].get_yticklabels(), fontsize=15)
+                # axes[j, i].set_xticklabels(np.arange(-5.5, 5.5))
+                axes[j, i].set_ylabel('Density', fontsize=22)
             cnt += 1
+    
+    axes[1, 1].set_xlabel('Disparity (pixel)', fontsize=22)
+    plt.savefig("/home/thomas/Desktop/images/estimated", bbox_inches="tight")
 
-    cnt = 0
-    fig, axes = plt.subplots(4, 5, sharex=False, sharey=True, figsize=(16, 12))
-    for i in range(5):
-        for j in range(4):
-            mask_residual = (
-                residual[
-                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
-                ]
-                < max_resi
-            ) & (
-                residual[
-                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
-                ]
-                > min_resi
-            )
-            # if i != 4 and j != 3:
-            axes[j, i].set_title(
-                "nb rf:"
-                + str(np.count_nonzero(mask_residual))
-                + "\nmean: "
-                + str(
-                    np.mean(
-                        disparity[
-                            cnt
-                            * spinet.conf["L1Depth"] : (cnt + 1)
-                            * spinet.conf["L1Depth"],
-                            0,
-                        ][mask_residual]
-                    )
-                )
-            )
-            axes[j, i].hist(
-                disparity[
-                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"], 1
-                ][mask_residual],
-                np.arange(-5.5, 6.5),
-                density=True,
-            )
-            cnt += 1
+    # cnt = 0
+    # fig, axes = plt.subplots(len(spinet.conf["L1YAnchor"]), len(spinet.conf["L1XAnchor"]), sharex=False, sharey=True, figsize=(16, 12))
+    # for i in range(len(spinet.conf["L1XAnchor"])):
+    #     for j in range(len(spinet.conf["L1YAnchor"])):
+    #         mask_residual = (
+    #             residual[
+    #                 cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+    #             ]
+    #             < max_resi
+    #         ) & (
+    #             residual[
+    #                 cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+    #             ]
+    #             > min_resi
+    #         )
+    #         # if i != 4 and j != 3:
+    #         axes[j, i].set_title(
+    #             "nb rf:"
+    #             + str(np.count_nonzero(mask_residual))
+    #             + "\nmean: "
+    #             + str(
+    #                 np.mean(
+    #                     disparity[
+    #                         cnt
+    #                         * spinet.conf["L1Depth"] : (cnt + 1)
+    #                         * spinet.conf["L1Depth"],
+    #                         0,
+    #                     ][mask_residual]
+    #                 )
+    #             )
+    #         )
+    #         axes[j, i].hist(
+    #             disparity[
+    #                 cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"], 1
+    #             ][mask_residual],
+    #             np.arange(-5.5, 6.5),
+    #             density=True,
+    #         )
+    #         cnt += 1
 
 
 def compute_disparity(

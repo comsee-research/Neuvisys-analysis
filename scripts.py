@@ -86,16 +86,16 @@ events = load_aedat4(home + "Desktop/Events/pavin-3-5.aedat4")
 #%% Load rosbag and convert it to npdat
 
 left_events = ros_to_npy(
-    home + "Desktop/indoor_flying1_data.bag", topic="/davis/left/events"
+    home + "Downloads/outdoor_night1_data.bag", topic="/davis/left/events"
 )
 right_events = ros_to_npy(
-    home + "Desktop/indoor_flying1_data.bag", topic="/davis/right/events"
+    home + "Downloads/outdoor_night1_data.bag", topic="/davis/right/events"
 )
 
 
 #%% Save aedat file as numpy npz file
 
-write_npz(home + "Desktop/mvsec_drone", (left_events, right_events))
+write_npz(home + "Desktop/mvsec_car_night", (left_events, right_events))
 
 
 #%% Load frames
@@ -125,11 +125,19 @@ gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
 
 #%% Compute receptive field disparity
 
+network_path = "/home/thomas/Desktop/N2/network_0/"
+spinet = SpikingNetwork(network_path)
+
 weights = spinet.get_weights("simple")
 residuals, disparity = rf_matching(weights)
 disparity[disparity >= 5] -= 10
+disparity = np.abs(disparity)
 
-compute_disparity_0(spinet, disparity, residuals, min_resi=0.5, max_resi=10)
+disparity[disparity == 0] = -1
+disparity = 0.1 * 223 / disparity
+disparity[disparity == -22.3] = 30
+
+compute_disparity_0(spinet, disparity, residuals, min_resi=0.5, max_resi=30)
 
 
 #%% Stereo matching
@@ -254,11 +262,11 @@ for i in range(144):
 
 #%% Launch training of multiple networks
 
-n_networks = 5
-networks_path = "/home/alphat/Desktop/Networks/"
-event_path = "/home/alphat/Desktop/mvsec_car.npz"
+n_networks = 1
+networks_path = "/home/thomas/Desktop/N3/"
+event_path = "/home/thomas/Desktop/mvsec_car_night.npz"
 generate_networks(networks_path, n_networks)
-nb_iterations = 5
+nb_iterations = 8
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
@@ -337,3 +345,100 @@ tse = [
 ]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
+
+#%%
+
+import rosbag
+import seaborn as sns
+
+bag_file = "/home/thomas/Downloads/outdoor_day1_gt.bag"
+bag = rosbag.Bag(bag_file)
+
+dt = np.dtype('<f4')
+
+xs = [10, 148, 286]
+ys = [10, 105, 200]
+mat = [[[], [], []],
+       [[], [], []],
+       [[], [], []]]
+
+cnt = 0
+for topic, msg, t in bag.read_messages(topics=["/davis/left/depth_image_raw"]):
+    # cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="32FC1")
+    im = np.frombuffer(msg.data, dtype=dt).reshape(260, 346)
+    
+    for i, x in enumerate(xs):
+        for j, y in enumerate(ys):
+            mat[i][j].append(im[y:y+40, x:x+40].flatten())
+
+    # plt.imshow(im)
+    # plt.show()
+    
+mat = np.array(mat)
+mat = mat.reshape(mat.shape[:-2] + (-1,))
+
+#%%
+
+fig, axes = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(14, 8))
+# fig.suptitle("Ground Truth Depth estimation per region", fontsize=30)
+for i in range(len(xs)):
+    for j in range(len(ys)):
+        if j != 2:
+            sns.histplot(mat[i, j][mat[i, j] < 100], ax=axes[j, i], stat="density", color="#2C363F")
+
+for ax in axes.flat:
+    plt.setp(ax.get_xticklabels(), fontsize=15)
+    plt.setp(ax.get_yticklabels(), fontsize=15)
+    ax.set_ylabel('Density', fontsize=26)
+    ax.set_xticks(np.arange(0, 110, 10))
+
+axes[1, 1].set_xlabel('Depth (m)', fontsize=26)
+
+plt.savefig("/home/thomas/Desktop/images/gt", bbox_inches="tight")
+
+#%%
+
+fig, axes = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(14, 8))
+# fig.suptitle("Ground Truth Depth estimation per region", fontsize=30)
+cnt = 0
+
+for i in range(len(spinet.conf["L1XAnchor"])):
+    for j in range(len(spinet.conf["L1YAnchor"])):
+        mask_residual = (
+            residuals[
+                cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+            ]
+            < 30
+        ) & (
+            residuals[
+                cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+            ]
+            > 0.5
+        )
+        if j != 2:
+            sns.histplot(
+                disparity[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"],
+                    0,
+                ][mask_residual],
+                ax=axes[j, i],
+                bins=[4.46, 5.575, 7.43, 11.15, 22.3, 70],
+                stat="density",
+                color="#2C363F"
+            )
+        cnt += 1
+
+for i in range(len(xs)):
+    for j in range(len(ys)):
+        if j != 2:
+            sns.histplot(mat[i, j][mat[i, j] < 70], ax=axes[j, i], stat="density")
+
+for ax in axes.flat:
+    plt.setp(ax.get_xticklabels(), fontsize=15)
+    plt.setp(ax.get_yticklabels(), fontsize=15)
+    ax.set_ylabel('Density', fontsize=24)
+    ax.set_xticks(np.arange(0, 71, 10))
+
+axes[1, 1].set_xlabel('Depth (m)', fontsize=24)
+
+plt.savefig("/home/thomas/Desktop/images/test", bbox_inches="tight")

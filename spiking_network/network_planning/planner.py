@@ -19,8 +19,8 @@ def generate_networks(directory, n_iter):
         "L1Width": [4],
         "L1Height": [4],
         "L1Depth": [100],
-        "L1XAnchor": [[0, 153, 306]],
-        "L1YAnchor": [[0, 110, 220]],
+        "L1XAnchor": [[10, 148, 286]],
+        "L1YAnchor": [[10, 105, 200]],
         "Neuron1Width": [10],
         "Neuron1Height": [10],
         "Neuron1Synapses": [1],
@@ -37,7 +37,7 @@ def generate_networks(directory, n_iter):
     }
 
     neuron_params = {
-        "VTHRESH": [25],
+        "VTHRESH": [30],
         "VRESET": [-20],
         "TRACKING": ["none"],
         "TAU_SRA": [100000],
@@ -45,17 +45,17 @@ def generate_networks(directory, n_iter):
         "TAU_M": [18000],
         "TAU_LTP": [7000],
         "TAU_LTD": [14000],
-        "TARGET_SPIKE_RATE": [0.1, 0.2, 0.5],
+        "TARGET_SPIKE_RATE": [0.5],
         "SYNAPSE_DELAY": [0],
         "STDP_LEARNING": [True],
         "NORM_FACTOR": [4],
-        "MIN_THRESH": [5],
-        "ETA_LTP": [0.0077, 0.0055, 0.0099],
-        "ETA_LTD": [-0.0021, -0.0011, -0.0031],
-        "ETA_SRA": [0.6],
+        "MIN_THRESH": [4],
+        "ETA_LTP": [0.0077],
+        "ETA_LTD": [-0.0021],
+        "ETA_SRA": [3, 6, 9],
         "ETA_TA": [1],
         "ETA_RP": [1],
-        "ETA_INH": [10, 30, 50],
+        "ETA_INH": [20],
         "DECAY_FACTOR": [0],
     }
 
@@ -149,7 +149,7 @@ def execute(cmd):
 def launch_neuvisys_multi_pass(network_path, event_file, nb_pass):
     for path in execute(
         [
-            "/home/alphat/neuvisys-dv/cmake-build-release/neuvisys",
+            "/home/thomas/neuvisys-dv/build/neuvisys",
             network_path,
             event_file,
             str(nb_pass),

@@ -309,6 +309,8 @@ def plot_directions(spinet, directions, rotations):
         ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=13)
         plt.savefig(
             spinet.path + "figures/complex_directions/" + str(i), bbox_inches="tight"
         )
@@ -350,6 +352,8 @@ def plot_orientations(spinet, orientations, rotations):
         ax.set_xticklabels(
             ["0°", "22.5°", "45°", "67.5°", "90°", "112.5°", "135°", "157.5°"]
         )
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=13)
         plt.savefig(
             spinet.path + "figures/complex_orientations/" + str(i), bbox_inches="tight"
         )

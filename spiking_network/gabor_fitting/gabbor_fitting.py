@@ -147,23 +147,25 @@ def error_percentage(theta, error, max_error, dest):
 
 
 def create_gabor_basis(spinet, side, nb_ticks):
-    mu = sio.loadmat(spinet.path + "gabors/data/" + side + "/mu.mat")["mu_table"]
-    sigma = sio.loadmat(spinet.path + "gabors/data/" + side + "/sigma.mat")[
+    if side == "None":
+        side = ""
+    mu = sio.loadmat(spinet.path + "gabors/data/" + side + "mu.mat")["mu_table"]
+    sigma = sio.loadmat(spinet.path + "gabors/data/" + side + "sigma.mat")[
         "sigma_table"
     ]
-    lambd = sio.loadmat(spinet.path + "gabors/data/" + side + "/lambda.mat")[
+    lambd = sio.loadmat(spinet.path + "gabors/data/" + side + "lambda.mat")[
         "lambda_table"
     ]
-    phase = sio.loadmat(spinet.path + "gabors/data/" + side + "/phase.mat")[
+    phase = sio.loadmat(spinet.path + "gabors/data/" + side + "phase.mat")[
         "phase_table"
     ]
-    theta = sio.loadmat(spinet.path + "gabors/data/" + side + "/theta.mat")[
+    theta = sio.loadmat(spinet.path + "gabors/data/" + side + "theta.mat")[
         "theta_table"
     ]
-    error = sio.loadmat(spinet.path + "gabors/data/" + side + "/error.mat")[
+    error = sio.loadmat(spinet.path + "gabors/data/" + side + "error.mat")[
         "error_table"
     ]
-    est_basis = sio.loadmat(spinet.path + "gabors/data/" + side + "/EstBasis.mat")[
+    est_basis = sio.loadmat(spinet.path + "gabors/data/" + side + "EstBasis.mat")[
         "EstBasis"
     ]
 
@@ -182,7 +184,12 @@ def create_gabor_basis(spinet, side, nb_ticks):
         side,
     )
     plot_polar_chart(
-        spinet.l1depth, nb_ticks, theta[0], error[0], 20, spinet.path + "gabors/hists/"
+        spinet.conf["L1Depth"],
+        nb_ticks,
+        theta,
+        error,
+        100,
+        spinet.path + "gabors/figures/",
     )
     error_percentage(theta[0], error[0], 20, spinet.path + "gabors/hists/")
 
@@ -218,20 +225,20 @@ def hists_preferred_orientations(spinet):
 
     for i in range(spinet.nb_complex_cells):
         complex_cell = spinet.complex_cells[i]
-        ox, oy, oz = complex_cell.offset
+        ox, oy, oz = complex_cell.params["offset"]
 
         orientations = []
         strengths = []
         maximum = np.max(complex_cell.weights)
-        for connection in complex_cell.in_connections:
+        for connection in complex_cell.params["in_connections"]:
             simple_cell = spinet.simple_cells[connection]
-            xs, ys, zs = simple_cell.position
+            xs, ys, zs = simple_cell.params["position"]
             strengths.append(complex_cell.weights[xs - ox, ys - oy, zs] / maximum)
             orientations.append(simple_cell.orientation * 180 / np.pi)
 
         hists_o.append(compute_histogram(orientations, 180, 8, strengths))
 
-        if i % spinet.l2depth == 0:
+        if i % spinet.conf["L2Depth"] == 0:
             hists_ro.append(compute_histogram(orientations, 180, 8))
 
     return np.array(hists_o), np.array(hists_ro)

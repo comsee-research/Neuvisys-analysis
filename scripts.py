@@ -27,6 +27,7 @@ from aedat_tools.aedat_tools import (
     write_npz,
     load_frames,
     npaedat_to_np,
+    ros_to_npy,
     rectify_events,
     rectify_frames,
     remove_events,
@@ -40,7 +41,7 @@ from spiking_network.display import (
 from event_statistics.frame_analysis import stereo_matching
 from spiking_network.network_statistics.network_statistics import (
     network_params,
-    compute_disparity,
+    compute_disparity_0,
     rf_matching,
     spike_plots_simple_cells,
     spike_plots_complex_cells,
@@ -69,7 +70,7 @@ spinet = SpikingNetwork(network_path)
 
 #%% Display weights
 
-display_network([spinet], 1)
+display_network([spinet], 0)
 
 
 #%% //!!!\\ Delete weights network
@@ -82,9 +83,19 @@ spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
 events = load_aedat4(home + "Desktop/Events/pavin-3-5.aedat4")
 
 
+#%% Load rosbag and convert it to npdat
+
+left_events = ros_to_npy(
+    home + "Desktop/indoor_flying1_data.bag", topic="/davis/left/events"
+)
+right_events = ros_to_npy(
+    home + "Desktop/indoor_flying1_data.bag", topic="/davis/right/events"
+)
+
+
 #%% Save aedat file as numpy npz file
 
-write_npz(home + "Desktop/Events/pavin-3-1", events)
+write_npz(home + "Desktop/mvsec_drone", (left_events, right_events))
 
 
 #%% Load frames
@@ -92,59 +103,12 @@ write_npz(home + "Desktop/Events/pavin-3-1", events)
 frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
-#%% Load network params
+#%% Load network params of learned batch
+
 
 network_path = "/home/thomas/Bureau/Networks/network_"
 nb_networks = 10
 ndf, sdf, cdf = network_params(network_path, nb_networks, trim_sim_val=True)
-
-
-#%% Create Matlab weight.mat
-
-basis = spinet.generate_weight_mat()
-
-
-#%% Load and create gabor basis
-
-spinet.generate_weight_images()
-# gabor_params_l = create_gabor_basis(spinet, "None", nb_ticks=8)
-gabor_params_l = create_gabor_basis(spinet, "left", nb_ticks=8)
-gabor_params_r = create_gabor_basis(spinet, "right", nb_ticks=8)
-
-
-#%% Compute receptive field disparity
-
-weights = spinet.get_weights("simple")
-residuals, disparity = rf_matching(weights)
-
-disparity[disparity >= 5] -= 10
-compute_disparity(
-    spinet,
-    disparity,
-    gabor_params_l[4],
-    (gabor_params_l[5] + gabor_params_r[5]) / 2,
-    residuals,
-    0,
-    500,
-    120.5,
-)
-
-
-#%% Stereo matching
-
-# disp_frames, disp_nb_frames = stereo_matching("/home/alphat/Desktop/pavin_images/im3/", [10, 84, 158, 232], [20, 83, 146], range(900, 1100))
-disp_frames, disp_nb_frames = stereo_matching(
-    "/home/alphat/Desktop/pavin_images/im1/",
-    [10, 84, 158, 232],
-    [20, 83, 146],
-    range(0, 200),
-)
-
-
-#%% Create plots for preferred orientations and directions
-
-oris, oris_r = hists_preferred_orientations(spinet)
-plot_preferred_orientations(spinet, oris, oris_r)
 
 
 #%% Load various neuron informations
@@ -161,49 +125,74 @@ for i in range(1, 2):
 y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
 
 
-#%% Launch
+#%% Spike plots
 
-toggle_learning(spinet, True)
+spike_plots_simple_cells(spinet, 7639)
+spike_plots_complex_cells(spinet, 100)
 
-for i in range(3):
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_h.npz",
-        2,
-    )
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_-90.npz",
-        2,
-    )
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_180.npz",
-        2,
-    )
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_hv.npz",
-        2,
-    )
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_flip_v.npz",
-        2,
-    )
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_0.npz",
-        2,
-    )
-    launch_neuvisys_multi_pass(
-        network_path + "configs/network_config.json",
-        "/home/thomas/Videos/real_videos/npz/diverse_shapes/shapes_rot_90.npz",
-        2,
-    )
 
-spinet = SpikingNetwork(network_path)
-display_network([spinet], 0)
+#%% Spike rate evolution
+
+for i in range(10):
+    spike_rate_evolution(spinet, i)
+
+
+#%% Create Matlab weight.mat
+
+basis = spinet.generate_weight_mat()
+
+
+#%% Load and create gabor basis
+
+spinet.generate_weight_images()
+gabor_params_l = create_gabor_basis(spinet, "None", nb_ticks=8)
+# gabor_params_l = create_gabor_basis(spinet, "left/", nb_ticks=8)
+# gabor_params_r = create_gabor_basis(spinet, "right/", nb_ticks=8)
+
+
+#%% Create plots for preferred orientations and directions
+
+oris, oris_r = hists_preferred_orientations(spinet)
+plot_preferred_orientations(spinet, oris, oris_r)
+
+#%% direction and orientation selectivity
+
+rotations = np.array(
+    [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
+)
+dir_vec, ori_vec = complex_cells_directions(spinet, rotations)
+
+angles = np.pi * rotations / 180
+
+dirs = []
+dis = []
+for i in range(144):
+    dirs.append(direction_norm_length(spinet.directions[:, i], angles))
+    dis.append(direction_selectivity(spinet.directions[:, i]))
+oris = []
+ois = []
+for i in range(144):
+    oris.append(orientation_norm_length(spinet.orientations[:, i], angles[0:8]))
+    ois.append(orientation_selectivity(spinet.orientations[:, i]))
+
+
+#%% Compute receptive field disparity
+
+weights = spinet.get_weights("simple")
+residuals, disparity = rf_matching(weights)
+disparity[disparity >= 5] -= 10
+
+compute_disparity_0(spinet, disparity, residuals, min_resi=0.5, max_resi=10)
+
+
+#%% Stereo matching
+
+disp_frames, disp_nb_frames = stereo_matching(
+    "/home/alphat/Desktop/pavin_images/im1/",
+    [10, 84, 158, 232],
+    [20, 83, 146],
+    range(0, 200),
+)
 
 
 #%% Toggle learning
@@ -232,32 +221,15 @@ for rot in rotations:
 spinet.save_complex_directions(cspikes, rotations)
 
 
-#%% direction and orientation selectivity
-
-dir_vec, ori_vec = complex_cells_directions(spinet, rotations)
-
-angles = np.pi * rotations / 180
-
-dirs = []
-dis = []
-for i in range(144):
-    dirs.append(direction_norm_length(spinet.directions[:, i], angles))
-    dis.append(direction_selectivity(spinet.directions[:, i]))
-oris = []
-ois = []
-for i in range(144):
-    oris.append(orientation_norm_length(spinet.orientations[:, i], angles[0:8]))
-    ois.append(orientation_selectivity(spinet.orientations[:, i]))
-
-
 #%% Launch training of multiple networks
 
 n_networks = 12
 exec_path = "/home/thomas/neuvisys-dv/build/neuvisys"
 networks_path = "/home/thomas/Bureau/Networks/"
 event_path = "/home/thomas/Bureau/shapes.npz"
+
 generate_networks(networks_path, n_networks)
-nb_iterations = 50
+nb_iterations = 5
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
@@ -272,40 +244,20 @@ for i in range(0, n_networks):
     # basis = spinet.generate_weight_mat()
 
 
-#%% Spike plots
-
-spike_plots_simple_cells(spinet, 7639)
-spike_plots_complex_cells(spinet, 100)
-
-
-#%% Spike rate evolution
-
-for i in range(10):
-    spike_rate_evolution(spinet, i)
-
-
-#%% Rectify and Plot event images
+#%% Rectify and plot event images
 
 rect_events = rectify_events((events[0].copy(), events[1].copy()), -5, -16, 5, 16)
 
-show_event_images(
-    npaedat_to_np(rect_events[0]),
-    100000,
-    346,
-    260,
-    "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/",
-    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
-    "_l",
-)
-show_event_images(
-    npaedat_to_np(rect_events[1]),
-    100000,
-    346,
-    260,
-    "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/",
-    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
-    "_r",
-)
+for i in range(2):
+    show_event_images(
+        npaedat_to_np(rect_events[0]),
+        100000,
+        346,
+        260,
+        "/media/alphat/DisqueDur/0_Thesis/short_pavin2_img/",
+        ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
+        "_"+str(i),
+    )
 
 
 #%% Plot frames

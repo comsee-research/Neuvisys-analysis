@@ -52,8 +52,8 @@ class SpikingNetwork:
             )
             self.neurons.append(neuron)
             self.complex_cells.append(neuron)
-            if neuron.tracking == "partial":
-                self.cspikes.append(neuron.spike_train)
+            if neuron.conf["TRACKING"] == "partial":
+                self.cspikes.append(neuron.params["spike_train"])
 
         neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
         for paths in [
@@ -95,12 +95,12 @@ class SpikingNetwork:
 
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
-            for synapse in range(self.conf["neuron1_synapses"]):
-                for camera in range(self.conf["nb_cameras"]):
+            for synapse in range(self.conf["Neuron1Synapses"]):
+                for camera in range(self.conf["NbCameras"]):
                     weights = reshape_weights(
                         neuron.weights[:, camera, synapse],
-                        self.conf["neuron1_width"],
-                        self.conf["neuron1_height"],
+                        self.conf["Neuron1Width"],
+                        self.conf["Neuron1Height"],
                     )
                     path = (
                         self.path
@@ -116,10 +116,8 @@ class SpikingNetwork:
                     neuron.weight_images.append(path)
 
         for i, neuron in enumerate(self.complex_cells):
-            for lay in range(self.neuron2_depth):
-                dim = np.zeros(
-                    (self.conf["neuron2_width"], self.conf["neuron2_height"])
-                )
+            for lay in range(self.conf["Neuron2Depth"]):
+                dim = np.zeros((self.conf["Neuron2Width"], self.conf["Neuron2Height"]))
                 weight = np.stack((neuron.weights[:, :, lay], dim, dim), axis=2)
                 path = (
                     self.path
@@ -135,20 +133,20 @@ class SpikingNetwork:
     def get_weights(self, neuron_type):
         if neuron_type == "simple":
             weights = []
-            if self.weight_sharing == "full":
+            if self.conf["SharingType"] == "full":
                 weights = [
                     neuron.weights
-                    for neuron in self.simple_cells[0 : self.conf["l1depth"]]
+                    for neuron in self.simple_cells[0 : self.conf["L1Depth"]]
                 ]
-            elif self.weight_sharing == "patch":
+            elif self.conf["SharingType"] == "patch":
                 for i in range(
                     0,
                     self.nb_simple_cells,
-                    self.conf["l1depth"] * self.conf["l1width"] * self.conf["l1height"],
+                    self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"],
                 ):
                     weights += [
                         neuron.weights
-                        for neuron in self.simple_cells[i : i + self.conf["l1depth"]]
+                        for neuron in self.simple_cells[i : i + self.conf["L1Depth"]]
                     ]
             else:
                 weights = [neuron.weights for neuron in self.simple_cells]
@@ -157,9 +155,9 @@ class SpikingNetwork:
     def generate_weight_mat(self):
         weights = self.get_weights("simple")
 
-        w = self.conf["neuron1_width"] * self.conf["neuron1_height"]
+        w = self.conf["Neuron1Width"] * self.conf["Neuron1Height"]
         basis = np.zeros((2 * w, len(weights)))
-        for c in range(self.conf["nb_cameras"]):
+        for c in range(self.conf["NbCameras"]):
             for i, weight in enumerate(weights):
                 basis[c * w : (c + 1) * w, i] = (
                     weight[0, c, 0] - weight[1, c, 0]

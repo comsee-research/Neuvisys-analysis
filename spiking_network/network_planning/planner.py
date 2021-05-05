@@ -15,7 +15,7 @@ import numpy as np
 
 def generate_networks(directory, n_iter):
     network_params = {
-        "NbCameras": [1],
+        "NbCameras": [2],
         "L1Width": [4],
         "L1Height": [4],
         "L1Depth": [100],
@@ -24,20 +24,20 @@ def generate_networks(directory, n_iter):
         "Neuron1Width": [10],
         "Neuron1Height": [10],
         "Neuron1Synapses": [1],
-        "L2Width": [1],
-        "L2Height": [1],
-        "L2Depth": [16],
+        "L2Width": [0],
+        "L2Height": [0],
+        "L2Depth": [0],
         "L2XAnchor": [[0, 4, 8]],
         "L2YAnchor": [[0, 4, 8]],
         "Neuron2Width": [4],
         "Neuron2Height": [4],
         "Neuron2Depth": [16],
-        "SharingType": ["full"],
+        "SharingType": ["patch"],
         "SaveData": [True],
     }
 
     neuron_params = {
-        "VTHRESH": [20],
+        "VTHRESH": [25],
         "VRESET": [-20],
         "TRACKING": ["partial"],
         "TAU_SRA": [100000],
@@ -50,12 +50,12 @@ def generate_networks(directory, n_iter):
         "STDP_LEARNING": [True],
         "NORM_FACTOR": [4],
         "MIN_THRESH": [5],
-        "ETA_LTP": [0.00077],
-        "ETA_LTD": [-0.00021],
+        "ETA_LTP": [0.0077, 0.0055, 0.0099],
+        "ETA_LTD": [-0.0021, -0.0011, -0.0031],
         "ETA_SRA": [0.6],
         "ETA_TA": [1],
         "ETA_RP": [1],
-        "ETA_INH": [10, 20, 30, 40],
+        "ETA_INH": [10, 30, 50],
         "DECAY_FACTOR": [0],
     }
 

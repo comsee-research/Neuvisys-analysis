@@ -205,6 +205,89 @@ def rf_matching(weights):
     return np.array(residuals), np.array(disparity)
 
 
+def compute_disparity_0(spinet, disparity, residual, min_resi, max_resi):
+    cnt = 0
+    fig, axes = plt.subplots(4, 5, sharex=False, sharey=True, figsize=(16, 12))
+    for i in range(5):
+        for j in range(4):
+            mask_residual = (
+                residual[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+                ]
+                < max_resi
+            ) & (
+                residual[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+                ]
+                > min_resi
+            )
+            # if i != 4 and j != 3:
+            axes[j, i].set_title(
+                "nb rf:"
+                + str(np.count_nonzero(mask_residual))
+                + "\nmean: "
+                + str(
+                    np.mean(
+                        disparity[
+                            cnt
+                            * spinet.conf["L1Depth"] : (cnt + 1)
+                            * spinet.conf["L1Depth"],
+                            0,
+                        ][mask_residual]
+                    )
+                )
+            )
+            axes[j, i].hist(
+                disparity[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"],
+                    0,
+                ][mask_residual],
+                np.arange(-5.5, 6.5),
+                density=True,
+            )
+            cnt += 1
+
+    cnt = 0
+    fig, axes = plt.subplots(4, 5, sharex=False, sharey=True, figsize=(16, 12))
+    for i in range(5):
+        for j in range(4):
+            mask_residual = (
+                residual[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+                ]
+                < max_resi
+            ) & (
+                residual[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
+                ]
+                > min_resi
+            )
+            # if i != 4 and j != 3:
+            axes[j, i].set_title(
+                "nb rf:"
+                + str(np.count_nonzero(mask_residual))
+                + "\nmean: "
+                + str(
+                    np.mean(
+                        disparity[
+                            cnt
+                            * spinet.conf["L1Depth"] : (cnt + 1)
+                            * spinet.conf["L1Depth"],
+                            0,
+                        ][mask_residual]
+                    )
+                )
+            )
+            axes[j, i].hist(
+                disparity[
+                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"], 1
+                ][mask_residual],
+                np.arange(-5.5, 6.5),
+                density=True,
+            )
+            cnt += 1
+
+
 def compute_disparity(
     spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual
 ):

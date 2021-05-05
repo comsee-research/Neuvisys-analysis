@@ -73,13 +73,14 @@ def pdf_layers(spinet, rows, cols, nb_synapses, nb_layers):
 
 
 def pdf_weight_sharing(spinet, camera):
-    if spinet.weight_sharing == "full":
+    if spinet.conf["SharingType"] == "full":
         side = int(np.sqrt(spinet.l1depth))
         xpatch = 1
         ypatch = 1
-    elif spinet.weight_sharing == "patch":
-        xpatch = len(spinet.l1xanchor)
-        ypatch = len(spinet.l1xanchor)
+    elif spinet.conf["SharingType"] == "patch":
+        side = int(np.sqrt(spinet.conf["L1Depth"]))
+        xpatch = len(spinet.conf["L1XAnchor"])
+        ypatch = len(spinet.conf["L1YAnchor"])
     pdf = FPDF(
         "P",
         "mm",
@@ -92,59 +93,65 @@ def pdf_weight_sharing(spinet, camera):
 
     pos_x = 0
     pos_y = 0
-    shift = np.arange(spinet.l1depth).reshape((side, side))
-    if spinet.weight_sharing == "full":
-        cell_range = range(spinet.l1depth)
-    elif spinet.weight_sharing == "patch":
+    shift = np.arange(spinet.conf["L1Depth"]).reshape((side, side))
+    if spinet.conf["SharingType"] == "full":
+        cell_range = range(spinet.conf["L1Depth"])
+    elif spinet.conf["SharingType"] == "patch":
         cell_range = range(
-            0, spinet.nb_simple_cells, spinet.l1depth * spinet.l1width * spinet.l1height
+            0,
+            spinet.nb_simple_cells,
+            spinet.conf["L1Depth"] * spinet.conf["L1Width"] * spinet.conf["L1Height"],
         )
     for i in cell_range:
-        for neuron in spinet.simple_cells[i : i + spinet.l1depth]:
-            x, y, z = neuron.position
+        for neuron in spinet.simple_cells[i : i + spinet.conf["L1Depth"]]:
+            x, y, z = neuron.params["position"]
             pos_x = (
-                (x // spinet.l1width) * side * 11
+                (x // spinet.conf["L1Width"]) * side * 11
                 + np.where(shift == z)[0][0] * 11
-                + (x // spinet.l1width) * 10
+                + (x // spinet.conf["L1Width"]) * 10
             )  # patch size + weight sharing shift + patch padding
             pos_y = (
-                (y // spinet.l1height) * side * 11
+                (y // spinet.conf["L1Height"]) * side * 11
                 + np.where(shift == z)[1][0] * 11
-                + (y // spinet.l1height) * 10
+                + (y // spinet.conf["L1Height"]) * 10
             )
             pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 
 def pdf_weight_sharing_left_right_combined(spinet):
-    side = int(np.sqrt(spinet.l1depth))
+    side = int(np.sqrt(spinet.conf["L1Depth"]))
     pdf = FPDF(
         "P",
         "mm",
         (
-            11 * len(spinet.l1xanchor) * side + (len(spinet.l1xanchor) - 1) * 10,
-            24 * len(spinet.l1yanchor) * side + (len(spinet.l1yanchor) - 1) * 10,
+            11 * len(spinet.conf["L1XAnchor"]) * side
+            + (len(spinet.conf["L1XAnchor"]) - 1) * 10,
+            24 * len(spinet.conf["L1YAnchor"]) * side
+            + (len(spinet.conf["L1YAnchor"]) - 1) * 10,
         ),
     )
     pdf.add_page()
 
     pos_x = 0
     pos_y = 0
-    shift = np.arange(spinet.l1depth).reshape((side, side))
+    shift = np.arange(spinet.conf["L1Depth"]).reshape((side, side))
     for i in range(
-        0, spinet.nb_simple_cells, spinet.l1depth * spinet.l1width * spinet.l1height
+        0,
+        spinet.nb_simple_cells,
+        spinet.conf["L1Depth"] * spinet.conf["L1Width"] * spinet.conf["L1Height"],
     ):
-        for neuron in spinet.simple_cells[i : i + spinet.l1depth]:
-            x, y, z = neuron.position
+        for neuron in spinet.simple_cells[i : i + spinet.conf["L1Depth"]]:
+            x, y, z = neuron.params["position"]
             pos_x = (
-                (x // spinet.l1width) * side * 11
+                (x // spinet.conf["L1Width"]) * side * 11
                 + np.where(shift == z)[0][0] * 11
-                + (x // spinet.l1width) * 10
+                + (x // spinet.conf["L1Width"]) * 10
             )  # patch size + weight sharing shift (x2) + patch padding
             pos_y = (
-                (y // spinet.l1height) * side * 24
+                (y // spinet.conf["L1Height"]) * side * 24
                 + np.where(shift == z)[1][0] * 24
-                + (y // spinet.l1height) * 10
+                + (y // spinet.conf["L1Height"]) * 10
             )
             pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
             pdf.image(neuron.weight_images[1], x=pos_x, y=pos_y + 11, w=10, h=10)
@@ -302,6 +309,8 @@ def plot_directions(spinet, directions, rotations):
         ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=13)
         plt.savefig(
             spinet.path + "figures/complex_directions/" + str(i), bbox_inches="tight"
         )
@@ -343,6 +352,8 @@ def plot_orientations(spinet, orientations, rotations):
         ax.set_xticklabels(
             ["0°", "22.5°", "45°", "67.5°", "90°", "112.5°", "135°", "157.5°"]
         )
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=13)
         plt.savefig(
             spinet.path + "figures/complex_orientations/" + str(i), bbox_inches="tight"
         )
@@ -357,8 +368,11 @@ def display_network(spinets, pooling=0):
     for spinet in spinets:
         spinet.generate_weight_images()
 
-        if spinet.weight_sharing == "patch" or spinet.weight_sharing == "full":
-            for i in range(spinet.nb_cameras):
+        if (
+            spinet.conf["SharingType"] == "patch"
+            or spinet.conf["SharingType"] == "full"
+        ):
+            for i in range(spinet.conf["NbCameras"]):
                 pdf = pdf_weight_sharing(spinet, i)
                 pdf.output(
                     spinet.path
@@ -367,13 +381,13 @@ def display_network(spinets, pooling=0):
                     + ".pdf",
                     "F",
                 )
-            if spinet.nb_cameras == 2:
+            if spinet.conf["NbCameras"] == 2:
                 pdf = pdf_weight_sharing_left_right_combined(spinet)
                 pdf.output(
                     spinet.path + "figures/simple_figures/weight_sharing_combined.pdf",
                     "F",
                 )
-        elif spinet.weight_sharing == "none":
+        elif spinet.conf["SharingType"] == "none":
             for layer in range(spinet.l1depth):
                 for i in range(spinet.nb_cameras):
                     pdf = pdf_simple_cell(spinet, layer, i)

@@ -94,8 +94,8 @@ frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 #%% Load network params
 
-network_path = "/home/alphat/Desktop/Networks/network_"
-nb_networks = 15
+network_path = "/home/thomas/Bureau/Networks/network_"
+nb_networks = 10
 ndf, sdf, cdf = network_params(network_path, nb_networks, trim_sim_val=True)
 
 
@@ -252,14 +252,16 @@ for i in range(144):
 
 #%% Launch training of multiple networks
 
-n_networks = 15
-networks_path = "/home/alphat/Desktop/Networks/"
-event_path = "/home/alphat/Desktop/shapes.npz"
+n_networks = 12
+exec_path = "/home/thomas/neuvisys-dv/build/neuvisys"
+networks_path = "/home/thomas/Bureau/Networks/"
+event_path = "/home/thomas/Bureau/shapes.npz"
 generate_networks(networks_path, n_networks)
 nb_iterations = 50
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
+        exec_path,
         networks_path + "network_" + str(i) + "/configs/network_config.json",
         event_path,
         nb_iterations,

@@ -40,22 +40,22 @@ def generate_networks(directory, n_iter):
         "VTHRESH": [20],
         "VRESET": [-20],
         "TRACKING": ["partial"],
-        "TAU_SRA": [50000, 100000, 200000],
+        "TAU_SRA": [100000],
         "TAU_RP": [20000],
         "TAU_M": [18000],
         "TAU_LTP": [7000],
         "TAU_LTD": [14000],
-        "TARGET_SPIKE_RATE": [0.25, 0.5, 0.75],
+        "TARGET_SPIKE_RATE": [0.75],
         "SYNAPSE_DELAY": [0],
         "STDP_LEARNING": [True],
         "NORM_FACTOR": [4],
         "MIN_THRESH": [5],
         "ETA_LTP": [0.00077],
         "ETA_LTD": [-0.00021],
-        "ETA_SRA": [0.01, 0.1, 0.6, 3.6],
+        "ETA_SRA": [0.6],
         "ETA_TA": [1],
         "ETA_RP": [1],
-        "ETA_INH": [10, 20, 25, 40],
+        "ETA_INH": [10, 20, 30, 40],
         "DECAY_FACTOR": [0],
     }
 
@@ -76,13 +76,36 @@ def generate_networks(directory, n_iter):
         "DECAY_FACTOR": [0],
     }
 
+    list_params = generate_list_params(network_params, neuron_params, pooling_neuron_params, n_iter)
+
     create_directories(
-        directory, network_params, neuron_params, pooling_neuron_params, n_iter
+        directory, list_params, n_iter
     )
 
+def generate_list_params(network_params, neuron_params, pooling_neuron_params, n_iter):
+    list_network_params = list(ParameterGrid(network_params))
+    list_neuron_params = list(ParameterGrid(neuron_params))
+    list_pooling_neuron_params = list(ParameterGrid(pooling_neuron_params))
+
+    if len(list_network_params) > n_iter:
+        np.shuffle(list_network_params)
+    else:
+        list_network_params = list_network_params * (n_iter // len(list_network_params) + 1)
+
+    if len(list_neuron_params) > n_iter:
+        np.shuffle(list_neuron_params)
+    else:
+        list_neuron_params = list_neuron_params * (n_iter // len(list_neuron_params) + 1)
+
+    if len(list_pooling_neuron_params) > n_iter:
+        np.shuffle(list_pooling_neuron_params)
+    else:
+        list_pooling_neuron_params = list_pooling_neuron_params * (n_iter // len(list_pooling_neuron_params) + 1)
+
+    return list_network_params, list_neuron_params, list_pooling_neuron_params
 
 def create_directories(
-    directory, network_params, neuron_params, pooling_neuron_params, n_iter
+    directory, list_params, n_iter
 ):
     for i in range(n_iter):
         os.mkdir(directory + "network_" + str(i))
@@ -109,17 +132,17 @@ def create_directories(
         with open(
             directory + "network_" + str(i) + "/configs/network_config.json", "w"
         ) as file:
-            json.dump(list(ParameterSampler(network_params, 1))[0], file)
+            json.dump(list_params[0][i], file)
 
         with open(
             directory + "network_" + str(i) + "/configs/simple_cell_config.json", "w"
         ) as file:
-            json.dump(list(ParameterSampler(neuron_params, 1))[0], file)
+            json.dump(list_params[1][i], file)
 
         with open(
             directory + "network_" + str(i) + "/configs/complex_cell_config.json", "w"
         ) as file:
-            json.dump(list(ParameterSampler(pooling_neuron_params, 1))[0], file)
+            json.dump(list_params[2][i], file)
 
 
 def toggle_learning(spinet, switch):
@@ -146,10 +169,10 @@ def execute(cmd):
         raise subprocess.CalledProcessError(return_code, cmd)
 
 
-def launch_neuvisys_multi_pass(network_path, event_file, nb_pass):
+def launch_neuvisys_multi_pass(exec_path, network_path, event_file, nb_pass):
     for path in execute(
         [
-            "/home/alphat/neuvisys-dv/cmake-build-release/neuvisys",
+            exec_path,
             network_path,
             event_file,
             str(nb_pass),

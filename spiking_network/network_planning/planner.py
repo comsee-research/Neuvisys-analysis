@@ -41,7 +41,7 @@ def generate_networks(directory, n_iter):
         "VRESET": [-20],
         "TRACKING": ["partial"],
         "TAU_SRA": [100000],
-        "TAU_RP": [100000000000000], #20000
+        "TAU_RP": [20000],
         "TAU_M": [18000],
         "TAU_LTP": [7000],
         "TAU_LTD": [14000],
@@ -54,7 +54,7 @@ def generate_networks(directory, n_iter):
         "ETA_LTD": [-0.0021],
         "ETA_SRA": [0.6],
         "ETA_TA": [1],
-        "ETA_RP": [1000000000000], #1
+        "ETA_RP": [1],
         "ETA_INH": [20],
         "DECAY_FACTOR": [0],
     }

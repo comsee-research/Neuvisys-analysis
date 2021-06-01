@@ -45,7 +45,16 @@ def inhibition_boxplot(directory):
     axes.boxplot([dist[1], dist[0]])
     axes.xaxis.set_ticklabels(["No inhibition", "Inhibition"], fontsize=14)
     plt.savefig("boxplots.pdf", bbox_inches="tight")
-
+    
+def update_dataframe(df: list, spinet):
+    conf = {}
+    for d in (spinet.conf, spinet.simple_conf):
+        conf.update(d)
+        
+    conf["mean_sr"], conf["std_sr"] = network_spike_rate(spinet)
+    conf["mean_isi"], conf["std_isi"] = network_isi(spinet)
+    conf["mean_thres"], conf["std_thres"] = network_thresholds(spinet)
+    df.append(conf)
 
 def network_params(network_path, nb_networks, trim_sim_val=False):
     conf_list = []
@@ -74,11 +83,20 @@ def network_params(network_path, nb_networks, trim_sim_val=False):
 
 def network_spike_rate(spinet):
     time = np.max(spinet.sspikes)
-
     srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
-    print("mean:", np.mean(srates))
-    print("std:", np.std(srates))
+    return np.mean(srates), np.std(srates)
 
+
+def network_isi(spinet):
+    isi = np.diff(spinet.sspikes)
+    isi = isi[isi > 0]
+    return np.mean(isi), np.std(isi)
+
+def network_thresholds(spinet):
+    thresholds = []
+    for neuron in spinet.simple_cells:
+        thresholds.append(neuron.params["threshold"])
+    return np.mean(thresholds), np.std(thresholds)
 
 def spike_plots_simple_cells(spinet, neuron_id):
     plt.figure()

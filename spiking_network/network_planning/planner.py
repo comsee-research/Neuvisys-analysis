@@ -32,6 +32,10 @@ def generate_networks(directory, n_iter):
         "Neuron2Width": [4],
         "Neuron2Height": [4],
         "Neuron2Depth": [100],
+        "L3Width": [0],
+        "L3Height": [0],
+        "Neuron3Width": [0],
+        "Neuron3Height": [0],
         "SharingType": ["patch"],
         "SaveData": [True],
     }
@@ -75,17 +79,26 @@ def generate_networks(directory, n_iter):
         "TAU_RP": [20000],
         "DECAY_FACTOR": [0],
     }
+    
+    motor_neuron_params = {
+        "VTHRESH": [3],
+        "VRESET": [-20],
+        "TRACKING": ["partial"],
+        "TAU_M": [20000],
+        "ETA_INH": [25]
+    }
 
-    list_params = generate_list_params(network_params, neuron_params, pooling_neuron_params, n_iter)
+    list_params = generate_list_params(network_params, neuron_params, pooling_neuron_params, motor_neuron_params, n_iter)
 
     create_directories(
         directory, list_params, n_iter
     )
 
-def generate_list_params(network_params, neuron_params, pooling_neuron_params, n_iter):
+def generate_list_params(network_params, neuron_params, pooling_neuron_params, motor_neuron_params, n_iter):
     list_network_params = list(ParameterGrid(network_params))
     list_neuron_params = list(ParameterGrid(neuron_params))
     list_pooling_neuron_params = list(ParameterGrid(pooling_neuron_params))
+    list_motor_neuron_params = list(ParameterGrid(motor_neuron_params))
 
     if len(list_network_params) > n_iter:
         np.shuffle(list_network_params)
@@ -101,8 +114,13 @@ def generate_list_params(network_params, neuron_params, pooling_neuron_params, n
         np.shuffle(list_pooling_neuron_params)
     else:
         list_pooling_neuron_params = list_pooling_neuron_params * (n_iter // len(list_pooling_neuron_params) + 1)
+        
+    if len(list_motor_neuron_params) > n_iter:
+        np.shuffle(list_motor_neuron_params)
+    else:
+        list_motor_neuron_params = list_motor_neuron_params * (n_iter // len(list_motor_neuron_params) + 1)
 
-    return list_network_params, list_neuron_params, list_pooling_neuron_params
+    return list_network_params, list_neuron_params, list_pooling_neuron_params, list_motor_neuron_params
 
 def create_directories(
     directory, list_params, n_iter
@@ -143,6 +161,11 @@ def create_directories(
             directory + "network_" + str(i) + "/configs/complex_cell_config.json", "w"
         ) as file:
             json.dump(list_params[2][i], file)
+            
+        with open(
+            directory + "network_" + str(i) + "/configs/motor_cell_config.json", "w"
+        ) as file:
+            json.dump(list_params[3][i], file)
 
 
 def toggle_learning(spinet, switch):

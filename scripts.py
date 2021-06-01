@@ -19,6 +19,7 @@ network_path = home + "neuvisys-dv/configuration/network/"
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from spiking_network.spiking_network import SpikingNetwork
 from aedat_tools.aedat_tools import (
@@ -40,7 +41,6 @@ from spiking_network.display import (
 )
 from event_statistics.frame_analysis import stereo_matching
 from spiking_network.network_statistics.network_statistics import (
-    network_params,
     compute_disparity_0,
     rf_matching,
     spike_plots_simple_cells,
@@ -50,6 +50,7 @@ from spiking_network.network_statistics.network_statistics import (
     direction_selectivity,
     orientation_selectivity,
     spike_rate_evolution,
+    update_dataframe,
 )
 from spiking_network.network_planning.planner import (
     generate_networks,
@@ -103,14 +104,6 @@ write_npz(home + "Desktop/mvsec_car_night", (left_events, right_events))
 frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
-#%% Load network params of learned batch
-
-
-network_path = "/home/thomas/Desktop/NetworkSuite/tau_rp/network_"
-nb_networks = 10
-ndf, sdf, cdf = network_params(network_path, nb_networks, trim_sim_val=True)
-
-
 #%% Load various neuron informations
 
 simpa_decay, compa_decay = load_array_param(spinet, "learning_decay")
@@ -154,6 +147,7 @@ gabor_params_l = create_gabor_basis(spinet, "None", nb_ticks=8)
 
 oris, oris_r = hists_preferred_orientations(spinet)
 plot_preferred_orientations(spinet, oris, oris_r)
+
 
 #%% direction and orientation selectivity
 
@@ -224,12 +218,14 @@ spinet.save_complex_directions(cspikes, rotations)
 #%% Launch training of multiple networks
 
 n_networks = 1
-exec_path = "/home/thomas/neuvisys-dv/build/neuvisys"
-networks_path = "/home/thomas/Desktop/NetworkSuite/extreme/"
-event_path = "/home/thomas/Desktop/NetworkSuite/shapes.npz"
+exec_path = "/home/alphat/neuvisys-dv/build/neuvisys-exe"
+networks_path = "/home/alphat/Desktop/test/"
+event_path = "/home/alphat/Desktop/shapes.npz"
 
 generate_networks(networks_path, n_networks)
-nb_iterations = 8
+nb_iterations = 1
+
+df = []
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
@@ -241,8 +237,9 @@ for i in range(0, n_networks):
 
     spinet = SpikingNetwork(networks_path + "network_" + str(i) + "/")
     display_network([spinet], 0)
-    # basis = spinet.generate_weight_mat()
-
+    update_dataframe(df, spinet)
+    
+df = pd.DataFrame(df)
 
 #%% Rectify and plot event images
 

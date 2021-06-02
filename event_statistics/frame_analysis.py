@@ -9,6 +9,52 @@ Created on Mon Mar 29 15:19:28 2021
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
+import rosbag
+import seaborn as sns
+
+
+def load_depth_images_rosbag(bag_file):
+    bag = rosbag.Bag(bag_file)
+    dt = np.dtype("<f4")
+
+    xs = [10, 148, 286]
+    ys = [10, 105, 200]
+    mat = [[[], [], []], [[], [], []], [[], [], []]]
+
+    for topic, msg, t in bag.read_messages(topics=["/davis/left/depth_image_raw"]):
+        # cv_image = bridge.imgmsg_to_cv2(msg, desired_encoding="32FC1")
+        im = np.frombuffer(msg.data, dtype=dt).reshape(260, 346)
+        for i, x in enumerate(xs):
+            for j, y in enumerate(ys):
+                mat[i][j].append(im[y: y + 40, x: x + 40].flatten())
+        # plt.imshow(im)
+        # plt.show()
+
+    mat = np.array(mat)
+    mat = mat.reshape(mat.shape[:-2] + (-1,))
+
+
+def depth_estimation_per_region(xs, ys, mat):
+    fig, axes = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(14, 8))
+    # fig.suptitle("Ground Truth Depth estimation per region", fontsize=30)
+    for i in range(len(xs)):
+        for j in range(len(ys)):
+            if j != 2:
+                sns.histplot(
+                    mat[i, j][mat[i, j] < 100],
+                    ax=axes[j, i],
+                    stat="density",
+                    color="#2C363F",
+                )
+
+    for ax in axes.flat:
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=15)
+        ax.set_ylabel("Density", fontsize=26)
+        ax.set_xticks(np.arange(0, 110, 10))
+    axes[1, 1].set_xlabel("Depth (m)", fontsize=26)
+
+    plt.savefig("/home/thomas/Desktop/images/gt", bbox_inches="tight")
 
 
 def stereo_matching(folder, xs, ys, range_imgs):
@@ -16,7 +62,7 @@ def stereo_matching(folder, xs, ys, range_imgs):
     ind = 1
     for x in xs:
         for y in ys:
-            mat[x : x + 30, y : y + 30] = ind
+            mat[x: x + 30, y: y + 30] = ind
             ind += 1
 
     vec = {}

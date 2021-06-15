@@ -16,29 +16,35 @@ from spiking_network.network_planning.network_config import NetworkConfig
 
 def generate_networks(directory, params, n_iter):
     conf = NetworkConfig()
-
     for key in params:
         conf.random_params[key].update(params[key])
-
-    list_params = generate_list_params(conf.random_params, n_iter)
-
+    list_params = generate_list_params(conf.random_params, n_iter, "ParameterSampler")
     create_directories(directory, list_params, n_iter)
 
 
-def generate_list_params(params, n_iter):
-    list_network_params = list(ParameterGrid(params["network_params"]))
-    # list_neuron_params = list(ParameterGrid(params["neuron_params"]))
-    list_pooling_neuron_params = list(ParameterGrid(params["pooling_neuron_params"]))
-    list_motor_neuron_params = list(ParameterGrid(params["motor_neuron_params"]))
+def generate_network_files(directory):
+    conf = NetworkConfig()
+    list_params = generate_list_params(conf.params, 1, "ParameterGrid")
+    create_directories(directory, list_params, 1)
 
-    # list_network_params = list(ParameterSampler(params["network_params"], n_iter))
-    list_neuron_params = list(ParameterSampler(params["neuron_params"], n_iter))
-    # list_pooling_neuron_params = list(
-    #     ParameterSampler(params["pooling_neuron_params"], n_iter)
-    # )
-    # list_motor_neuron_params = list(
-    #     ParameterSampler(params["motor_neuron_params"], n_iter)
-    # )
+
+def generate_list_params(params, n_iter, choice_type):
+    if choice_type == "ParameterGrid":
+        list_network_params = list(ParameterGrid(params["network_params"]))
+        list_neuron_params = list(ParameterGrid(params["neuron_params"]))
+        list_pooling_neuron_params = list(
+            ParameterGrid(params["pooling_neuron_params"])
+        )
+        list_motor_neuron_params = list(ParameterGrid(params["motor_neuron_params"]))
+    elif choice_type == "ParameterSampler":
+        list_network_params = list(ParameterSampler(params["network_params"], n_iter))
+        list_neuron_params = list(ParameterSampler(params["neuron_params"], n_iter))
+        list_pooling_neuron_params = list(
+            ParameterSampler(params["pooling_neuron_params"], n_iter)
+        )
+        list_motor_neuron_params = list(
+            ParameterSampler(params["motor_neuron_params"], n_iter)
+        )
 
     for dc in list_neuron_params:
         for i, e in enumerate(dc):
@@ -106,6 +112,7 @@ def create_directories(directory, list_params, n_iter):
         os.mkdir(directory + "network_" + str(i) + "/weights")
         os.mkdir(directory + "network_" + str(i) + "/weights/simple_cells")
         os.mkdir(directory + "network_" + str(i) + "/weights/complex_cells")
+        os.mkdir(directory + "network_" + str(i) + "/weights/motor_cells")
 
         with open(
             directory + "network_" + str(i) + "/configs/network_config.json", "w"

@@ -53,6 +53,12 @@ class SpikingNetwork:
         self.path = path
         with open(path + "configs/network_config.json") as file:
             self.conf = json.load(file)
+        with open(path + "configs/simple_cell_config.json") as file:
+            self.simple_conf = json.load(file)
+        with open(path + "configs/complex_cell_config.json") as file:
+            self.complex_conf = json.load(file)
+        with open(path + "configs/motor_cell_config.json") as file:
+            self.motor_conf = json.load(file)
         self.neurons = []
         self.simple_cells = []
         self.complex_cells = []

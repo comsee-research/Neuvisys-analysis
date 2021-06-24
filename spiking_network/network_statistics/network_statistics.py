@@ -47,6 +47,17 @@ def inhibition_boxplot(directory):
     plt.savefig("boxplots.pdf", bbox_inches="tight")
 
 
+def update_dataframe(df: list, spinet):
+    conf = {}
+    for d in (spinet.conf, spinet.simple_conf):
+        conf.update(d)
+
+    conf["mean_sr"], conf["std_sr"] = network_spike_rate(spinet)
+    conf["mean_isi"], conf["std_isi"] = network_isi(spinet)
+    conf["mean_thres"], conf["std_thres"] = network_thresholds(spinet)
+    df.append(conf)
+
+
 def network_params(network_path, nb_networks, trim_sim_val=False):
     conf_list = []
     for conf_name in [
@@ -70,6 +81,25 @@ def network_params(network_path, nb_networks, trim_sim_val=False):
                 pass
         conf_list.append(df)
     return conf_list
+
+
+def network_spike_rate(spinet):
+    time = np.max(spinet.sspikes)
+    srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
+    return np.mean(srates), np.std(srates)
+
+
+def network_isi(spinet):
+    isi = np.diff(spinet.sspikes)
+    isi = isi[isi > 0]
+    return np.mean(isi), np.std(isi)
+
+
+def network_thresholds(spinet):
+    thresholds = []
+    for neuron in spinet.simple_cells:
+        thresholds.append(neuron.params["threshold"])
+    return np.mean(thresholds), np.std(thresholds)
 
 
 def spike_plots_simple_cells(spinet, neuron_id):
@@ -197,21 +227,19 @@ def rf_matching(weights):
     return np.array(residuals), np.array(disparity)
 
 
-def compute_disparity_0(spinet, disparity, residual, min_resi, max_resi):
+def compute_disparity_0(spinet, disparity, residuals, min_resi, max_resi, xs, ys, mat):
+    fig, axes = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(14, 8))
+    # fig.suptitle("Ground Truth Depth estimation per region", fontsize=30)
     cnt = 0
-    fig, axes = plt.subplots(len(spinet.conf["L1YAnchor"])-1, len(spinet.conf["L1XAnchor"]), sharex=False, sharey=True, figsize=(14, 8))
+
     for i in range(len(spinet.conf["L1XAnchor"])):
         for j in range(len(spinet.conf["L1YAnchor"])):
             mask_residual = (
-                residual[
-                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
-                ]
-                < max_resi
+                residuals[cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]]
+                < 30
             ) & (
-                residual[
-                    cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
-                ]
-                > min_resi
+                residuals[cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]]
+                > 0.5
             )
             if j != 2:
                 sns.histplot(
@@ -220,57 +248,26 @@ def compute_disparity_0(spinet, disparity, residual, min_resi, max_resi):
                         0,
                     ][mask_residual],
                     ax=axes[j, i],
-                    bins=[4.46, 5.575, 7.43, 11.15, 22.3, 50],
+                    bins=[4.46, 5.575, 7.43, 11.15, 22.3, 70],
                     stat="density",
+                    color="#2C363F",
                 )
-                plt.setp(axes[j, i].get_xticklabels(), fontsize=15)
-                plt.setp(axes[j, i].get_yticklabels(), fontsize=15)
-                # axes[j, i].set_xticklabels(np.arange(-5.5, 5.5))
-                axes[j, i].set_ylabel('Density', fontsize=22)
             cnt += 1
     
-    axes[1, 1].set_xlabel('Disparity (pixel)', fontsize=22)
-    plt.savefig("/home/thomas/Desktop/images/estimated", bbox_inches="tight")
-
-    # cnt = 0
-    # fig, axes = plt.subplots(len(spinet.conf["L1YAnchor"]), len(spinet.conf["L1XAnchor"]), sharex=False, sharey=True, figsize=(16, 12))
-    # for i in range(len(spinet.conf["L1XAnchor"])):
-    #     for j in range(len(spinet.conf["L1YAnchor"])):
-    #         mask_residual = (
-    #             residual[
-    #                 cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
-    #             ]
-    #             < max_resi
-    #         ) & (
-    #             residual[
-    #                 cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]
-    #             ]
-    #             > min_resi
-    #         )
-    #         # if i != 4 and j != 3:
-    #         axes[j, i].set_title(
-    #             "nb rf:"
-    #             + str(np.count_nonzero(mask_residual))
-    #             + "\nmean: "
-    #             + str(
-    #                 np.mean(
-    #                     disparity[
-    #                         cnt
-    #                         * spinet.conf["L1Depth"] : (cnt + 1)
-    #                         * spinet.conf["L1Depth"],
-    #                         0,
-    #                     ][mask_residual]
-    #                 )
-    #             )
-    #         )
-    #         axes[j, i].hist(
-    #             disparity[
-    #                 cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"], 1
-    #             ][mask_residual],
-    #             np.arange(-5.5, 6.5),
-    #             density=True,
-    #         )
-    #         cnt += 1
+    for i in range(len(xs)):
+        for j in range(len(ys)):
+            if j != 2:
+                sns.histplot(mat[i, j][mat[i, j] < 70], ax=axes[j, i], stat="density")
+    
+    for ax in axes.flat:
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=15)
+        ax.set_ylabel("Density", fontsize=24)
+        ax.set_xticks(np.arange(0, 71, 10))
+    
+    axes[1, 1].set_xlabel("Depth (m)", fontsize=24)
+    
+    plt.savefig("/home/thomas/Desktop/images/test", bbox_inches="tight")
 
 
 def compute_disparity(

@@ -20,7 +20,7 @@ network_path = home + "neuvisys-dv/configuration/network/"
 import numpy as np
 import matplotlib.pyplot as plt
 
-from spiking_network.spiking_network import SpikingNetwork
+from spiking_network.spiking_network import SpikingNetwork, clean_network
 from aedat_tools.aedat_tools import (
     load_aedat4,
     show_event_images,
@@ -75,7 +75,7 @@ display_network([spinet], 0)
 
 #%% //!!!\\ Delete weights network
 
-spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
+clean_network(network_path, simple_cells=True, complex_cells=True, json_only=False)
 
 
 #%% Load events
@@ -103,12 +103,37 @@ write_npz(home + "Desktop/mvsec_car_night", (left_events, right_events))
 frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
+#%% Launch training of multiple networks
+
+nb_networks = 11
+exec_path = "/home/thomas/neuvisys-dv/build/neuvisys"
+networks_path = "/home/thomas/Desktop/NetworkSuite/tau_rp/"
+event_path = "/home/thomas/Desktop/NetworkSuite/shapes.npz"
+
+generate_networks(networks_path, nb_networks)
+nb_iterations = 8
+
+for i in range(0, nb_networks):
+    launch_neuvisys_multi_pass(
+        exec_path,
+        networks_path + "network_" + str(i) + "/configs/network_config.json",
+        event_path,
+        nb_iterations,
+    )
+
+    spinet = SpikingNetwork(networks_path + "network_" + str(i) + "/")
+    display_network([spinet], 0)
+    # basis = spinet.generate_weight_mat()
+
+
 #%% Load network params of learned batch
 
-
-network_path = "/home/thomas/Desktop/NetworkSuite/tau_rp/network_"
-nb_networks = 10
+network_path = "/home/thomas/Desktop/NetworkSuite/eta_rp/network_"
 ndf, sdf, cdf = network_params(network_path, nb_networks, trim_sim_val=True)
+
+for i in range(nb_networks):
+    spinet = SpikingNetwork(network_path+str(i)+"/")
+    print(spinet.spike_rate())
 
 
 #%% Load various neuron informations
@@ -154,6 +179,7 @@ gabor_params_l = create_gabor_basis(spinet, "None", nb_ticks=8)
 
 oris, oris_r = hists_preferred_orientations(spinet)
 plot_preferred_orientations(spinet, oris, oris_r)
+
 
 #%% direction and orientation selectivity
 
@@ -219,29 +245,6 @@ for rot in rotations:
     sspikes.append(spinet.sspikes)
     cspikes.append(spinet.cspikes)
 spinet.save_complex_directions(cspikes, rotations)
-
-
-#%% Launch training of multiple networks
-
-n_networks = 1
-exec_path = "/home/thomas/neuvisys-dv/build/neuvisys"
-networks_path = "/home/thomas/Desktop/NetworkSuite/extreme/"
-event_path = "/home/thomas/Desktop/NetworkSuite/shapes.npz"
-
-generate_networks(networks_path, n_networks)
-nb_iterations = 8
-
-for i in range(0, n_networks):
-    launch_neuvisys_multi_pass(
-        exec_path,
-        networks_path + "network_" + str(i) + "/configs/network_config.json",
-        event_path,
-        nb_iterations,
-    )
-
-    spinet = SpikingNetwork(networks_path + "network_" + str(i) + "/")
-    display_network([spinet], 0)
-    # basis = spinet.generate_weight_mat()
 
 
 #%% Rectify and plot event images

@@ -72,14 +72,6 @@ def network_params(network_path, nb_networks, trim_sim_val=False):
     return conf_list
 
 
-def network_spike_rate(spinet):
-    time = np.max(spinet.sspikes)
-
-    srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
-    print("mean:", np.mean(srates))
-    print("std:", np.std(srates))
-
-
 def spike_plots_simple_cells(spinet, neuron_id):
     plt.figure()
     plt.xlabel("time (µs)")

@@ -26,6 +26,26 @@ def reshape_weights(weights, width, height):
     return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
 
 
+def clean_network(path, simple_cells, complex_cells, json_only):
+    if json_only:
+        if simple_cells:
+            for file in os.listdir(path + "weights/simple_cells/"):
+                if file.endswith(".json"):
+                    os.remove(path + "weights/simple_cells/" + file)
+        if complex_cells:
+            for file in os.listdir(path + "weights/complex_cells/"):
+                if file.endswith(".json"):
+                    os.remove(path + "weights/complex_cells/" + file)
+    else:
+        if simple_cells:
+            delete_files(path + "weights/simple_cells/")
+        if complex_cells:
+            delete_files(path + "weights/complex_cells/")
+        delete_files(path + "images/complex_connections/")
+        delete_files(path + "images/simple_cells/")
+        delete_files(path + "images/complex_cells/")
+        os.remove(path + "learning_trace.txt")
+
 class SpikingNetwork:
     """Spiking Neural Network class"""
 
@@ -166,26 +186,6 @@ class SpikingNetwork:
 
         return basis
 
-    def clean_network(self, simple_cells, complex_cells, json_only):
-        if json_only:
-            if simple_cells:
-                for file in os.listdir(self.path + "weights/simple_cells/"):
-                    if file.endswith(".json"):
-                        os.remove(self.path + "weights/simple_cells/" + file)
-            if complex_cells:
-                for file in os.listdir(self.path + "weights/complex_cells/"):
-                    if file.endswith(".json"):
-                        os.remove(self.path + "weights/complex_cells/" + file)
-        else:
-            if simple_cells:
-                delete_files(self.path + "weights/simple_cells/")
-            if complex_cells:
-                delete_files(self.path + "weights/complex_cells/")
-            delete_files(self.path + "images/complex_connections/")
-            delete_files(self.path + "images/simple_cells/")
-            delete_files(self.path + "images/complex_cells/")
-            os.remove(self.path + "learning_trace.txt")
-
     def save_complex_directions(self, spikes, rotations):
         spike_vector = []
         for rot in range(rotations.size):
@@ -195,7 +195,11 @@ class SpikingNetwork:
         np.save(self.path + "gabors/data/direction_response", spike_vector)
         self.directions = spike_vector
         self.orientations = self.directions[0:8] + self.directions[8:16]
-
+        
+    def spike_rate(self):
+        time = np.max(self.sspikes)
+        srates = np.count_nonzero(self.sspikes, axis=1) / (time * 1e-6)
+        return np.mean(srates), np.std(srates)
 
 class Neuron:
     """Spiking Neuron class"""

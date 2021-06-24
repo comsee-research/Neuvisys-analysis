@@ -17,36 +17,36 @@ import matplotlib.pyplot as plt
 
 def pdf_simple_cell(spinet, layer, camera):
     pdf = FPDF(
-        "P", "mm", (11 * spinet.l1width, 11 * spinet.l1height * spinet.neuron1_synapses)
+        "P", "mm", (11 * spinet.conf["L1Width"], 11 * spinet.conf["L1Height"] * spinet.conf["Neuron1Synapses"])
     )
     pdf.add_page()
 
     pos_x = 0
     pos_y = 0
     for neuron in spinet.simple_cells:
-        x, y, z = neuron.position
+        x, y, z = neuron.params["position"]
         if z == layer:
-            for i in range(spinet.neuron1_synapses):
+            for i in range(spinet.conf["Neuron1Synapses"]):
                 pos_x = x * 11
-                pos_y = y * spinet.neuron1_synapses * 11 + i * 11
+                pos_y = y * spinet.conf["Neuron1Synapses"] * 11 + i * 11
                 pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 
 def pdf_simple_cell_left_right_combined(spinet, layer):
     pdf = FPDF(
-        "P", "mm", (11 * spinet.l1width, 24 * spinet.l1height * spinet.neuron1_synapses)
+        "P", "mm", (11 * spinet.conf["L1Width"], 24 * spinet.conf["L1Height"] * spinet.conf["Neuron1Synapses"])
     )
     pdf.add_page()
 
     pos_x = 0
     pos_y = 0
     for neuron in spinet.simple_cells:
-        x, y, z = neuron.position
+        x, y, z = neuron.params["position"]
         if z == layer:
-            for i in range(spinet.neuron1_synapses):
+            for i in range(spinet.conf["Neuron1Synapses"]):
                 pos_x = 11 * x
-                pos_y = 24 * y * spinet.neuron1_synapses + i * 11
+                pos_y = 24 * y * spinet.conf["Neuron1Synapses"] + i * 11
                 pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
                 pdf.image(neuron.weight_images[1], x=pos_x, y=pos_y + 11, w=10, h=10)
     return pdf
@@ -74,7 +74,7 @@ def pdf_layers(spinet, rows, cols, nb_synapses, nb_layers):
 
 def pdf_weight_sharing(spinet, camera):
     if spinet.conf["SharingType"] == "full":
-        side = int(np.sqrt(spinet.l1depth))
+        side = int(np.sqrt(spinet.conf["L1Depth"]))
         xpatch = 1
         ypatch = 1
     elif spinet.conf["SharingType"] == "patch":
@@ -388,8 +388,8 @@ def display_network(spinets, pooling=0):
                     "F",
                 )
         elif spinet.conf["SharingType"] == "none":
-            for layer in range(spinet.l1depth):
-                for i in range(spinet.nb_cameras):
+            for layer in range(spinet.conf["L1Depth"]):
+                for i in range(spinet.conf["NbCameras"]):
                     pdf = pdf_simple_cell(spinet, layer, i)
                     pdf.output(
                         spinet.path
@@ -412,7 +412,7 @@ def display_network(spinets, pooling=0):
             # pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if pooling:
-            for layer in range(spinet.l2depth):
+            for layer in range(spinet.conf["L2Depth"]):
                 pdfs = pdf_complex_cell(spinet, layer)
             # proc = []
             # for i, pdf in enumerate(pdfs[0:4]):

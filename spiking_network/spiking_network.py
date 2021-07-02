@@ -26,6 +26,33 @@ def reshape_weights(weights, width, height):
     return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
 
 
+def clean_network(path, simple_cells, complex_cells, motor_cells, json_only):
+    if json_only:
+        if simple_cells:
+            for file in os.listdir(path + "weights/simple_cells/"):
+                if file.endswith(".json"):
+                    os.remove(path + "weights/simple_cells/" + file)
+        if complex_cells:
+            for file in os.listdir(path + "weights/complex_cells/"):
+                if file.endswith(".json"):
+                    os.remove(path + "weights/complex_cells/" + file)
+        if motor_cells:
+            for file in os.listdir(path + "weights/motor_cells/"):
+                if file.endswith(".json"):
+                    os.remove(path + "weights/motor_cells/" + file)
+    else:
+        if simple_cells:
+            delete_files(path + "weights/simple_cells/")
+        if complex_cells:
+            delete_files(path + "weights/complex_cells/")
+        if motor_cells:
+            delete_files(path + "weights/motor_cells/")
+        delete_files(path + "images/complex_connections/")
+        delete_files(path + "images/simple_cells/")
+        delete_files(path + "images/complex_cells/")
+        os.remove(path + "learning_trace.txt")
+
+
 class SpikingNetwork:
     """Spiking Neural Network class"""
 
@@ -39,45 +66,18 @@ class SpikingNetwork:
             self.complex_conf = json.load(file)
         with open(path + "configs/motor_cell_config.json") as file:
             self.motor_conf = json.load(file)
-        self.neurons = []
-        self.simple_cells = []
-        self.complex_cells = []
 
-        self.sspikes = []
-        self.cspikes = []
+        self.nb_neurons = 0
+        self.simple_cells, self.sspikes = self.load_weights(
+            "weights/simple_cells", "simple_cell"
+        )
+        self.complex_cells, self.cspikes = self.load_weights(
+            "weights/complex_cells", "complex_cell"
+        )
+        self.motor_cells, self.mspikes = self.load_weights(
+            "weights/motor_cells", "motor_cell"
+        )
 
-        neurons_paths = natsorted(os.listdir(path + "weights/complex_cells"))
-        for paths in [
-            neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)
-        ]:
-            neuron = Neuron(
-                "complex",
-                path + "configs/complex_cell_config.json",
-                path + "weights/complex_cells/",
-                *paths
-            )
-            self.neurons.append(neuron)
-            self.complex_cells.append(neuron)
-            if neuron.conf["TRACKING"] == "partial":
-                self.cspikes.append(neuron.params["spike_train"])
-
-        neurons_paths = natsorted(os.listdir(path + "weights/simple_cells"))
-        for paths in [
-            neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)
-        ]:
-            neuron = Neuron(
-                "simple",
-                path + "configs/simple_cell_config.json",
-                path + "weights/simple_cells/",
-                *paths
-            )
-            self.neurons.append(neuron)
-            self.simple_cells.append(neuron)
-
-            if neuron.conf["TRACKING"] == "partial":
-                self.sspikes.append(neuron.params["spike_train"])
-
-        self.nb_neurons = len(self.neurons)
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
 
@@ -98,6 +98,26 @@ class SpikingNetwork:
         if os.path.exists(self.path + "gabors/data/direction_response.npy"):
             self.directions = np.load(self.path + "gabors/data/direction_response.npy")
             self.orientations = self.directions[0:8] + self.directions[8:16]
+
+    def load_weights(self, cell_path, cell_type):
+        neurons = []
+        spike_train = []
+
+        neurons_paths = natsorted(os.listdir(self.path + cell_path))
+        for paths in [
+            neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)
+        ]:
+            neuron = Neuron(
+                cell_type,
+                self.path + "configs/" + cell_type + "_config.json",
+                self.path + "weights/" + cell_type + "s/",
+                *paths
+            )
+            neurons.append(neuron)
+            if neuron.conf["TRACKING"] == "partial":
+                spike_train.append(neuron.params["spike_train"])
+        self.nb_neurons += len(neurons)
+        return neurons, spike_train
 
     def generate_weight_images(self):
         for i, neuron in enumerate(self.simple_cells):
@@ -171,26 +191,6 @@ class SpikingNetwork:
         sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
 
         return basis
-
-    def clean_network(self, simple_cells, complex_cells, json_only):
-        if json_only:
-            if simple_cells:
-                for file in os.listdir(self.path + "weights/simple_cells/"):
-                    if file.endswith(".json"):
-                        os.remove(self.path + "weights/simple_cells/" + file)
-            if complex_cells:
-                for file in os.listdir(self.path + "weights/complex_cells/"):
-                    if file.endswith(".json"):
-                        os.remove(self.path + "weights/complex_cells/" + file)
-        else:
-            if simple_cells:
-                delete_files(self.path + "weights/simple_cells/")
-            if complex_cells:
-                delete_files(self.path + "weights/complex_cells/")
-            delete_files(self.path + "images/complex_connections/")
-            delete_files(self.path + "images/simple_cells/")
-            delete_files(self.path + "images/complex_cells/")
-            os.remove(self.path + "learning_trace.txt")
 
     def save_complex_directions(self, spikes, rotations):
         spike_vector = []

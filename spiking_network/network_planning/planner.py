@@ -162,3 +162,17 @@ def execute(cmd):
 def launch_neuvisys_multi_pass(exec_path, network_path, event_file, nb_pass):
     for path in execute([exec_path, network_path, event_file, str(nb_pass),]):
         print(path, end="")
+
+
+def divide_visual_field(nbrx, nbry, srx, sry):
+    spacing_x = (346 - (srx * nbrx)) / (nbrx - 1)
+    spacing_y = (260 - (srx * nbrx)) / (nbrx - 1)
+
+    X = []
+    for x in range(nbrx):
+        X.append(x * (srx + spacing_x))
+    Y = []
+    for y in range(nbry):
+        Y.append(y * (sry + spacing_y))
+
+    return X, Y

@@ -7,6 +7,7 @@ Created on Tue May 19 02:47:43 2020
 """
 
 import os
+import shutil
 import numpy as np
 from PIL import Image
 from natsort import natsorted
@@ -163,10 +164,14 @@ def pdf_complex_cell(spinet, layer):
         "P",
         "mm",
         (
-            len(spinet.l1xanchor) * spinet.l1width * 11 + len(spinet.l1xanchor) * 11,
-            len(spinet.l1yanchor) * spinet.l1height * spinet.neuron2_depth * 11
-            + len(spinet.l1yanchor) * 11
-            + len(spinet.l1yanchor) * 10,
+            len(spinet.conf["L1XAnchor"]) * spinet.conf["L1Width"] * 11
+            + len(spinet.conf["L1XAnchor"]) * 11,
+            len(spinet.conf["L1YAnchor"])
+            * spinet.conf["L1Height"]
+            * spinet.conf["Neuron2Depth"]
+            * 11
+            + len(spinet.conf["L1YAnchor"]) * 11
+            + len(spinet.conf["L1YAnchor"]) * 10,
         ),
     )
     pdf.add_page()
@@ -175,26 +180,27 @@ def pdf_complex_cell(spinet, layer):
     pdf.multi_cell(0, 5, "")
 
     for c, complex_cell in enumerate(spinet.complex_cells):
-        xc, yc, zc = complex_cell.position
-        ox, oy, oz = complex_cell.offset
+        xc, yc, zc = complex_cell.params["position"]
+        ox, oy, oz = complex_cell.params["offset"]
 
-        heatmap = np.zeros((spinet.neuron2_width, spinet.neuron2_height))
+        heatmap = np.zeros((spinet.conf["Neuron2Width"], spinet.conf["Neuron2Height"]))
         heatmap_rf = np.zeros((120, 120, 3))
 
         if zc == layer:
             maximum = np.max(complex_cell.weights)
             for z, k in enumerate(sort_connections(spinet, complex_cell, oz)):
-                for i in range(ox, ox + spinet.l1width):
-                    for j in range(oy, oy + spinet.l1height):
+                for i in range(ox, ox + spinet.conf["L1Width"]):
+                    for j in range(oy, oy + spinet.conf["L1Height"]):
                         simple_cell = spinet.simple_cells[spinet.layout1[i, j, k]]
-                        xs, ys, zs = simple_cell.position
+                        xs, ys, zs = simple_cell.params["position"]
 
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(
                             Image.open(simple_cell.weight_images[0])
                         )
                         path = (
-                            "/home/thomas/Bureau/temp/images/"
+                            spinet.path
+                            + "figures/complex_figures/tmp/"
                             + str(c)
                             + "_simple_"
                             + str(spinet.layout1[i, j, k])
@@ -212,34 +218,38 @@ def pdf_complex_cell(spinet, layer):
                                 * weight_sc
                             )
 
-                        pos_x = xc * (11 * spinet.l1width + 10) + (xs - ox) * 11
+                        pos_x = xc * (11 * spinet.conf["L1Width"] + 10) + (xs - ox) * 11
                         pos_y = (
                             yc
                             * (
-                                11 * spinet.l1height * spinet.neuron2_depth
-                                + spinet.neuron2_depth * 2
+                                11
+                                * spinet.conf["L1Height"]
+                                * spinet.conf["Neuron2Depth"]
+                                + spinet.conf["Neuron2Depth"] * 2
                                 + 10
                             )
-                            + z * (11 * spinet.l1height + 2)
+                            + z * (11 * spinet.conf["L1Height"] + 2)
                             + (ys - oy) * 11
                         )
                         pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
             plt.figure()
             plt.matshow(heatmap)
-            plt.savefig("/home/alphat/Desktop/images/heatmaps/" + str(c))
+            plt.savefig(
+                spinet.path + "figures/complex_figures/" + str(c), bbox_inches="tight"
+            )
             # h_max = np.max(heatmap.flatten())
             # for i in range(4):
             #     for j in range(4):
             #         heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] = heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] * heatmap[i, j] / h_max
             Image.fromarray(heatmap_rf.astype("uint8")).save(
-                "/home/alphat/Desktop/images/heatmaps/" + str(c) + "_rf.png"
+                spinet.path + "figures/complex_figures/" + str(c) + "_rf.png"
             )
     return pdf
 
 
 def sort_connections(spinet, complex_cell, oz):
     strengths = []
-    for z in range(spinet.neuron2_depth):
+    for z in range(spinet.conf["Neuron2Depth"]):
         strengths.append(np.sum(complex_cell.weights[:, :, z]))
     return np.argsort(strengths)[::-1]
 
@@ -412,12 +422,7 @@ def display_network(spinets, pooling=0):
             # pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if pooling:
-            for layer in range(spinet.l2depth):
+            os.mkdir(spinet.path + "figures/complex_figures/tmp/")
+            for layer in range(spinet.conf["L2Depth"]):
                 pdfs = pdf_complex_cell(spinet, layer)
-            # proc = []
-            # for i, pdf in enumerate(pdfs[0:4]):
-            #     process = Process(target=pdf.output, args=(spinet.path+"figures/complex_figures/"+str(i)+".pdf", "F"))
-            #     process.start()
-            #     proc.append(process)
-            # for process in proc:
-            #     process.join()
+            shutil.rmtree(spinet.path + "figures/complex_figures/tmp/")

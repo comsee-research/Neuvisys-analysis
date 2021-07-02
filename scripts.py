@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from spiking_network.spiking_network import SpikingNetwork
+from spiking_network.spiking_network import SpikingNetwork, clean_network
 from aedat_tools.aedat_tools import (
     load_aedat4,
     show_event_images,
@@ -46,6 +46,7 @@ from spiking_network.network_planning.planner import (
     generate_networks,
     launch_neuvisys_multi_pass,
     toggle_learning,
+    divide_visual_field,
 )
 from spiking_network.gabor_fitting.gabbor_fitting import (
     create_gabor_basis,
@@ -74,17 +75,23 @@ spinet = SpikingNetwork(network_path)
 
 # %% Display weights
 
-display_network([spinet], 0)
+display_network([spinet], 1)
 
 
 # %% //!!!\\ Delete weights network
 
-spinet.clean_network(simple_cells=True, complex_cells=True, json_only=False)
+clean_network(
+    network_path,
+    simple_cells=True,
+    complex_cells=True,
+    motor_cells=True,
+    json_only=False,
+)
 
 
 # %% Load events
 
-events = load_aedat4(home + "Desktop/shapes.aedat4")
+events = load_aedat4(home + "Desktop/shape_hovering_fast.aedat4")
 
 
 # %% Load rosbag and convert it to npdat
@@ -304,3 +311,8 @@ tse = [
 ]
 
 l_events, r_events = remove_events(rect_events, tss, tse)
+
+
+# %% divide visual fields
+
+X, Y = divide_visual_field(5, 1, 40, 40)

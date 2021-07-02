@@ -91,6 +91,7 @@ for tau in bins:
     # np.save(folder + "spat_corr_" + str(tau) + "_" + str(l), spat_corr)
 
 #%% Temporal Correlation
+
 bins = [100, 500, 1000, 5000, 10000]  # us
 rf_size = (346, 260)
 tau_max = 500000
@@ -112,7 +113,9 @@ for tau in bins:
     temp_corr /= count
     np.save(folder + "temp_corr_" + str(tau), temp_corr)
 
+
 #%% Cross Correlation
+
 bins = [500]  # us
 buf = 1000000
 

@@ -26,7 +26,11 @@ def reshape_weights(weights, width, height):
     return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
 
 
+<<<<<<< HEAD
 def clean_network(path, simple_cells, complex_cells, motor_cells, json_only):
+=======
+def clean_network(path, simple_cells, complex_cells, json_only):
+>>>>>>> 1293d93e4fed97b25734913b2d32e474eef1a407
     if json_only:
         if simple_cells:
             for file in os.listdir(path + "weights/simple_cells/"):
@@ -36,23 +40,32 @@ def clean_network(path, simple_cells, complex_cells, motor_cells, json_only):
             for file in os.listdir(path + "weights/complex_cells/"):
                 if file.endswith(".json"):
                     os.remove(path + "weights/complex_cells/" + file)
+<<<<<<< HEAD
         if motor_cells:
             for file in os.listdir(path + "weights/motor_cells/"):
                 if file.endswith(".json"):
                     os.remove(path + "weights/motor_cells/" + file)
+=======
+>>>>>>> 1293d93e4fed97b25734913b2d32e474eef1a407
     else:
         if simple_cells:
             delete_files(path + "weights/simple_cells/")
         if complex_cells:
             delete_files(path + "weights/complex_cells/")
+<<<<<<< HEAD
         if motor_cells:
             delete_files(path + "weights/motor_cells/")
+=======
+>>>>>>> 1293d93e4fed97b25734913b2d32e474eef1a407
         delete_files(path + "images/complex_connections/")
         delete_files(path + "images/simple_cells/")
         delete_files(path + "images/complex_cells/")
         os.remove(path + "learning_trace.txt")
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1293d93e4fed97b25734913b2d32e474eef1a407
 class SpikingNetwork:
     """Spiking Neural Network class"""
 
@@ -201,7 +214,11 @@ class SpikingNetwork:
         np.save(self.path + "gabors/data/direction_response", spike_vector)
         self.directions = spike_vector
         self.orientations = self.directions[0:8] + self.directions[8:16]
-
+        
+    def spike_rate(self):
+        time = np.max(self.sspikes)
+        srates = np.count_nonzero(self.sspikes, axis=1) / (time * 1e-6)
+        return np.mean(srates), np.std(srates)
 
 class Neuron:
     """Spiking Neuron class"""

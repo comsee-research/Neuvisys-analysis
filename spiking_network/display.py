@@ -169,6 +169,17 @@ def pdf_weight_sharing_left_right_combined(spinet):
     return pdf
 
 
+def display_motor_cell(spinet):
+    for i, motor_cell in enumerate(spinet.motor_cells):
+        heatmap = np.mean(motor_cell.weights, axis=2)
+        
+        plt.figure()
+        plt.matshow(heatmap)
+        plt.savefig(
+            spinet.path + "figures/motor_figures/" + str(i), bbox_inches="tight"
+        )
+        
+
 def pdf_complex_cell(spinet, layer):
     pdf = FPDF(
         "P",
@@ -198,7 +209,7 @@ def pdf_complex_cell(spinet, layer):
 
         if zc == layer:
             maximum = np.max(complex_cell.weights)
-            for z, k in enumerate(sort_connections(spinet, complex_cell, oz)):
+            for z, k in enumerate(sort_connections(spinet, complex_cell)):
                 for i in range(ox, ox + spinet.conf["L1Width"]):
                     for j in range(oy, oy + spinet.conf["L1Height"]):
                         simple_cell = spinet.simple_cells[spinet.layout1[i, j, k]]
@@ -257,10 +268,10 @@ def pdf_complex_cell(spinet, layer):
     return pdf
 
 
-def sort_connections(spinet, complex_cell, oz):
+def sort_connections(spinet, cell):
     strengths = []
     for z in range(spinet.conf["Neuron2Depth"]):
-        strengths.append(np.sum(complex_cell.weights[:, :, z]))
+        strengths.append(np.sum(cell.weights[:, :, z]))
     return np.argsort(strengths)[::-1]
 
 
@@ -384,7 +395,7 @@ def mean_response(directions, angles):
     return np.mean(directions * np.exp(1j * angles))
 
 
-def display_network(spinets, pooling=0):
+def display_network(spinets):
     for spinet in spinets:
         spinet.generate_weight_images()
 
@@ -431,8 +442,11 @@ def display_network(spinets, pooling=0):
             # pdf = generate_pdf_layers(spinet, spinet.l1height, spinet.l1width, spinet.neuron1_synapses, spinet.l1depth)
             # pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
-        if pooling:
+        if spinet.nb_complex_cells > 0:
             os.mkdir(spinet.path + "figures/complex_figures/tmp/")
             for layer in range(spinet.conf["L2Depth"]):
                 pdfs = pdf_complex_cell(spinet, layer)
             shutil.rmtree(spinet.path + "figures/complex_figures/tmp/")
+            
+        if spinet.nb_motor_cells > 0:
+            display_motor_cell(spinet)

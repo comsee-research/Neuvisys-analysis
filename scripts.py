@@ -44,6 +44,7 @@ from spiking_network.network_statistics.network_statistics import (
 )
 from spiking_network.network_planning.planner import (
     generate_networks,
+    generate_network_files,
     launch_neuvisys_multi_pass,
     toggle_learning,
     divide_visual_field,
@@ -75,7 +76,7 @@ spinet = SpikingNetwork(network_path)
 
 # %% Display weights
 
-display_network([spinet], 1)
+display_network([spinet])
 
 
 # %% //!!!\\ Delete weights network
@@ -87,6 +88,11 @@ clean_network(
     motor_cells=True,
     json_only=False,
 )
+
+
+# %% Generate network
+
+generate_network_files(home + "neuvisys-dv/configuration/")
 
 
 # %% Load events

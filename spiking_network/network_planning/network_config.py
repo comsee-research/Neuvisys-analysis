@@ -158,5 +158,12 @@ class NetworkConfig:
                 "TRACKING": ["partial"],
                 "TAU_M": [20000],
                 "ETA_INH": [25],
+                "TAU_LTP": [7000],
+                "TAU_LTD": [14000],
+                "ETA_LTP": [0.0077],
+                "ETA_LTD": [-0.0021],
+                "TAU_E": [10000],
+                "STDP_LEARNING": [True],
+                "NORM_FACTOR": [4],
             },
         }

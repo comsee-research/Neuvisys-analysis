@@ -101,6 +101,7 @@ def create_directories(directory, list_params, n_iter):
         os.mkdir(
             directory + "network_" + str(i) + "/figures/complex_weights_orientations"
         )
+        os.mkdir(directory + "network_" + str(i) + "/figures/motor_figures")
         os.mkdir(directory + "network_" + str(i) + "/figures/simple_figures")
         os.mkdir(directory + "network_" + str(i) + "/gabors")
         os.mkdir(directory + "network_" + str(i) + "/gabors/data")

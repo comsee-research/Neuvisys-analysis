@@ -80,6 +80,7 @@ class SpikingNetwork:
 
         self.nb_simple_cells = len(self.simple_cells)
         self.nb_complex_cells = len(self.complex_cells)
+        self.nb_motor_cells = len(self.motor_cells)
 
         self.layout1 = np.load(path + "weights/layout1.npy")
         # self.layout2 = np.load(path + "weights/layout2.npy")

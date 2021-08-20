@@ -7,6 +7,14 @@ Created on Thu Jul  2 16:58:28 2020
 """
 
 import os
+
+if os.path.exists("/home/alphat"):
+    os.chdir("/home/alphat/neuvisys-analysis")
+    home = "/home/alphat/"
+else:
+    os.chdir("/home/thomas/neuvisys-analysis")
+    home = "/home/thomas/"
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -59,13 +67,6 @@ from spiking_network.network_statistics.parameter_analysis import (
     scatter_mat,
 )
 
-if os.path.exists("/home/alphat"):
-    os.chdir("/home/alphat/neuvisys-analysis")
-    home = "/home/alphat/"
-else:
-    os.chdir("/home/thomas/neuvisys-analysis")
-    home = "/home/thomas/"
-
 network_path = home + "neuvisys-dv/configuration/network/"
 
 
@@ -78,15 +79,14 @@ spinet = SpikingNetwork(network_path)
 
 display_network([spinet])
 
+# for neuron in spinet.motor_cells:
+#     plt.imshow(np.sum(neuron.weights, axis=2).T)
+#     plt.show()
 
 # %% //!!!\\ Delete weights network
 
 clean_network(
-    network_path,
-    simple_cells=True,
-    complex_cells=True,
-    motor_cells=True,
-    json_only=False,
+    network_path, simple_cells=True, complex_cells=True, motor_cells=True, json_only=False,
 )
 
 
@@ -102,12 +102,8 @@ events = load_aedat4(home + "Desktop/shape_hovering_fast.aedat4")
 
 # %% Load rosbag and convert it to npdat
 
-left_events = ros_to_npy(
-    home + "Downloads/outdoor_night1_data.bag", topic="/davis/left/events"
-)
-right_events = ros_to_npy(
-    home + "Downloads/outdoor_night1_data.bag", topic="/davis/right/events"
-)
+left_events = ros_to_npy(home + "Downloads/outdoor_night1_data.bag", topic="/davis/left/events")
+right_events = ros_to_npy(home + "Downloads/outdoor_night1_data.bag", topic="/davis/right/events")
 
 
 # %% Save aedat file as numpy npz file
@@ -168,9 +164,7 @@ plot_preferred_orientations(spinet, oris, oris_r)
 
 # %% direction and orientation selectivity
 
-rotations = np.array(
-    [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
-)
+rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
 dir_vec, ori_vec = complex_cells_directions(spinet, rotations)
 
 angles = np.pi * rotations / 180
@@ -199,10 +193,7 @@ compute_disparity_0(spinet, disparity, residuals, min_resi=0.5, max_resi=10)
 # %% Stereo matching
 
 disp_frames, disp_nb_frames = stereo_matching(
-    "/home/alphat/Desktop/pavin_images/im1/",
-    [10, 84, 158, 232],
-    [20, 83, 146],
-    range(0, 200),
+    "/home/alphat/Desktop/pavin_images/im1/", [10, 84, 158, 232], [20, 83, 146], range(0, 200),
 )
 
 
@@ -215,15 +206,11 @@ toggle_learning(spinet, False)
 
 sspikes = []
 cspikes = []
-rotations = np.array(
-    [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
-)
+rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
 for rot in rotations:
     launch_neuvisys_multi_pass(
         network_path + "configs/network_config.json",
-        "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/"
-        + str(rot)
-        + ".npz",
+        "/media/alphat/SSD Games/Thesis/videos/artificial_videos/lines/" + str(rot) + ".npz",
         5,
     )
     spinet = SpikingNetwork(network_path)
@@ -249,10 +236,7 @@ df = []
 
 for i in range(0, n_networks):
     launch_neuvisys_multi_pass(
-        exec_path,
-        networks_path + "network_" + str(i) + "/configs/network_config.json",
-        event_path,
-        nb_iterations,
+        exec_path, networks_path + "network_" + str(i) + "/configs/network_config.json", event_path, nb_iterations,
     )
 
     spinet = SpikingNetwork(networks_path + "network_" + str(i) + "/")
@@ -293,9 +277,7 @@ for i in range(2):
 rect_frames = rectify_frames(frames, -4, 8, 4, -8)
 
 write_frames(
-    "/home/alphat/Desktop/im1/",
-    rect_frames,
-    ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
+    "/home/alphat/Desktop/im1/", rect_frames, ([10, 84, 158, 232, 306], [20, 83, 146, 209]),
 )
 
 

@@ -77,11 +77,19 @@ spinet = SpikingNetwork(network_path)
 
 # %% Display weights
 
-display_network([spinet])
+# display_network([spinet])
 
-# for neuron in spinet.motor_cells:
-#     plt.imshow(np.sum(neuron.weights, axis=2).T)
-#     plt.show()
+w = np.zeros((spinet.neurons[2][0].weights.shape[0], 1))
+
+for neuron in spinet.neurons[2]:
+    # plt.imshow(np.sum(neuron.weights, axis=2).T)
+    # plt.show()
+    w += np.sum(neuron.weights, axis=2)
+    
+plt.imshow(w.T / np.max(w))
+plt.colorbar(orientation="horizontal")
+plt.show()
+    
 
 # %% //!!!\\ Delete weights network
 

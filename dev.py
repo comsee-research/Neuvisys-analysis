@@ -22,17 +22,81 @@ import seaborn as sns
 
 #%%
 
-# for i in range(nb_networks):
-#     copyfile(
-#         network_path + str(i) + "/figures/simple_figures/weight_sharing_0.pdf",
-#         "/home/alphat/Desktop/net_figs/" + str(i) + ".pdf",
-#     )
+tau_k = 0.2
+nu_k = 0.05
+t = np.linspace(0, 2, 10000)
+
+def gaussian(a, b, c, x):
+    return a * np.exp(-0.5 * (x - b)**2 / c**2)
+
+def kernel(time):
+    return (np.exp(-time / tau_k) - np.exp(-time / nu_k)) / (tau_k - nu_k)
+
+def kernel_dot(time):
+    return (np.exp(-time / nu_k) / nu_k - np.exp(-time / tau_k) / tau_k) / (tau_k - nu_k)
+
+plt.figure()
+plt.plot(t, kernel(t))
+plt.plot(t, kernel_dot(t))
+plt.show()
+
+#%%
+
+Y = np.cumsum(np.random.exponential(np.random.uniform(0, 10), 100))
+for i in range(9):
+    Y = np.concatenate((Y, np.cumsum(np.random.exponential(np.random.uniform(0, 10), 100)) + Y[-1]))
+
+Y = np.array(Y) / 1000
+
+signal = []
+signal_dot = []
+for time in np.linspace(0, Y[-1], 1000):
+    value = 0
+    value_dot = 0
+    for spike in Y[Y <= time]:
+        value += kernel(time - spike)
+        value_dot += kernel_dot(time - spike)
+    signal.append(value)
+    signal_dot.append(value_dot)
+    
+plt.figure()
+plt.plot(Y)
+
+plt.figure()
+plt.plot(signal)
+plt.plot(signal_dot)
+plt.show()
 
 
 #%%
 
 network_path = ""
 spinet = SpikingNetwork(network_path)
+
+
+# %%
+
+state = np.array(spinet.state["td"])
+
+plt.figure()
+plt.title("Reward (blue) vs Value (orange)")
+plt.plot(state[:, 0], state[:, 1])
+plt.plot(state[:, 0], state[:, 2])
+
+plt.figure()
+plt.title("Reward (blue) vs Value Derivative (orange)")
+plt.plot(state[:, 0], state[:, 1])
+plt.plot(state[:, 0], state[:, 3])
+
+plt.figure()
+plt.title("Reward (blue) vs TD error (orange)")
+plt.plot(state[:, 0], state[:, 1])
+plt.plot(state[:, 0], state[:, 4])
+
+plt.figure()
+plt.title("Value (blue) vs taur * Value Derivative (orange)")
+plt.plot(state[:, 0], state[:, 2])
+plt.plot(state[:, 0], -1*state[:, 3])
 
 
 #%%

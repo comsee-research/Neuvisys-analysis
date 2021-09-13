@@ -26,32 +26,11 @@ def reshape_weights(weights, width, height):
     return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
 
 
-def clean_network(path, simple_cells, complex_cells, motor_cells, json_only):
-    if json_only:
-        if simple_cells:
-            for file in os.listdir(path + "weights/simple_cells/"):
-                if file.endswith(".json"):
-                    os.remove(path + "weights/simple_cells/" + file)
-        if complex_cells:
-            for file in os.listdir(path + "weights/complex_cells/"):
-                if file.endswith(".json"):
-                    os.remove(path + "weights/complex_cells/" + file)
-        if motor_cells:
-            for file in os.listdir(path + "weights/motor_cells/"):
-                if file.endswith(".json"):
-                    os.remove(path + "weights/motor_cells/" + file)
-    else:
-        if simple_cells:
-            delete_files(path + "weights/simple_cells/")
-        if complex_cells:
-            delete_files(path + "weights/complex_cells/")
-        if motor_cells:
-            delete_files(path + "weights/motor_cells/")
-        delete_files(path + "images/complex_connections/")
-        delete_files(path + "images/simple_cells/")
-        delete_files(path + "images/complex_cells/")
-        os.remove(path + "learning_trace.txt")
-
+def clean_network(path, layers):
+    for i in layers:
+        delete_files(path + "weights/" + str(i) + "/")
+        delete_files(path + "images/" + str(i) + "/")
+    os.remove(path + "networkState.json")
 
 class SpikingNetwork:
     """Spiking Neural Network class"""
@@ -66,6 +45,8 @@ class SpikingNetwork:
             self.complex_conf = json.load(file)
         with open(path + "configs/motor_cell_config.json") as file:
             self.motor_conf = json.load(file)
+        with open(path + "networkState.json") as file:
+            self.state = json.load(file)
 
         self.nb_neurons = 0
         self.neurons = []
@@ -82,11 +63,13 @@ class SpikingNetwork:
         self.neurons.append(layer3)
         self.spikes.append(spikes3)
         
-        layer4, spikes4 = self.load_weights(2, "motor_cell")
+        layer4, spikes4 = self.load_weights(3, "motor_cell")
         self.neurons.append(layer4)
         self.spikes.append(spikes4)
 
-        # self.layout1 = np.load(path + "weights/layout1.npy")
+        self.layout = []
+        self.layout.append(np.load(path + "weights/layout_0.npy"))
+        self.layout.append(np.load(path + "weights/layout_1.npy"))
 
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:

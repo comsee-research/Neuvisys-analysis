@@ -79,23 +79,21 @@ spinet = SpikingNetwork(network_path)
 
 # display_network([spinet])
 
-w = np.zeros((spinet.neurons[2][0].weights.shape[0], 1))
-
 for neuron in spinet.neurons[2]:
-    # plt.imshow(np.sum(neuron.weights, axis=2).T)
-    # plt.show()
+    plt.imshow(np.sum(neuron.weights, axis=2).T)
+    plt.show()
+    
+w = np.zeros((spinet.neurons[2][0].weights.shape[0], spinet.neurons[2][0].weights.shape[1]))
+for neuron in spinet.neurons[2]:
     w += np.sum(neuron.weights, axis=2)
-    
-plt.imshow(w.T / np.max(w))
-plt.colorbar(orientation="horizontal")
+plt.imshow(w)
+plt.colorbar()
 plt.show()
-    
+
 
 # %% //!!!\\ Delete weights network
 
-clean_network(
-    network_path, simple_cells=True, complex_cells=True, motor_cells=True, json_only=False,
-)
+clean_network(network_path, [0, 1, 2, 3])
 
 
 # %% Generate network

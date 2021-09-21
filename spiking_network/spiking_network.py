@@ -43,27 +43,29 @@ class SpikingNetwork:
             self.simple_conf = json.load(file)
         with open(path + "configs/complex_cell_config.json") as file:
             self.complex_conf = json.load(file)
-        with open(path + "configs/motor_cell_config.json") as file:
-            self.motor_conf = json.load(file)
+        with open(path + "configs/critic_cell_config.json") as file:
+            self.critic_conf = json.load(file)
+        with open(path + "configs/actor_cell_config.json") as file:
+            self.actor_conf = json.load(file)
         with open(path + "networkState.json") as file:
             self.state = json.load(file)
 
         self.nb_neurons = 0
         self.neurons = []
         self.spikes = []
-        layer1, spikes1 = self.load_weights(0, "simple_cell")
+        layer1, spikes1 = self.load_weights(0, "simple_cell", "simple_cell_config.json")
         self.neurons.append(layer1)
         self.spikes.append(spikes1)
 
-        layer2, spikes2 = self.load_weights(1, "complex_cell")
+        layer2, spikes2 = self.load_weights(1, "complex_cell", "complex_cell_config.json")
         self.neurons.append(layer2)
         self.spikes.append(spikes2)
 
-        layer3, spikes3 = self.load_weights(2, "motor_cell")
+        layer3, spikes3 = self.load_weights(2, "motor_cell", "critic_cell_config.json")
         self.neurons.append(layer3)
         self.spikes.append(spikes3)
         
-        layer4, spikes4 = self.load_weights(3, "motor_cell")
+        layer4, spikes4 = self.load_weights(3, "motor_cell", "actor_cell_config.json")
         self.neurons.append(layer4)
         self.spikes.append(spikes4)
 
@@ -84,7 +86,7 @@ class SpikingNetwork:
         self.l_shape = np.array(self.conf["layerSizes"])
         self.n_shape = np.array(self.conf["neuronSizes"])
 
-    def load_weights(self, layer, cell_type):
+    def load_weights(self, layer, cell_type, config):
         neurons = []
         spike_train = []
 
@@ -92,7 +94,7 @@ class SpikingNetwork:
         for paths in [neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)]:
             neuron = Neuron(
                 cell_type,
-                self.path + "configs/" + cell_type + "_config.json",
+                self.path + "configs/" + config,
                 self.path + "weights/" + str(layer) + "/",
                 *paths
             )

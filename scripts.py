@@ -48,8 +48,7 @@ from spiking_network.network_statistics.network_statistics import (
     update_dataframe,
 )
 from spiking_network.network_planning.planner import (
-    generate_networks,
-    generate_network_files,
+    create_networks,
     launch_neuvisys_multi_pass,
     toggle_learning,
     divide_visual_field,
@@ -76,9 +75,9 @@ spinet = SpikingNetwork(network_path)
 
 # display_network([spinet])
 
-for neuron in spinet.neurons[2]:
-    plt.imshow(np.sum(neuron.weights, axis=2).T)
-    plt.show()
+# for neuron in spinet.neurons[2]:
+#     plt.imshow(np.sum(neuron.weights, axis=2).T)
+#     plt.show()
     
 w = np.zeros((spinet.neurons[2][0].weights.shape[0], spinet.neurons[2][0].weights.shape[1]))
 for neuron in spinet.neurons[2]:
@@ -93,9 +92,10 @@ plt.show()
 clean_network(network_path, [0, 1, 2, 3])
 
 
-# %% Generate network
+# %% create networks
 
-generate_network_files(home + "neuvisys-dv/configuration/")
+params = {"simple_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}, "complex_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}}
+create_networks(home + "neuvisys-dv/cmake-build-release", home + "Bureau", 2, params)
 
 
 # %% Load events
@@ -209,10 +209,9 @@ exec_path = home + "neuvisys-dv/build/neuvisys-exe"
 networks_path = home + "Desktop/test/"
 event_path = home + "Desktop/shapes.npz"
 
-# params = {"neuron_params": {"TARGET_SPIKE_RATE": [0.1, 0.2, 0.3]}}
-params = {}
+params = {"simple_cell_config": {"TARGET_SPIKE_RATE": [0.1, 0.2, 0.3]}}
 
-generate_networks(networks_path, params, n_networks)
+create_networks(networks_path, params, n_networks)
 nb_iterations = 5
 
 df = []

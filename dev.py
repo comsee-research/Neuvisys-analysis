@@ -59,13 +59,16 @@ for time in np.linspace(0, Y[-1], 1000):
         value_dot += kernel_dot(time - spike)
     signal.append(value)
     signal_dot.append(value_dot)
-    
+
+V = np.array(signal)
+V_dot = np.array(signal_dot)
 plt.figure()
 plt.plot(Y)
 
 plt.figure()
-plt.plot(signal)
-plt.plot(signal_dot)
+plt.plot(V)
+plt.plot(V_dot)
+# plt.plot(V_dot - V)
 plt.show()
 
 

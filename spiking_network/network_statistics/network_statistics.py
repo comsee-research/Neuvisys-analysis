@@ -84,8 +84,8 @@ def network_params(network_path, nb_networks, trim_sim_val=False):
 
 
 def network_spike_rate(spinet):
-    time = np.max(spinet.sspikes)
-    srates = np.count_nonzero(spinet.sspikes, axis=1) / (time * 1e-6)
+    time = np.max(spinet.spikes)
+    srates = np.count_nonzero(spinet.spikes, axis=1) / (time * 1e-6)
     return np.mean(srates), np.std(srates)
 
 
@@ -100,36 +100,6 @@ def network_thresholds(spinet):
     for neuron in spinet.simple_cells:
         thresholds.append(neuron.params["threshold"])
     return np.mean(thresholds), np.std(thresholds)
-
-
-def spike_plots_simple_cells(spinet, neuron_id):
-    plt.figure()
-    plt.xlabel("time (µs)")
-    plt.ylabel("neurons")
-
-    indices = spinet.simple_cells[neuron_id].inhibition_connections
-    colors1 = ["C{}".format(i) for i in range(len(indices) + 1)]
-
-    eveplot = []
-    for i in np.sort(indices + [neuron_id]):
-        eveplot.append(spinet.sspikes[i][spinet.sspikes[i] != 0])
-
-    plt.eventplot(eveplot, colors=colors1)
-
-
-def spike_plots_complex_cells(spinet, neuron_id):
-    plt.figure()
-    plt.xlabel("time (µs)")
-    plt.ylabel("neurons")
-
-    indices = spinet.complex_cells[neuron_id].inhibition_connections
-    colors1 = ["C{}".format(i) for i in range(len(indices) + 1)]
-
-    eveplot = []
-    for i in indices + [neuron_id]:
-        eveplot.append(spinet.cspikes[i][spinet.cspikes[i] != 0])
-
-    plt.eventplot(eveplot, colors=colors1)
 
 
 def crosscorrelogram(spinet):
@@ -351,24 +321,3 @@ def compute_disparity(
                     density=True,
                 )
             cnt += 1
-
-
-def spike_rate_evolution(spinet, neuron_id):
-    spikes = spinet.sspikes[neuron_id][spinet.sspikes[neuron_id] != 0]
-
-    if spikes.size:
-        hist = np.histogram(
-            spikes,
-            bins=np.arange(spikes[0], spikes[-1], 100000000),
-        )[0]
-        hist = hist / 100
-        plt.figure()
-        plt.plot(hist)
-
-        plt.figure()
-        plt.hist(
-            spikes,
-            bins=np.arange(spikes[0], spikes[-1], 1000000),
-            density=True,
-            cumulative=True,
-        )

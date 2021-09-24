@@ -66,7 +66,7 @@ from spiking_network.network_statistics.parameter_analysis import (
     scatter_mat,
 )
 
-network_path = home + "neuvisys-dv/configuration/network/"
+network_path = home + "neuvisys-dv/configuration/network_full/"
 
 
 # %% Generate Spiking Network
@@ -77,10 +77,6 @@ spinet = SpikingNetwork(network_path)
 # %% Display weights
 
 # display_network([spinet])
-
-# for neuron in spinet.neurons[2]:
-#     plt.imshow(np.sum(neuron.weights, axis=2).T)
-#     plt.show()
     
 w = np.zeros((spinet.neurons[2][0].weights.shape[0], spinet.neurons[2][0].weights.shape[1]))
 for neuron in spinet.neurons[2]:
@@ -88,6 +84,12 @@ for neuron in spinet.neurons[2]:
 plt.imshow(w)
 plt.colorbar()
 plt.show()
+
+for neuron in spinet.neurons[3]:
+    plt.figure()
+    plt.imshow(np.sum(neuron.weights, axis=2).T)
+    plt.colorbar(orientation="horizontal")
+    plt.show()
 
 
 # %% //!!!\\ Delete weights network

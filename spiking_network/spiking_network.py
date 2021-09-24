@@ -89,6 +89,7 @@ class SpikingNetwork:
         self.l_shape = np.array(self.conf["layerSizes"])
         self.n_shape = np.array(self.conf["neuronSizes"])
 
+
     def load_weights(self, layer, cell_type, config):
         neurons = []
         spike_train = []

@@ -18,7 +18,7 @@ import pandas as pd
 import cv2 as cv
 from spiking_network.spiking_network import SpikingNetwork
 import seaborn as sns
-
+    
 
 #%%
 
@@ -39,6 +39,7 @@ plt.figure()
 plt.plot(t, kernel(t))
 plt.plot(t, kernel_dot(t))
 plt.show()
+
 
 #%%
 

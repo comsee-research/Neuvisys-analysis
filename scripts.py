@@ -41,13 +41,10 @@ from event_statistics.frame_analysis import stereo_matching
 from spiking_network.network_statistics.network_statistics import (
     compute_disparity_0,
     rf_matching,
-    spike_plots_simple_cells,
-    spike_plots_complex_cells,
     direction_norm_length,
     orientation_norm_length,
     direction_selectivity,
     orientation_selectivity,
-    spike_rate_evolution,
     update_dataframe,
 )
 from spiking_network.network_planning.planner import (
@@ -125,35 +122,15 @@ write_npz(home + "Desktop/shapes", events)  # mono
 frames = load_frames("/media/alphat/DisqueDur/0_Thesis/pavin.aedat4")
 
 
+# %% Create Matlab weight.mat
+
+basis = spinet.generate_weight_mat()
+
+
 # %% Load various neuron informations
 
 simpa_decay, compa_decay = load_array_param(spinet, "learning_decay")
 simpa_spike, compa_spike = load_array_param(spinet, "count_spike")
-
-
-# %% Plot cell response
-
-pot_train = []
-for i in range(1, 2):
-    pot_train.append(np.array(spinet.complex_cells[i].potential_train))
-y_train, x_train = np.array(pot_train)[0, :, 0], np.array(pot_train)[0, :, 1]
-
-
-# %% Spike plots
-
-spike_plots_simple_cells(spinet, 7639)
-spike_plots_complex_cells(spinet, 100)
-
-
-# %% Spike rate evolution
-
-for i in range(10):
-    spike_rate_evolution(spinet, i)
-
-
-# %% Create Matlab weight.mat
-
-basis = spinet.generate_weight_mat()
 
 
 # %% Load and create gabor basis

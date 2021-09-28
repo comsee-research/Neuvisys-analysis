@@ -37,18 +37,21 @@ class SpikingNetwork:
 
     def __init__(self, path):
         self.path = path
-        with open(path + "configs/network_config.json") as file:
-            self.conf = json.load(file)
-        with open(path + "configs/simple_cell_config.json") as file:
-            self.simple_conf = json.load(file)
-        with open(path + "configs/complex_cell_config.json") as file:
-            self.complex_conf = json.load(file)
-        with open(path + "configs/critic_cell_config.json") as file:
-            self.critic_conf = json.load(file)
-        with open(path + "configs/actor_cell_config.json") as file:
-            self.actor_conf = json.load(file)
-        with open(path + "networkState.json") as file:
-            self.state = json.load(file)
+        try:
+            with open(path + "configs/network_config.json") as file:
+                self.conf = json.load(file)
+            with open(path + "configs/simple_cell_config.json") as file:
+                self.simple_conf = json.load(file)
+            with open(path + "configs/complex_cell_config.json") as file:
+                self.complex_conf = json.load(file)
+            with open(path + "configs/critic_cell_config.json") as file:
+                self.critic_conf = json.load(file)
+            with open(path + "configs/actor_cell_config.json") as file:
+                self.actor_conf = json.load(file)
+            with open(path + "networkState.json") as file:
+                self.state = json.load(file)
+        except:
+            print("could not load some config file")
 
         self.nb_neurons = 0
         self.neurons = []

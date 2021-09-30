@@ -63,7 +63,7 @@ from spiking_network.network_statistics.parameter_analysis import (
     scatter_mat,
 )
 
-network_path = home + "neuvisys-dv/configuration/network_full/"
+network_path = home + "neuvisys-dv/configuration/network/"
 
 
 # %% Generate Spiking Network
@@ -113,7 +113,7 @@ right_events = ros_to_npy(home + "Downloads/outdoor_night1_data.bag", topic="/da
 
 # %% Save aedat file as numpy npz file
 
-write_npz(home + "Desktop/shapes", events)  # mono
+write_npz(home + "Desktop/shape_hovering_fast", events)  # mono
 # write_npz(home + "Desktop/shapes", (left_events, right_events)) # stereo
 
 

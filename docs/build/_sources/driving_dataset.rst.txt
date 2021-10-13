@@ -1,0 +1,53 @@
+driving\_dataset package
+========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   driving_dataset.interfaces
+
+Submodules
+----------
+
+driving\_dataset.aedat\_tools module
+------------------------------------
+
+.. automodule:: driving_dataset.aedat_tools
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+driving\_dataset.datasets module
+--------------------------------
+
+.. automodule:: driving_dataset.datasets
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+driving\_dataset.export module
+------------------------------
+
+.. automodule:: driving_dataset.export
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+driving\_dataset.view module
+----------------------------
+
+.. automodule:: driving_dataset.view
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: driving_dataset
+   :members:
+   :undoc-members:
+   :show-inheritance:

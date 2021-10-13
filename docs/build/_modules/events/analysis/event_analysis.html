@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>events.analysis.event_analysis &#8212; Neuvisys 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for events.analysis.event_analysis</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Mon Mar 29 15:19:28 2021</span>
+
+<span class="sd">@author: thomas</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">dv</span> <span class="kn">import</span> <span class="n">AedatFile</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="c1"># from numba import jit</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">receptive_field</span> <span class="o">=</span> <span class="p">(</span><span class="mi">346</span><span class="p">,</span> <span class="mi">260</span><span class="p">)</span>  <span class="c1"># px</span>
+<span class="n">file_name</span> <span class="o">=</span> <span class="s2">&quot;/home/thomas/Vidéos/DVS_Recordings/test/hand_slow.aedat4&quot;</span>
+<span class="n">folder</span> <span class="o">=</span> <span class="s2">&quot;/home/thomas/neuvisys-report/data/&quot;</span>
+
+<div class="viewcode-block" id="quantity_variation"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.quantity_variation">[docs]</a><span class="k">def</span> <span class="nf">quantity_variation</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">binsize</span><span class="p">):</span>
+    <span class="n">nb_events</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">events</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">binsize</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">nb_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="p">[(</span><span class="n">events</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])]</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nb_events</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="spatial_correlation"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.spatial_correlation">[docs]</a><span class="k">def</span> <span class="nf">spatial_correlation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">spat_corr</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">rf_size</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">l</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">rf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">l</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="n">l</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="n">rf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">l</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">polarity</span><span class="p">:</span>
+            <span class="n">spat_corr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">timestamp</span> <span class="o">-</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">y</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(On | On)</span>
+            <span class="n">spat_corr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">timestamp</span> <span class="o">-</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">y</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(Off | On)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">spat_corr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">timestamp</span> <span class="o">-</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">y</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(On | Off)</span>
+            <span class="n">spat_corr</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">timestamp</span> <span class="o">-</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">y</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">l</span> <span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(Off | Off)</span>
+    <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span> <span class="o">*</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span></div>
+
+<span class="c1"># @jit(nopython=True)</span>
+<div class="viewcode-block" id="temporal_correlation"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.temporal_correlation">[docs]</a><span class="k">def</span> <span class="nf">temporal_correlation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">temp_corr</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">taus</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">polarity</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">taus</span><span class="p">):</span>
+            <span class="n">temp_corr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">*</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span>
+                <span class="ow">and</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span> <span class="o">+</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(On | On)</span>
+            <span class="n">temp_corr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">*</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span>
+                <span class="ow">and</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span> <span class="o">+</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(Off | On)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">taus</span><span class="p">):</span>
+            <span class="n">temp_corr</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">*</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span>
+                <span class="ow">and</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span> <span class="o">+</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(On | Off)</span>
+            <span class="n">temp_corr</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+                <span class="mi">1</span> <span class="o">*</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span>
+                <span class="ow">and</span> <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">t</span> <span class="o">+</span> <span class="n">tau</span>
+            <span class="p">)</span>  <span class="c1"># P(Off | Off)</span>
+    <span class="n">timestamps</span><span class="p">[</span><span class="mi">1</span> <span class="o">*</span> <span class="n">polarity</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">timestamp</span></div>
+
+<div class="viewcode-block" id="compute_spatial_correlation"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.compute_spatial_correlation">[docs]</a><span class="k">def</span> <span class="nf">compute_spatial_correlation</span><span class="p">():</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">]</span>  <span class="c1"># np.geomspace(100, 1000000, 9) # us</span>
+    <span class="n">rf_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">346</span><span class="p">,</span> <span class="mi">260</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="mi">40</span>
+    
+    <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">bins</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">AedatFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Spatial Correlation computation with tau = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+            <span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">rf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">spat_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">l</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]:</span>
+                <span class="n">spatial_correlation</span><span class="p">(</span>
+                    <span class="n">e</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">polarity</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">spat_corr</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">rf_size</span>
+                <span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+        <span class="n">spat_corr</span> <span class="o">/=</span> <span class="n">count</span></div>
+        <span class="c1"># np.save(folder + &quot;spat_corr_&quot; + str(tau) + &quot;_&quot; + str(l), spat_corr)</span>
+
+<div class="viewcode-block" id="compute_temporal_correaltion"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.compute_temporal_correaltion">[docs]</a><span class="k">def</span> <span class="nf">compute_temporal_correaltion</span><span class="p">():</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span> <span class="mi">10000</span><span class="p">]</span>  <span class="c1"># us</span>
+    <span class="n">rf_size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">346</span><span class="p">,</span> <span class="mi">260</span><span class="p">)</span>
+    <span class="n">tau_max</span> <span class="o">=</span> <span class="mi">500000</span>
+    
+    <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">bins</span><span class="p">:</span>
+        <span class="n">taus</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tau_max</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">AedatFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Temporal Correlation computation with tau = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+            <span class="n">timestamps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">rf_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rf_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">temp_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="n">taus</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+    
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]:</span>
+                <span class="n">temporal_correlation</span><span class="p">(</span>
+                    <span class="n">e</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">polarity</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">temp_corr</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">taus</span>
+                <span class="p">)</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+        <span class="n">temp_corr</span> <span class="o">/=</span> <span class="n">count</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;temp_corr_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">temp_corr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="compute_cross_correlation"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.compute_cross_correlation">[docs]</a><span class="k">def</span> <span class="nf">compute_cross_correlation</span><span class="p">():</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">500</span><span class="p">]</span>  <span class="c1"># µs</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="mi">1000000</span>
+    
+    <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">bins</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">AedatFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cross Correlation computation with tau = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+            <span class="n">xon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">xoff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]:</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">timestamp</span>
+                <span class="k">break</span>
+    
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;events&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">-</span> <span class="n">first</span><span class="p">)</span> <span class="o">//</span> <span class="n">tau</span> <span class="o">&gt;=</span> <span class="mi">1000000</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">polarity</span><span class="p">:</span>
+                    <span class="n">xon</span><span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">-</span> <span class="n">first</span><span class="p">)</span> <span class="o">//</span> <span class="n">tau</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">xoff</span><span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">-</span> <span class="n">first</span><span class="p">)</span> <span class="o">//</span> <span class="n">tau</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+        <span class="n">xon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trim_zeros</span><span class="p">(</span><span class="n">xon</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">xoff</span> <span class="o">=</span> <span class="n">xoff</span><span class="p">[:</span> <span class="n">xon</span><span class="o">.</span><span class="n">size</span><span class="p">]</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;xon_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">xon</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;xoff_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">xoff</span><span class="p">)</span>
+    
+        <span class="n">cross_corr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">xon</span> <span class="o">=</span> <span class="p">(</span><span class="n">xon</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xon</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">xon</span><span class="p">)</span>
+        <span class="n">xoff</span> <span class="o">=</span> <span class="p">(</span><span class="n">xoff</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xoff</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">xoff</span><span class="p">)</span>
+        <span class="n">cross_corr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">xon</span><span class="p">,</span> <span class="n">xon</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">))</span>
+        <span class="n">cross_corr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">xon</span><span class="p">,</span> <span class="n">xoff</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">))</span>
+        <span class="n">cross_corr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">xon</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">))</span>
+        <span class="n">cross_corr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">xoff</span><span class="p">,</span> <span class="n">xoff</span><span class="p">,</span> <span class="s2">&quot;full&quot;</span><span class="p">))</span>
+        <span class="n">cross_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cross_corr</span><span class="p">)[:,</span> <span class="n">cross_corr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">folder</span> <span class="o">+</span> <span class="s2">&quot;cross_corr_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tau</span><span class="p">),</span> <span class="n">cross_corr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="compute_entripy_metric"><a class="viewcode-back" href="../../../events.analysis.html#events.analysis.event_analysis.compute_entripy_metric">[docs]</a><span class="k">def</span> <span class="nf">compute_entripy_metric</span><span class="p">():</span>
+    <span class="n">directory</span> <span class="o">=</span> <span class="s2">&quot;/home/thomas/neuvisys-analysis/results/metric/&quot;</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">directory</span> <span class="o">+</span> <span class="s2">&quot;weights_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sizes</span><span class="p">))[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Neuvisys</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Thomas Barbier.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

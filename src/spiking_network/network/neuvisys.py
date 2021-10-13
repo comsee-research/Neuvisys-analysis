@@ -75,6 +75,8 @@ class SpikingNetwork:
         self.layout = []
         self.layout.append(np.load(path + "weights/layout_0.npy"))
         self.layout.append(np.load(path + "weights/layout_1.npy"))
+        self.layout.append(np.load(path + "weights/layout_2.npy"))
+        self.layout.append(np.load(path + "weights/layout_3.npy"))
 
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:

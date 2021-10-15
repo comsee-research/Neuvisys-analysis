@@ -46,6 +46,15 @@ plt.show()
 
 #%%
 
+network_path = "/home/thomas/neuvisys-dv/configuration/network/"
+spinet = SpikingNetwork(network_path)
+array = np.array(spinet.state["nb_events"])
+plt.figure()
+plt.plot(array[100:800])
+
+
+#%%
+
 Y = np.cumsum(np.random.exponential(np.random.uniform(0, 10), 100))
 for i in range(9):
     Y = np.concatenate((Y, np.cumsum(np.random.exponential(np.random.uniform(0, 10), 100)) + Y[-1]))

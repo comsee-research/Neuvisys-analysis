@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/Faulhaber.cpp
+Faulhaber.hpp
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/Faulhaber.hpp
+iostream
+-
+string
+-
+
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/Faulhaber.hpp
+comserie.hpp
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/comserie.hpp
+
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/comserie.cpp
+comserie.hpp
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/comserie.hpp
+
+/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/comserie.hpp
+iostream
+-
+stdint.h
+-
+termios.h
+-
+memory.h
+-
+fcntl.h
+-
+unistd.h
+-
+stdio.h
+-
+string
+-
+

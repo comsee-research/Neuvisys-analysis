@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG -rdynamic CMakeFiles/GOTO.dir/GOTO.cpp.o -o GOTO  libserie/liblibserie.a 

@@ -1,0 +1,47 @@
+#include <unistd.h>
+#include <string>
+#include "libserie/comserie.hpp"
+
+using namespace std;
+
+//==============================================================================
+
+int main(int argc, char ** argv)
+{
+  ComSerie com;
+  uint8_t octet = 0;
+  string chaine = "";
+
+  //trames de configuration �transmettre
+  //chaine += "$PASHS,SPD,B,9\r\n";
+  //chaine += "$PASHS,NME,PER,0.1\r\n";
+  /*chaine += "$PASHS,NME,GGA,B,OFF\r\n";
+  chaine += "$PASHS,NME,CRT,B,OFF\r\n";
+  chaine += "$PASHS,NME,LTN,B,OFF\r\n";
+  chaine += "$PASHS,NME,GST,B,OFF\r\n";
+  chaine += "$PASHS,NME,RMC,B,ON\r\n";
+  chaine += "$PASHS,SAV,Y\r\n";*/
+
+  com.ouvrir("/dev/ttyUSB0",B115200|CRTSCTS|CS8|CLOCAL|CREAD,10);
+  com.envoyer((const uint8_t *)(chaine.c_str()),uint32_t(chaine.length()));
+
+  com.flush();
+
+  //affichage des 100 trames suivantes recues
+  //(boucle infinie si non NMEA)
+  int nbTrames = 0;
+  while (nbTrames <= 100)
+  {
+    if(com.recevoir(&octet,1))
+    {
+      if(octet == '$') ++nbTrames;
+      cout << octet;
+    }
+    else cout << "timeout" << endl;
+  }
+
+  com.fermer();
+
+  return 0;
+}
+//==============================================================================

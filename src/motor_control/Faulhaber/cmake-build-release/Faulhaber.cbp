@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Faulhaber"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\libserie\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="MOVEOF">
+				<Option output="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/MOVEOF" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 MOVEOF"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="MOVEOF/fast">
+				<Option output="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/MOVEOF" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 MOVEOF/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="GOTO">
+				<Option output="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/GOTO" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 GOTO"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="GOTO/fast">
+				<Option output="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/GOTO" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 GOTO/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="libserie">
+				<Option output="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/liblibserie.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 libserie"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="libserie/fast">
+				<Option output="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/liblibserie.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 libserie/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/cmake-build-release/libserie/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/GOTO.cpp">
+			<Option target="GOTO"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/MOVEOF.cpp">
+			<Option target="MOVEOF"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/Faulhaber.cpp">
+			<Option target="libserie"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/Faulhaber.hpp">
+			<Option target="libserie"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/comserie.cpp">
+			<Option target="libserie"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/comserie.hpp">
+			<Option target="libserie"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/libserie/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\libserie\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

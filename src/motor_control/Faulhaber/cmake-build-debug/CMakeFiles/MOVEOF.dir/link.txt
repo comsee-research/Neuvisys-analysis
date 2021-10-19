@@ -1,0 +1,1 @@
+/usr/bin/c++ -g -rdynamic CMakeFiles/MOVEOF.dir/MOVEOF.cpp.o -o MOVEOF  libserie/liblibserie.a 

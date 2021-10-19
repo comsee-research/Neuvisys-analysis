@@ -20,48 +20,48 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from spiking_network.network.neuvisys import SpikingNetwork, clean_network
-# from aedat_tools.aedat_tools import (
-#     load_aedat4,
-#     show_event_images,
-#     write_npz,
-#     load_frames,
-#     npaedat_to_np,
-#     ros_to_npy,
-#     rectify_events,
-#     rectify_frames,
-#     remove_events,
-#     write_frames,
-# )
-# from spiking_network.display import (
-#     display_network,
-#     load_array_param,
-#     complex_cells_directions,
-# )
-# from event_statistics.frame_analysis import stereo_matching
-# from spiking_network.network_statistics.network_statistics import (
-#     compute_disparity_0,
-#     rf_matching,
-#     direction_norm_length,
-#     orientation_norm_length,
-#     direction_selectivity,
-#     orientation_selectivity,
-#     update_dataframe,
-# )
-# from spiking_network.network_planning.planner import (
-#     create_networks,
-#     launch_neuvisys_multi_pass,
-#     toggle_learning,
-#     divide_visual_field,
-# )
-# from spiking_network.gabor_fitting.gabbor_fitting import (
-#     create_gabor_basis,
-#     hists_preferred_orientations,
-#     plot_preferred_orientations,
-# )
-# from spiking_network.network_statistics.parameter_analysis import (
-#     correlation_matrix,
-#     scatter_mat,
-# )
+from aedat_tools.aedat_tools import (
+    load_aedat4,
+    show_event_images,
+    write_npz,
+    load_frames,
+    npaedat_to_np,
+    ros_to_npy,
+    rectify_events,
+    rectify_frames,
+    remove_events,
+    write_frames,
+)
+from spiking_network.display import (
+    display_network,
+    load_array_param,
+    complex_cells_directions,
+)
+from event_statistics.frame_analysis import stereo_matching
+from spiking_network.network_statistics.network_statistics import (
+    compute_disparity_0,
+    rf_matching,
+    direction_norm_length,
+    orientation_norm_length,
+    direction_selectivity,
+    orientation_selectivity,
+    update_dataframe,
+)
+from spiking_network.network_planning.planner import (
+    create_networks,
+    launch_neuvisys_multi_pass,
+    toggle_learning,
+    divide_visual_field,
+)
+from spiking_network.gabor_fitting.gabbor_fitting import (
+    create_gabor_basis,
+    hists_preferred_orientations,
+    plot_preferred_orientations,
+)
+from spiking_network.network_statistics.parameter_analysis import (
+    correlation_matrix,
+    scatter_mat,
+)
 
 network_path = home + "neuvisys-dv/configuration/network/"
 

@@ -29,6 +29,9 @@ t = np.linspace(0, 2, 10000)
 def gaussian(a, b, c, x):
     return a * np.exp(-0.5 * (x - b)**2 / c**2)
 
+def gaussian2D(x, y, A, x0, y0, sigX, sigY):
+    return A * np.exp(-(((x - x0)**2 / 2*sigX**2) + (y - y0)**2 / 2*sigY**2))
+
 def kernel(time):
     return (np.exp(-time / tau_k) - np.exp(-time / nu_k)) / (tau_k - nu_k)
 

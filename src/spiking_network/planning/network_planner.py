@@ -26,6 +26,31 @@ def create_networks(exec_path, network_path, n_iter, params):
                 conf[neuron_key][key] = value
                 
             save_config_files(n_path + "/configs/" + neuron_key + ".json", conf[neuron_key])
+            
+def random_params(exec_path, network_path):
+    params = {"network_config" : {"actionRate": [400, 500, 600],
+                                  "decayRate": [0.01, 0.02, 0.04],
+                                  "explorationFactor": [30, 50, 70],
+                                  "nu": [0.5, 1, 2],
+                                  "tauR": [0.5, 1, 2]},
+              "simple_cell_config" : {"ETA_INH": [10, 20, 30], 
+                                      "ETA_RP": [0.5, 1, 2],
+                                      "TAU_RP": [10, 20, 30], 
+                                      "VTHRESH": [20, 30, 40]},
+              "complex_cell_config" : {"ETA_INH": [10, 20, 30], 
+                                      "ETA_RP": [0.5, 1, 2],
+                                      "TAU_RP": [10, 20, 30], 
+                                      "VTHRESH": [2, 3, 4]},
+              "critic_cell_config" : {"ETA": [0.2, 0.5, 0.8],
+                                      "TAU_E": [250, 500, 750],
+                                      "NU_K": [150, 200, 250],
+                                      "TAU_K": [25, 50, 75],
+                                      "VTHRESH": [1, 2, 3]},
+              "actor_cell_config" : {"ETA": [0.2, 0.5, 0.8], 
+                                     "TAU_E": [250, 500, 750],
+                                     "VTHRESH": [1, 2, 3]}  
+              }
+    create_networks(exec_path, network_path, 10, params)
 
 def open_config_files(config_path):
     conf = {}

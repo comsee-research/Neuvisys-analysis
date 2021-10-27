@@ -20,25 +20,31 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from spiking_network.network.neuvisys import SpikingNetwork, clean_network
-from aedat_tools.aedat_tools import (
+from events.tools.read_write.aedat_tools import (
     load_aedat4,
-    show_event_images,
+)
+from events.tools.read_write.events_tools import (
     write_npz,
-    load_frames,
     npaedat_to_np,
     ros_to_npy,
-    rectify_events,
-    rectify_frames,
-    remove_events,
-    write_frames,
 )
-from spiking_network.display import (
+from events.tools.modification.event_modification import (
+    show_event_images,
+    rectify_events,
+    remove_events,
+)
+from frames.frame_analysis import (
+    load_frames,
+    rectify_frames,
+    write_frames,
+    stereo_matching,
+)
+from spiking_network.analysis.network_display import (
     display_network,
     load_array_param,
     complex_cells_directions,
 )
-from event_statistics.frame_analysis import stereo_matching
-from spiking_network.network_statistics.network_statistics import (
+from spiking_network.analysis.network_statistics import (
     compute_disparity_0,
     rf_matching,
     direction_norm_length,
@@ -47,18 +53,19 @@ from spiking_network.network_statistics.network_statistics import (
     orientation_selectivity,
     update_dataframe,
 )
-from spiking_network.network_planning.planner import (
+from spiking_network.planning.network_planner import (
     create_networks,
+    random_params,
     launch_neuvisys_multi_pass,
     toggle_learning,
     divide_visual_field,
 )
-from spiking_network.gabor_fitting.gabbor_fitting import (
+from spiking_network.gabor.gabbor_fitting import (
     create_gabor_basis,
     hists_preferred_orientations,
     plot_preferred_orientations,
 )
-from spiking_network.network_statistics.parameter_analysis import (
+from spiking_network.analysis.parameter_analysis import (
     correlation_matrix,
     scatter_mat,
 )
@@ -96,8 +103,9 @@ clean_network(network_path, [0, 1, 2, 3])
 
 # %% create networks
 
-params = {"simple_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}, "complex_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}}
-create_networks(home + "neuvisys-dv/cmake-build-release", home + "Bureau", 2, params)
+# params = {"simple_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}, "complex_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}}
+# create_networks(home + "neuvisys-dv/cmake-build-release", home + "Bureau", 2, {})
+random_params("/home/thomas/neuvisys-dv/cmake-build-release", "/home/thomas/Bureau/Networks")
 
 
 # %% Load events

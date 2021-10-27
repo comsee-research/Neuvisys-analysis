@@ -15,7 +15,7 @@ void testMotor() {
         position.push_back(i);
     }
 
-    Faulhaber Motor1(1, port);
+    Faulhaber Motor1(0, port);
     Motor1.StartDrive();
 
     for (auto pos : position) {

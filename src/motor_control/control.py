@@ -13,7 +13,7 @@ import multiprocessing
 
 def goto(motor, pos):
     subprocess.run(
-        ["/home/thomas/apps/Faulhaber/cmake-build-release/GOTO", str(motor), str(pos)]
+        ["/home/thomas/neuvisys-analysis/src/motor_control/Faulhaber/build/GOTO", str(motor), str(pos)]
     )
 
 def test():

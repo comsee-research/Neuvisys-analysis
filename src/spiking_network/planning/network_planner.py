@@ -27,7 +27,7 @@ def create_networks(exec_path, network_path, n_iter, params):
                 
             save_config_files(n_path + "/configs/" + neuron_key + ".json", conf[neuron_key])
             
-def random_params(exec_path, network_path):
+def random_params(exec_path, network_path, nb_networks):
     params = {"network_config" : {"actionRate": [400, 500, 600],
                                   "decayRate": [0.01, 0.02, 0.04],
                                   "explorationFactor": [30, 50, 70],
@@ -50,7 +50,7 @@ def random_params(exec_path, network_path):
                                      "TAU_E": [250, 500, 750],
                                      "VTHRESH": [1, 2, 3]}  
               }
-    create_networks(exec_path, network_path, 10, params)
+    create_networks(exec_path, network_path, nb_networks, params)
 
 def open_config_files(config_path):
     conf = {}

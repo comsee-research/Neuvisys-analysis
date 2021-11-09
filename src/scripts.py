@@ -78,6 +78,28 @@ network_path = home + "neuvisys-dv/configuration/network/"
 spinet = SpikingNetwork(network_path)
 
 
+# %%
+
+scores = []
+
+networks = np.array([1, 2, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 23, 27, 28, 29, 31 ,32, 33, 35])
+for name in networks:
+    spinet = SpikingNetwork("/home/thomas/Desktop/Networks/network_" + str(name) + "/")
+    scores.append(spinet.state["learning_data"]["score"])
+    
+scores = np.array(scores)
+means = np.mean(scores[:, -9:], axis=1)
+indices = np.argsort(means)[::-1]
+
+df = []
+for index in networks[indices]:
+    spinet = SpikingNetwork("/home/thomas/Desktop/Networks/network_" + str(index) + "/")
+    update_dataframe(df, spinet)
+
+df = pd.DataFrame(df)
+df.to_csv(home + "Desktop/df")
+
+    
 # %% Display weights
 
 # display_network([spinet])
@@ -105,7 +127,7 @@ clean_network(network_path, [0, 1, 2, 3])
 
 # params = {"simple_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}, "complex_cell_config" : {"ETA_LTP": [0.0077, 0.0077]}}
 # create_networks(home + "neuvisys-dv/cmake-build-release", home + "Bureau", 2, {})
-random_params("/home/thomas/neuvisys-dv/cmake-build-release", "/home/thomas/Bureau/Networks")
+random_params("/home/thomas/neuvisys-dv/cmake-build-release", "/home/thomas/Desktop/Networks2", 40)
 
 
 # %% Load events

@@ -49,12 +49,12 @@ def inhibition_boxplot(directory):
 
 def update_dataframe(df: list, spinet):
     conf = {}
-    for d in (spinet.conf, spinet.simple_conf):
+    for d in (spinet.conf, spinet.simple_conf, spinet.complex_conf, spinet.critic_conf, spinet.actor_conf):
         conf.update(d)
 
-    conf["mean_sr"], conf["std_sr"] = network_spike_rate(spinet)
-    conf["mean_isi"], conf["std_isi"] = network_isi(spinet)
-    conf["mean_thres"], conf["std_thres"] = network_thresholds(spinet)
+    # conf["mean_sr"], conf["std_sr"] = network_spike_rate(spinet)
+    # conf["mean_isi"], conf["std_isi"] = network_isi(spinet)
+    # conf["mean_thres"], conf["std_thres"] = network_thresholds(spinet)
     df.append(conf)
 
 

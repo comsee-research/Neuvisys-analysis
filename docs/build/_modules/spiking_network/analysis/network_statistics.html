@@ -1,0 +1,420 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>spiking_network.analysis.network_statistics &#8212; Neuvisys 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for spiking_network.analysis.network_statistics</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue May 26 16:39:25 2020</span>
+
+<span class="sd">@author: thomas</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">natsort</span> <span class="kn">import</span> <span class="n">natsorted</span>
+
+
+<div class="viewcode-block" id="inhibition_boxplot"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.inhibition_boxplot">[docs]</a><span class="k">def</span> <span class="nf">inhibition_boxplot</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">network_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">direc</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="s2">&quot;/images/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">network_id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">natsorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">direc</span><span class="p">))</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3536</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+            <span class="n">vectors</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+                <span class="n">vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">direc</span> <span class="o">+</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="mi">255</span>
+                <span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">distances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">combination</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">combination</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+    <span class="n">axes</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Squared Euclidean distance&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">boxplot</span><span class="p">([</span><span class="n">dist</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dist</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([</span><span class="s2">&quot;No inhibition&quot;</span><span class="p">,</span> <span class="s2">&quot;Inhibition&quot;</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;boxplots.pdf&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="update_dataframe"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.update_dataframe">[docs]</a><span class="k">def</span> <span class="nf">update_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">spinet</span><span class="p">):</span>
+    <span class="n">conf</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">,</span> <span class="n">spinet</span><span class="o">.</span><span class="n">simple_conf</span><span class="p">):</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+    <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;mean_sr&quot;</span><span class="p">],</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;std_sr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">network_spike_rate</span><span class="p">(</span><span class="n">spinet</span><span class="p">)</span>
+    <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;mean_isi&quot;</span><span class="p">],</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;std_isi&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">network_isi</span><span class="p">(</span><span class="n">spinet</span><span class="p">)</span>
+    <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;mean_thres&quot;</span><span class="p">],</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;std_thres&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">network_thresholds</span><span class="p">(</span><span class="n">spinet</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="network_params"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.network_params">[docs]</a><span class="k">def</span> <span class="nf">network_params</span><span class="p">(</span><span class="n">network_path</span><span class="p">,</span> <span class="n">nb_networks</span><span class="p">,</span> <span class="n">trim_sim_val</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">conf_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">conf_name</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s2">&quot;/configs/network_config.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;/configs/simple_cell_config.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;/configs/complex_cell_config.json&quot;</span><span class="p">,</span>
+    <span class="p">]:</span>
+        <span class="n">net_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_networks</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">network_path</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="n">conf_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">net_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">net_list</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">trim_sim_val</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">nunique</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="o">.</span><span class="n">nunique</span><span class="p">)</span>
+                <span class="n">cols_to_drop</span> <span class="o">=</span> <span class="n">nunique</span><span class="p">[</span><span class="n">nunique</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">cols_to_drop</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="n">conf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">conf_list</span></div>
+
+
+<div class="viewcode-block" id="network_spike_rate"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.network_spike_rate">[docs]</a><span class="k">def</span> <span class="nf">network_spike_rate</span><span class="p">(</span><span class="n">spinet</span><span class="p">):</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">spikes</span><span class="p">)</span>
+    <span class="n">srates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">spikes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">time</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">srates</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">srates</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="network_isi"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.network_isi">[docs]</a><span class="k">def</span> <span class="nf">network_isi</span><span class="p">(</span><span class="n">spinet</span><span class="p">):</span>
+    <span class="n">isi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">sspikes</span><span class="p">)</span>
+    <span class="n">isi</span> <span class="o">=</span> <span class="n">isi</span><span class="p">[</span><span class="n">isi</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">isi</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">isi</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="network_thresholds"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.network_thresholds">[docs]</a><span class="k">def</span> <span class="nf">network_thresholds</span><span class="p">(</span><span class="n">spinet</span><span class="p">):</span>
+    <span class="n">thresholds</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">neuron</span> <span class="ow">in</span> <span class="n">spinet</span><span class="o">.</span><span class="n">simple_cells</span><span class="p">:</span>
+        <span class="n">thresholds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">neuron</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">thresholds</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">thresholds</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="crosscorrelogram"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.crosscorrelogram">[docs]</a><span class="k">def</span> <span class="nf">crosscorrelogram</span><span class="p">(</span><span class="n">spinet</span><span class="p">):</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">l1width</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">l1height</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">):</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">layout1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">])</span>
+
+    <span class="n">test</span> <span class="o">=</span> <span class="n">spinet</span><span class="o">.</span><span class="n">sspikes</span><span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">100000</span>  <span class="c1"># µs</span>
+    <span class="n">nb_bins</span> <span class="o">=</span> <span class="mi">19</span>
+
+    <span class="n">ref_id</span> <span class="o">=</span> <span class="mi">10</span>
+
+    <span class="n">strain_ref</span> <span class="o">=</span> <span class="n">test</span><span class="p">[</span><span class="n">ref_id</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+        <span class="n">strain_tar</span> <span class="o">=</span> <span class="n">test</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nb_bins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tmstp</span> <span class="ow">in</span> <span class="n">strain_ref</span><span class="p">[</span><span class="n">strain_ref</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]:</span>
+            <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">tmstp</span> <span class="o">-</span> <span class="n">bin_size</span><span class="p">,</span> <span class="n">tmstp</span> <span class="o">+</span> <span class="n">bin_size</span><span class="p">,</span> <span class="n">nb_bins</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">strain_tar</span><span class="p">,</span> <span class="n">bins</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span>
+            <span class="s2">&quot;Crosscorrelogram reference neuron &quot;</span>
+            <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_id</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot; against neuron &quot;</span>
+            <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;time delay (ms)&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">bin_size</span> <span class="o">/</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">bin_size</span> <span class="o">/</span> <span class="mf">1e3</span><span class="p">,</span> <span class="n">nb_bins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">a</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;/home/alphat/Desktop/report/crosscorr_inh/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="orientation_norm_length"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.orientation_norm_length">[docs]</a><span class="k">def</span> <span class="nf">orientation_norm_length</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">,</span> <span class="n">angles</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">spike_vector</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="n">j</span> <span class="o">*</span> <span class="n">angles</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="direction_norm_length"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.direction_norm_length">[docs]</a><span class="k">def</span> <span class="nf">direction_norm_length</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">,</span> <span class="n">angles</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">spike_vector</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">angles</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="direction_selectivity"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.direction_selectivity">[docs]</a><span class="k">def</span> <span class="nf">direction_selectivity</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">)</span> <span class="o">-</span> <span class="n">spike_vector</span><span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">)</span> <span class="o">+</span> <span class="mi">8</span><span class="p">)</span> <span class="o">%</span> <span class="mi">16</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="orientation_selectivity"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.orientation_selectivity">[docs]</a><span class="k">def</span> <span class="nf">orientation_selectivity</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">)</span> <span class="o">-</span> <span class="n">spike_vector</span><span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span> <span class="o">%</span> <span class="mi">8</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">spike_vector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="weight_centroid"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.weight_centroid">[docs]</a><span class="k">def</span> <span class="nf">weight_centroid</span><span class="p">(</span><span class="n">weight</span><span class="p">):</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">weight</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">weight</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">((</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">x_coord</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">y_coord</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">x_coord</span><span class="p">,</span> <span class="n">y_coord</span></div>
+
+
+<div class="viewcode-block" id="rf_matching"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.rf_matching">[docs]</a><span class="k">def</span> <span class="nf">rf_matching</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">disparity</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">weight</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">:</span>
+        <span class="n">res_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">]):</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">weight</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">weight</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+                <span class="c1"># fig, ax = plt.subplots(2, 3)</span>
+                <span class="c1"># fig.suptitle(str(np.sum(np.abs(res))))</span>
+                <span class="c1"># ax[0, 0].imshow(weight[0, 0, 0])</span>
+                <span class="c1"># ax[0, 1].imshow(np.roll(weight[0, 1, 0], (x, y), axis=(0, 1)))</span>
+                <span class="c1"># ax[1, 0].imshow(weight[1, 0, 0])</span>
+                <span class="c1"># ax[1, 1].imshow(np.roll(weight[1, 1, 0], (x, y), axis=(0, 1)))</span>
+                <span class="c1"># ax[0, 2].imshow(np.abs(res[0]))</span>
+                <span class="c1"># ax[1, 2].imshow(np.abs(res[1]))</span>
+
+                <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span> <span class="o">&lt;</span> <span class="n">res_ref</span><span class="p">:</span>
+                    <span class="n">res_ref</span> <span class="o">=</span> <span class="n">res</span>
+                    <span class="n">xmax</span> <span class="o">=</span> <span class="n">x</span>
+                    <span class="n">ymax</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">residuals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res_ref</span><span class="p">)</span>
+        <span class="n">disparity</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">residuals</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">disparity</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_disparity_0"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.compute_disparity_0">[docs]</a><span class="k">def</span> <span class="nf">compute_disparity_0</span><span class="p">(</span><span class="n">spinet</span><span class="p">,</span> <span class="n">disparity</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">min_resi</span><span class="p">,</span> <span class="n">max_resi</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">mat</span><span class="p">):</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="c1"># fig.suptitle(&quot;Ground Truth Depth estimation per region&quot;, fontsize=30)</span>
+    <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1XAnchor&quot;</span><span class="p">])):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1YAnchor&quot;</span><span class="p">])):</span>
+            <span class="n">mask_residual</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">residuals</span><span class="p">[</span><span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1Depth&quot;</span><span class="p">]</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1Depth&quot;</span><span class="p">]]</span>
+                <span class="o">&lt;</span> <span class="mi">30</span>
+            <span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                <span class="n">residuals</span><span class="p">[</span><span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1Depth&quot;</span><span class="p">]</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1Depth&quot;</span><span class="p">]]</span>
+                <span class="o">&gt;</span> <span class="mf">0.5</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span>
+                    <span class="n">disparity</span><span class="p">[</span>
+                        <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1Depth&quot;</span><span class="p">]</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">conf</span><span class="p">[</span><span class="s2">&quot;L1Depth&quot;</span><span class="p">],</span>
+                        <span class="mi">0</span><span class="p">,</span>
+                    <span class="p">][</span><span class="n">mask_residual</span><span class="p">],</span>
+                    <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">],</span>
+                    <span class="n">bins</span><span class="o">=</span><span class="p">[</span><span class="mf">4.46</span><span class="p">,</span> <span class="mf">5.575</span><span class="p">,</span> <span class="mf">7.43</span><span class="p">,</span> <span class="mf">11.15</span><span class="p">,</span> <span class="mf">22.3</span><span class="p">,</span> <span class="mi">70</span><span class="p">],</span>
+                    <span class="n">stat</span><span class="o">=</span><span class="s2">&quot;density&quot;</span><span class="p">,</span>
+                    <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#2C363F&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">sns</span><span class="o">.</span><span class="n">histplot</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">][</span><span class="n">mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">70</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">],</span> <span class="n">stat</span><span class="o">=</span><span class="s2">&quot;density&quot;</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xticklabels</span><span class="p">(),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">setp</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">(),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Density&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">71</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+    
+    <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Depth (m)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+    
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;/home/thomas/Desktop/images/test&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_disparity"><a class="viewcode-back" href="../../../spiking_network.analysis.html#spiking_network.analysis.network_statistics.compute_disparity">[docs]</a><span class="k">def</span> <span class="nf">compute_disparity</span><span class="p">(</span>
+    <span class="n">spinet</span><span class="p">,</span> <span class="n">disparity</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">epsi_theta</span><span class="p">,</span> <span class="n">epsi_error</span><span class="p">,</span> <span class="n">epsi_residual</span>
+<span class="p">):</span>
+    <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">mask_residual</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">residual</span><span class="p">[</span><span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span>
+                <span class="o">&lt;</span> <span class="n">epsi_residual</span>
+            <span class="p">)</span>
+            <span class="n">mask_theta</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span>
+                <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">epsi_theta</span>
+            <span class="p">)</span> <span class="o">|</span> <span class="p">(</span>
+                <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span>
+                <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">epsi_theta</span>
+            <span class="p">)</span>
+            <span class="n">mask_error</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">error</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">epsi_error</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+                    <span class="s2">&quot;nb rf:&quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mask_error</span> <span class="o">&amp;</span> <span class="n">mask_theta</span> <span class="o">&amp;</span> <span class="n">mask_residual</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">mean: &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                            <span class="n">disparity</span><span class="p">[</span>
+                                <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">,</span> <span class="mi">0</span>
+                            <span class="p">][</span><span class="n">mask_theta</span> <span class="o">&amp;</span> <span class="n">mask_error</span><span class="p">]</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+                    <span class="n">disparity</span><span class="p">[</span><span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">,</span> <span class="mi">0</span><span class="p">][</span>
+                        <span class="n">mask_theta</span> <span class="o">&amp;</span> <span class="n">mask_error</span> <span class="o">&amp;</span> <span class="n">mask_residual</span>
+                    <span class="p">],</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">5.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">),</span>
+                    <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">mask_residual</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">residual</span><span class="p">[</span><span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span>
+                <span class="o">&lt;</span> <span class="n">epsi_residual</span>
+            <span class="p">)</span>
+            <span class="n">mask_theta</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">epsi_theta</span>
+            <span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span>
+                <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">epsi_theta</span>
+            <span class="p">)</span>
+            <span class="n">mask_error</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">error</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">epsi_error</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span>
+                    <span class="s2">&quot;nb rf:&quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mask_error</span> <span class="o">&amp;</span> <span class="n">mask_theta</span> <span class="o">&amp;</span> <span class="n">mask_residual</span><span class="p">))</span>
+                    <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">mean: &quot;</span>
+                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                            <span class="n">disparity</span><span class="p">[</span>
+                                <span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">,</span> <span class="mi">0</span>
+                            <span class="p">][</span><span class="n">mask_theta</span> <span class="o">&amp;</span> <span class="n">mask_error</span><span class="p">]</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+                    <span class="n">disparity</span><span class="p">[</span><span class="n">cnt</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span> <span class="p">:</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">spinet</span><span class="o">.</span><span class="n">l1depth</span><span class="p">,</span> <span class="mi">1</span><span class="p">][</span>
+                        <span class="n">mask_theta</span> <span class="o">&amp;</span> <span class="n">mask_error</span> <span class="o">&amp;</span> <span class="n">mask_residual</span>
+                    <span class="p">],</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">5.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">),</span>
+                    <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">Neuvisys</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Thomas Barbier.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

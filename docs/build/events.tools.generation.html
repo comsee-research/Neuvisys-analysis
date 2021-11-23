@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>events.tools.generation package &#8212; Neuvisys 0.0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="events-tools-generation-package">
+<h1>events.tools.generation package<a class="headerlink" href="#events-tools-generation-package" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-events.tools.generation.pix2nvs">
+<span id="events-tools-generation-pix2nvs-module"></span><h2>events.tools.generation.pix2nvs module<a class="headerlink" href="#module-events.tools.generation.pix2nvs" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Nov  9 04:47:53 2020</p>
+<p>&#64;author: alphat</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="events.tools.generation.pix2nvs.Pix2Eve">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">events.tools.generation.pix2nvs.</span></span><span class="sig-name descname"><span class="pre">Pix2Eve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_gap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_thresh_coef_shift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/events/tools/generation/pix2nvs.html#Pix2Eve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#events.tools.generation.pix2nvs.Pix2Eve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Transform frames into an event stream</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="events.tools.generation.pix2nvs.Pix2Eve.convert_frame">
+<span class="sig-name descname"><span class="pre">convert_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/events/tools/generation/pix2nvs.html#Pix2Eve.convert_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#events.tools.generation.pix2nvs.Pix2Eve.convert_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="events.tools.generation.pix2nvs.Pix2Eve.frame_to_events">
+<span class="sig-name descname"><span class="pre">frame_to_events</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">events</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/events/tools/generation/pix2nvs.html#Pix2Eve.frame_to_events"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#events.tools.generation.pix2nvs.Pix2Eve.frame_to_events" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="events.tools.generation.pix2nvs.Pix2Eve.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/events/tools/generation/pix2nvs.html#Pix2Eve.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#events.tools.generation.pix2nvs.Pix2Eve.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="events.tools.generation.pix2nvs.Pix2Eve.write_event">
+<span class="sig-name descname"><span class="pre">write_event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">events</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta_B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/events/tools/generation/pix2nvs.html#Pix2Eve.write_event"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#events.tools.generation.pix2nvs.Pix2Eve.write_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="events.tools.generation.pix2nvs.launch">
+<span class="sig-prename descclassname"><span class="pre">events.tools.generation.pix2nvs.</span></span><span class="sig-name descname"><span class="pre">launch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/events/tools/generation/pix2nvs.html#launch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#events.tools.generation.pix2nvs.launch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="events-tools-generation-stimuli-gen-module">
+<h2>events.tools.generation.stimuli_gen module<a class="headerlink" href="#events-tools-generation-stimuli-gen-module" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-events.tools.generation">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-events.tools.generation" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Neuvisys</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Thomas Barbier.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/events.tools.generation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

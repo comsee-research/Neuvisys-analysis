@@ -1,0 +1,50 @@
+CC       = g++
+FICSRC   = .cpp
+CFLAGS   = -O3 -march=pentium4 -Wall -ansi -pthread -I.
+LIBS     =
+
+# nom du fichier executable
+BIN = configgps
+
+SRC += $(filter-out . ,$(shell find . -name '*$(FICSRC)' -printf "%P "))
+OBJ = $(SRC:$(FICSRC)=.o)
+RM=rm -f
+
+$(BIN): init $(OBJ)
+	@echo   Creation de l executable $@
+	@$(CC) -o $(BIN) $(OBJ) $(LIBS)
+
+$(FICSRC).o:
+	@echo   Compilation de $<
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+__cleandep:
+	@sed -e "/^init:/,$$ d" Makefile >dependances
+	@echo "init:" >> dependances
+	@echo "#DEPENDANCIES" >> dependances
+	@cat dependances > Makefile
+	@rm dependances
+
+cleandep:
+	@echo   Nettoyage des dependances
+	@sed -e "/^init:/,$$ d" Makefile >dependances
+	@echo "init: clean dep" >> dependances
+	@echo "#DEPENDANCIES" >> dependances
+	@cat dependances > Makefile
+	@rm dependances
+
+dep: __cleandep
+	@echo   Generation des dependances
+	@$(CC) $(CFLAGS) $(CXXFLAGS) -MM $(SRC) >> Makefile
+
+clean:
+	@echo   Suppression des fichiers temporaires
+	@-$(RM) $(OBJ) *~ \#*\#
+	@find . \( -name "*~" -o -name "\#*\#" \) -print0 | xargs -0 rm -rf ;
+	@echo   Suppression de l executable
+	@-$(RM) $(BIN)
+
+init:
+#DEPENDANCIES
+main.o: main.cpp libserie/comserie.hpp
+comserie.o: libserie/comserie.cpp libserie/comserie.hpp

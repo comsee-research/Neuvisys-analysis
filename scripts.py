@@ -77,13 +77,20 @@ spinet = SpikingNetwork(network_path)
 # %% Display weights
 
 display_network([spinet])
+# plt.matshow(np.sum(spinet.complex_cells[2].weights, axis=2).T)
+
+# a = np.zeros((24, 4, 64))
+# for i in range(24):
+#     for j in range(4):
+#         for k in range(64):
+#             a[i, j, k] = spinet.simple_cells[spinet.layout1[i, j, k]].params["count_spike"]
 
 
 # %% //!!!\\ Delete weights network
 
 clean_network(
     network_path,
-    simple_cells=True,
+    simple_cells=False,
     complex_cells=True,
     motor_cells=True,
     json_only=False,
@@ -97,7 +104,7 @@ generate_network_files(home + "neuvisys-dv/configuration/")
 
 # %% Load events
 
-events = load_aedat4(home + "Desktop/shape_hovering_fast.aedat4")
+events = load_aedat4(home + "Desktop/shapes.aedat4")
 
 
 # %% Load rosbag and convert it to npdat

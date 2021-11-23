@@ -29,28 +29,28 @@ def reshape_weights(weights, width, height):
 def clean_network(path, simple_cells, complex_cells, motor_cells, json_only):
     if json_only:
         if simple_cells:
-            for file in os.listdir(path + "weights/simple_cells/"):
+            for file in os.listdir(path + "weights/0/"):
                 if file.endswith(".json"):
-                    os.remove(path + "weights/simple_cells/" + file)
+                    os.remove(path + "weights/0/" + file)
         if complex_cells:
-            for file in os.listdir(path + "weights/complex_cells/"):
+            for file in os.listdir(path + "weights/1/"):
                 if file.endswith(".json"):
-                    os.remove(path + "weights/complex_cells/" + file)
+                    os.remove(path + "weights/1/" + file)
         if motor_cells:
-            for file in os.listdir(path + "weights/motor_cells/"):
+            for file in os.listdir(path + "weights/2/"):
                 if file.endswith(".json"):
-                    os.remove(path + "weights/motor_cells/" + file)
+                    os.remove(path + "weights/2/" + file)
     else:
         if simple_cells:
-            delete_files(path + "weights/simple_cells/")
+            delete_files(path + "weights/0/")
         if complex_cells:
-            delete_files(path + "weights/complex_cells/")
+            delete_files(path + "weights/1/")
         if motor_cells:
-            delete_files(path + "weights/motor_cells/")
+            delete_files(path + "weights/2/")
         delete_files(path + "images/complex_connections/")
         delete_files(path + "images/simple_cells/")
         delete_files(path + "images/complex_cells/")
-        os.remove(path + "learning_trace.txt")
+        os.remove(path + "networkState.json")
 
 
 class SpikingNetwork:
@@ -69,13 +69,13 @@ class SpikingNetwork:
 
         self.nb_neurons = 0
         self.simple_cells, self.sspikes = self.load_weights(
-            "weights/simple_cells", "simple_cell"
+            "weights/0", "simple_cell"
         )
         self.complex_cells, self.cspikes = self.load_weights(
-            "weights/complex_cells", "complex_cell"
+            "weights/1", "complex_cell"
         )
         self.motor_cells, self.mspikes = self.load_weights(
-            "weights/motor_cells", "motor_cell"
+            "weights/2", "motor_cell"
         )
 
         self.nb_simple_cells = len(self.simple_cells)
@@ -111,7 +111,7 @@ class SpikingNetwork:
             neuron = Neuron(
                 cell_type,
                 self.path + "configs/" + cell_type + "_config.json",
-                self.path + "weights/" + cell_type + "s/",
+                self.path + cell_path + "/",
                 *paths
             )
             neurons.append(neuron)

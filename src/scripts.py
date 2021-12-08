@@ -132,7 +132,7 @@ random_params("/home/thomas/neuvisys-dv/cmake-build-release", "/home/thomas/Desk
 
 # %% Load events
 
-events = load_aedat4(home + "Desktop/shape_hovering_fast.aedat4")
+events = load_aedat4(home + "Desktop/shapes.aedat4")
 
 
 # %% Load rosbag and convert it to npdat

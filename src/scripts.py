@@ -84,7 +84,7 @@ scores = []
 
 networks = np.array([1, 2, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16, 23, 27, 28, 29, 31 ,32, 33, 35])
 for name in networks:
-    spinet = SpikingNetwork("/home/thomas/Desktop/Networks/network_" + str(name) + "/")
+    spinet = SpikingNetwork("/home/thomas/Desktop/Networks/network_" + str(name) + "/", False)
     scores.append(spinet.state["learning_data"]["score"])
     
 scores = np.array(scores)
@@ -93,7 +93,7 @@ indices = np.argsort(means)[::-1]
 
 df = []
 for index in networks[indices]:
-    spinet = SpikingNetwork("/home/thomas/Desktop/Networks/network_" + str(index) + "/")
+    spinet = SpikingNetwork("/home/thomas/Desktop/Networks/network_" + str(index) + "/", False)
     update_dataframe(df, spinet)
 
 df = pd.DataFrame(df)

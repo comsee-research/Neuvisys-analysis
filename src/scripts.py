@@ -19,32 +19,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from spiking_network.network.neuvisys import SpikingNetwork, clean_network
-from events.tools.read_write.aedat_tools import (
+from src.spiking_network.network.neuvisys import SpikingNetwork, clean_network
+from src.events.tools.read_write.aedat_tools import (
     load_aedat4,
 )
-from events.tools.read_write.events_tools import (
+from src.events.tools.read_write.events_tools import (
     write_npz,
     npaedat_to_np,
     ros_to_npy,
 )
-from events.tools.modification.event_modification import (
+from src.events.tools.modification.event_modification import (
     show_event_images,
     rectify_events,
     remove_events,
 )
-from frames.frame_analysis import (
+from src.frames.frame_analysis import (
     load_frames,
     rectify_frames,
     write_frames,
     stereo_matching,
 )
-from spiking_network.analysis.network_display import (
+from src.spiking_network.analysis.network_display import (
     display_network,
     load_array_param,
     complex_cells_directions,
 )
-from spiking_network.analysis.network_statistics import (
+from src.spiking_network.analysis.network_statistics import (
     compute_disparity_0,
     rf_matching,
     direction_norm_length,
@@ -53,19 +53,19 @@ from spiking_network.analysis.network_statistics import (
     orientation_selectivity,
     update_dataframe,
 )
-from spiking_network.planning.network_planner import (
+from src.spiking_network.planning.network_planner import (
     create_networks,
     random_params,
     launch_neuvisys_multi_pass,
     toggle_learning,
     divide_visual_field,
 )
-from spiking_network.gabor.gabbor_fitting import (
+from src.spiking_network.gabor.gabbor_fitting import (
     create_gabor_basis,
     hists_preferred_orientations,
     plot_preferred_orientations,
 )
-from spiking_network.analysis.parameter_analysis import (
+from src.spiking_network.analysis.parameter_analysis import (
     correlation_matrix,
     scatter_mat,
 )

@@ -1,7 +1,8 @@
 import random
 from PIL import Image, ImageDraw
 import numpy as np
-from events.tools.read_write.aedat_tools import load_aedat4
+from src.events.tools.read_write.aedat_tools import load_aedat4
+
 
 def concatenate_files(aedat4_files):
     list_events = []
@@ -14,6 +15,7 @@ def concatenate_files(aedat4_files):
         last_tmsp = events[-1]["timestamp"]
         list_events.append(events)
     return np.hstack(list_events)
+
 
 def divide_events(events, chunk_size):
     first_timestamp = events["timestamp"][0]
@@ -31,6 +33,7 @@ def divide_events(events, chunk_size):
             print("error spliting events")
     return splits, first_timestamp
 
+
 def build_mixed_file(files, chunk_size):
     splits = []
     f_timestamps = []
@@ -46,15 +49,17 @@ def build_mixed_file(files, chunk_size):
 
     return np.hstack(splits)
 
+
 def remove_blank_space(aedat4_file, outfile, x_size, y_size):
     events = load_aedat4(aedat4_file)
     times = events["timestamp"]
 
     diff = np.diff(times)
     arg = np.argwhere(diff > 1000000)[0][0]
-    times[arg + 1 :] -= diff[arg]
+    times[arg + 1:] -= diff[arg]
 
     return events
+
 
 def show_event_images(events, time_gap, width, height, dest, rec, side):
     cnt = 0
@@ -76,6 +81,7 @@ def show_event_images(events, time_gap, width, height, dest, rec, side):
         time += time_gap
         img = np.zeros((height, width, 3))
 
+
 def rectify_events(events, lx, ly, rx, ry):
     events[0]["x"] += lx
     events[0]["y"] += ly
@@ -87,15 +93,16 @@ def rectify_events(events, lx, ly, rx, ry):
         & (events[0]["x"] >= 0)
         & (events[0]["y"] < 260)
         & (events[0]["y"] >= 0)
-    ]
+        ]
     r_events = events[1][
         (events[1]["x"] < 346)
         & (events[1]["x"] >= 0)
         & (events[1]["y"] < 260)
         & (events[1]["y"] >= 0)
-    ]
+        ]
 
     return l_events, r_events
+
 
 def remove_events(events, timestamp_starts, timestamp_end):
     l_events = events[0]

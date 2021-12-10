@@ -33,6 +33,7 @@ def pdf_simple_cell(spinet, layer, camera):
                 pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
+
 def pdf_simple_cell_left_right_combined(spinet, layer):
     pdf = FPDF(
         "P", "mm", (11 * spinet.conf["L1Width"], 24 * spinet.conf["L1Height"] * spinet.conf["Neuron1Synapses"],),
@@ -81,7 +82,7 @@ def pdf_weight_sharing(spinet, camera):
         side = int(np.sqrt(spinet.l_shape[0, 2]))
         xpatch = spinet.p_shape[0, 0].shape[0]
         ypatch = spinet.p_shape[0, 1].shape[0]
-    pdf = FPDF("P", "mm", (11 * xpatch * side + (xpatch - 1) * 10, 11 * ypatch * side + (ypatch - 1) * 10,),)
+    pdf = FPDF("P", "mm", (11 * xpatch * side + (xpatch - 1) * 10, 11 * ypatch * side + (ypatch - 1) * 10,), )
     pdf.add_page()
 
     pos_x = 0
@@ -94,17 +95,17 @@ def pdf_weight_sharing(spinet, camera):
             0, len(spinet.neurons[0]), spinet.l_shape[0, 2] * spinet.l_shape[0, 0] * spinet.l_shape[0, 1],
         )
     for i in cell_range:
-        for neuron in spinet.neurons[0][i : i + spinet.l_shape[0, 2]]:
+        for neuron in spinet.neurons[0][i: i + spinet.l_shape[0, 2]]:
             x, y, z = neuron.params["position"]
             pos_x = (
-                (x // spinet.l_shape[0, 0]) * side * 11
-                + np.where(shift == z)[0][0] * 11
-                + (x // spinet.l_shape[0, 0]) * 10
+                    (x // spinet.l_shape[0, 0]) * side * 11
+                    + np.where(shift == z)[0][0] * 11
+                    + (x // spinet.l_shape[0, 0]) * 10
             )  # patch size + weight sharing shift + patch padding
             pos_y = (
-                (y // spinet.l_shape[0, 1]) * side * 11
-                + np.where(shift == z)[1][0] * 11
-                + (y // spinet.l_shape[0, 1]) * 10
+                    (y // spinet.l_shape[0, 1]) * side * 11
+                    + np.where(shift == z)[1][0] * 11
+                    + (y // spinet.l_shape[0, 1]) * 10
             )
             pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
@@ -126,19 +127,19 @@ def pdf_weight_sharing_left_right_combined(spinet):
     pos_y = 0
     shift = np.arange(spinet.conf["L1Depth"]).reshape((side, side))
     for i in range(
-        0, spinet.nb_simple_cells, spinet.conf["L1Depth"] * spinet.conf["L1Width"] * spinet.conf["L1Height"],
+            0, spinet.nb_simple_cells, spinet.conf["L1Depth"] * spinet.conf["L1Width"] * spinet.conf["L1Height"],
     ):
-        for neuron in spinet.neurons[0][i : i + spinet.conf["L1Depth"]]:
+        for neuron in spinet.neurons[0][i: i + spinet.conf["L1Depth"]]:
             x, y, z = neuron.params["position"]
             pos_x = (
-                (x // spinet.conf["L1Width"]) * side * 11
-                + np.where(shift == z)[0][0] * 11
-                + (x // spinet.conf["L1Width"]) * 10
+                    (x // spinet.conf["L1Width"]) * side * 11
+                    + np.where(shift == z)[0][0] * 11
+                    + (x // spinet.conf["L1Width"]) * 10
             )  # patch size + weight sharing shift (x2) + patch padding
             pos_y = (
-                (y // spinet.conf["L1Height"]) * side * 24
-                + np.where(shift == z)[1][0] * 24
-                + (y // spinet.conf["L1Height"]) * 10
+                    (y // spinet.conf["L1Height"]) * side * 24
+                    + np.where(shift == z)[1][0] * 24
+                    + (y // spinet.conf["L1Height"]) * 10
             )
             pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
             pdf.image(neuron.weight_images[1], x=pos_x, y=pos_y + 11, w=10, h=10)
@@ -182,37 +183,37 @@ def pdf_complex_cell(spinet, zcell, layer):
             for z, k in enumerate(sort_connections(spinet, complex_cell, spinet.n_shape[layer, 2])):
                 for i in range(ox, ox + spinet.l_shape[layer, 0]):
                     for j in range(oy, oy + spinet.l_shape[layer, 1]):
-                        simple_cell = spinet.neurons[0][spinet.layout[layer-1][i, j, k]]
+                        simple_cell = spinet.neurons[0][spinet.layout[layer - 1][i, j, k]]
                         xs, ys, zs = simple_cell.params["position"]
 
                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
                         path = (
-                            spinet.path
-                            + "figures/1/tmp/"
-                            + str(c)
-                            + "_simple_"
-                            + str(spinet.layout[layer-1][i, j, k])
-                            + ".png"
+                                spinet.path
+                                + "figures/1/tmp/"
+                                + str(c)
+                                + "_simple_"
+                                + str(spinet.layout[layer - 1][i, j, k])
+                                + ".png"
                         )
                         Image.fromarray(img.astype("uint8")).save(path)
 
                         heatmap[ys - oy, xs - ox] += weight_sc
                         if np.argmax(complex_cell.weights[ys - oy, xs - ox]) == k:
-                            heatmap_rf[30 * (ys - oy) : 30 * (ys - oy + 1), 30 * (xs - ox) : 30 * (xs - ox + 1),] = (
-                                np.array(Image.open(simple_cell.weight_images[0])) * weight_sc
+                            heatmap_rf[30 * (ys - oy): 30 * (ys - oy + 1), 30 * (xs - ox): 30 * (xs - ox + 1), ] = (
+                                    np.array(Image.open(simple_cell.weight_images[0])) * weight_sc
                             )
 
                         pos_x = xc * (11 * spinet.l_shape[layer, 0] + 10) + (xs - ox) * 11
                         pos_y = (
-                            yc
-                            * (
-                                11 * spinet.l_shape[layer, 1] * spinet.n_shape[layer, 2]
-                                + spinet.n_shape[layer, 2] * 2
-                                + 10
-                            )
-                            + z * (11 * spinet.l_shape[layer, 1] + 2)
-                            + (ys - oy) * 11
+                                yc
+                                * (
+                                        11 * spinet.l_shape[layer, 1] * spinet.n_shape[layer, 2]
+                                        + spinet.n_shape[layer, 2] * 2
+                                        + 10
+                                )
+                                + z * (11 * spinet.l_shape[layer, 1] + 2)
+                                + (ys - oy) * 11
                         )
                         pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
             plt.figure()
@@ -267,34 +268,7 @@ def plot_directions(spinet, directions, rotations):
     angles = np.append(rotations, 0) * np.pi / 180
     spike_vector = temp
 
-    vectors = []
-
-    for i in range(spike_vector.shape[1]):
-        mean = mean_response(spike_vector[:-1, i], angles[:-1])
-        vectors.append(mean)
-        plt.figure()
-        ax = plt.subplot(111, polar=True)
-        # ax.set_title("Cell "+str(i))
-        ax.plot(angles, spike_vector[:, i], "darkslategrey")
-        ax.arrow(
-            np.angle(mean),
-            0,
-            0,
-            2 * np.abs(mean),
-            width=0.02,
-            head_width=0,
-            head_length=0,
-            length_includes_head=True,
-            edgecolor="firebrick",
-            lw=2,
-            zorder=5,
-        )
-        ax.set_thetamax(360)
-        ax.set_theta_zero_location("N")
-        ax.set_theta_direction(-1)
-        plt.setp(ax.get_xticklabels(), fontsize=15)
-        plt.setp(ax.get_yticklabels(), fontsize=13)
-        plt.savefig(spinet.path + "figures/complex_directions/" + str(i), bbox_inches="tight")
+    vectors = create_figure(spinet, spike_vector, angles, "complex_directions")
     return vectors
 
 
@@ -305,8 +279,12 @@ def plot_orientations(spinet, orientations, rotations):
     angles = np.append(rotations[::2], 0) * np.pi / 180
     spike_vector = temp
 
-    vectors = []
+    vectors = create_figure(spinet, spike_vector, angles, "complex_orientations")
+    return vectors
 
+
+def create_figure(spinet, spike_vector, angles, name):
+    vectors = []
     for i in range(spike_vector.shape[1]):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
         vectors.append(mean)
@@ -330,11 +308,11 @@ def plot_orientations(spinet, orientations, rotations):
         ax.set_thetamax(360)
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
-        ax.set_xticklabels(["0°", "22.5°", "45°", "67.5°", "90°", "112.5°", "135°", "157.5°"])
         plt.setp(ax.get_xticklabels(), fontsize=15)
         plt.setp(ax.get_yticklabels(), fontsize=13)
-        plt.savefig(spinet.path + "figures/complex_orientations/" + str(i), bbox_inches="tight")
-    return vectors
+        ax.set_xticklabels(["0°", "22.5°", "45°", "67.5°", "90°", "112.5°", "135°", "157.5°"])
+        plt.savefig(spinet.path + "figures/" + name + "/" + str(i), bbox_inches="tight")
+        return vectors
 
 
 def mean_response(directions, angles):
@@ -345,7 +323,7 @@ def display_network(spinets):
     for spinet in spinets:
         spinet.generate_weight_images()
 
-        if spinet.conf["sharingType"] == "patch" or spinet.conf["sharingType"] == "full":
+        if spinet.conf["sharingType"] == "patch":
             for i in range(spinet.conf["nbCameras"]):
                 pdf = pdf_weight_sharing(spinet, i)
                 pdf.output(

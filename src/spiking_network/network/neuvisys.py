@@ -18,7 +18,7 @@ from src.events.tools.read_write.events_tools import delete_files
 
 def compress_weight(weights, path):
     img = np.array(255 * (weights / weights.max()), dtype=np.uint8)
-    img = Image.fromarray(img).save(path)
+    Image.fromarray(img).save(path)
 
 
 def reshape_weights(weights, width, height):
@@ -51,52 +51,21 @@ class SpikingNetwork:
                 self.actor_conf = json.load(file)
             with open(path + "networkState.json") as file:
                 self.state = json.load(file)
-        except:
-            print("could not load some config file")
+        except FileNotFoundError as e:
+            print(e)
 
         self.nb_neurons = 0
         self.neurons = []
         self.spikes = []
-<<<<<<< HEAD
-        if loading:
-            layer1, spikes1 = self.load_weights(0, "simple_cell", "simple_cell_config.json")
-            self.neurons.append(layer1)
-            self.spikes.append(spikes1)
-    
-            layer2, spikes2 = self.load_weights(1, "complex_cell", "complex_cell_config.json")
-            self.neurons.append(layer2)
-            self.spikes.append(spikes2)
-    
-            layer3, spikes3 = self.load_weights(2, "motor_cell", "critic_cell_config.json")
-            self.neurons.append(layer3)
-            self.spikes.append(spikes3)
-            
-            layer4, spikes4 = self.load_weights(3, "motor_cell", "actor_cell_config.json")
-            self.neurons.append(layer4)
-            self.spikes.append(spikes4)
-=======
-        layer1, spikes1 = self.load_weights(0, "simple_cell", "simple_cell_config.json")
-        self.neurons.append(layer1)
-        self.spikes.append(spikes1)
-
-        layer2, spikes2 = self.load_weights(1, "complex_cell", "complex_cell_config.json")
-        self.neurons.append(layer2)
-        self.spikes.append(spikes2)
-
-        layer3, spikes3 = self.load_weights(2, "motor_cell", "critic_cell_config.json")
-        self.neurons.append(layer3)
-        self.spikes.append(spikes3)
-
-        layer4, spikes4 = self.load_weights(3, "motor_cell", "actor_cell_config.json")
-        self.neurons.append(layer4)
-        self.spikes.append(spikes4)
->>>>>>> f1adf8ff36671f83e76378e3117064d9981d5178
-
         self.layout = []
-        self.layout.append(np.load(path + "weights/layout_0.npy"))
-        self.layout.append(np.load(path + "weights/layout_1.npy"))
-        self.layout.append(np.load(path + "weights/layout_2.npy"))
-        self.layout.append(np.load(path + "weights/layout_3.npy"))
+        type_to_config = {"SimpleCell": "simple_cell_config.json", "ComplexCell": "complex_cell_config.json",
+                          "CriticCell": "critic_cell_config.json", "ActorCell": "actor_cell_config.json"}
+        if loading:
+            for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
+                neurons, spikes = self.load_weights(layer, neuron_type, type_to_config[neuron_type])
+                self.neurons.append(neurons)
+                self.spikes.append(spikes)
+                self.layout.append(np.load(path + "weights/layout_"+str(layer)+".npy"))
 
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:
@@ -162,15 +131,9 @@ class SpikingNetwork:
     def get_weights(self, neuron_type):
         if neuron_type == "simple":
             weights = []
-<<<<<<< HEAD
             if self.conf["sharingType"] == "full":
-                weights = [neuron.weights for neuron in self.simple_cells[0 : self.conf["L1Depth"]]]
-            elif self.conf["sharingType"] == "patch":
-=======
-            if self.conf["SharingType"] == "full":
                 weights = [neuron.weights for neuron in self.simple_cells[0: self.conf["L1Depth"]]]
-            elif self.conf["SharingType"] == "patch":
->>>>>>> f1adf8ff36671f83e76378e3117064d9981d5178
+            elif self.conf["sharingType"] == "patch":
                 for i in range(
                         0, self.nb_simple_cells, self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"],
                 ):

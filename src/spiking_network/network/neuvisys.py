@@ -13,7 +13,7 @@ from PIL import Image
 import scipy.io as sio
 import numpy as np
 import itertools
-from events.tools.read_write.events_tools import delete_files
+from src.events.tools.read_write.events_tools import delete_files
 
 
 def compress_weight(weights, path):
@@ -31,6 +31,7 @@ def clean_network(path, layers):
         delete_files(path + "weights/" + str(i) + "/")
         delete_files(path + "images/" + str(i) + "/")
     os.remove(path + "networkState.json")
+
 
 class SpikingNetwork:
     """Spiking Neural Network class"""
@@ -56,6 +57,7 @@ class SpikingNetwork:
         self.nb_neurons = 0
         self.neurons = []
         self.spikes = []
+<<<<<<< HEAD
         if loading:
             layer1, spikes1 = self.load_weights(0, "simple_cell", "simple_cell_config.json")
             self.neurons.append(layer1)
@@ -72,6 +74,23 @@ class SpikingNetwork:
             layer4, spikes4 = self.load_weights(3, "motor_cell", "actor_cell_config.json")
             self.neurons.append(layer4)
             self.spikes.append(spikes4)
+=======
+        layer1, spikes1 = self.load_weights(0, "simple_cell", "simple_cell_config.json")
+        self.neurons.append(layer1)
+        self.spikes.append(spikes1)
+
+        layer2, spikes2 = self.load_weights(1, "complex_cell", "complex_cell_config.json")
+        self.neurons.append(layer2)
+        self.spikes.append(spikes2)
+
+        layer3, spikes3 = self.load_weights(2, "motor_cell", "critic_cell_config.json")
+        self.neurons.append(layer3)
+        self.spikes.append(spikes3)
+
+        layer4, spikes4 = self.load_weights(3, "motor_cell", "actor_cell_config.json")
+        self.neurons.append(layer4)
+        self.spikes.append(spikes4)
+>>>>>>> f1adf8ff36671f83e76378e3117064d9981d5178
 
         self.layout = []
         self.layout.append(np.load(path + "weights/layout_0.npy"))
@@ -87,18 +106,17 @@ class SpikingNetwork:
         if os.path.exists(self.path + "gabors/data/direction_response.npy"):
             self.directions = np.load(self.path + "gabors/data/direction_response.npy")
             self.orientations = self.directions[0:8] + self.directions[8:16]
-            
+
         self.p_shape = np.array(self.conf["layerPatches"])
         self.l_shape = np.array(self.conf["layerSizes"])
         self.n_shape = np.array(self.conf["neuronSizes"])
-
 
     def load_weights(self, layer, cell_type, config):
         neurons = []
         spike_train = []
 
         neurons_paths = natsorted(os.listdir(self.path + "weights/" + str(layer) + "/"))
-        for paths in [neurons_paths[i : i + 2] for i in range(0, len(neurons_paths), 2)]:
+        for paths in [neurons_paths[i: i + 2] for i in range(0, len(neurons_paths), 2)]:
             neuron = Neuron(
                 cell_type,
                 self.path + "configs/" + config,
@@ -121,14 +139,14 @@ class SpikingNetwork:
                                 neuron.weights[:, camera, synapse], self.n_shape[layer, 0], self.n_shape[layer, 1],
                             )
                             path = (
-                                self.path
-                                + "images/0/"
-                                + str(i)
-                                + "_syn"
-                                + str(synapse)
-                                + "_cam"
-                                + str(camera)
-                                + ".png"
+                                    self.path
+                                    + "images/0/"
+                                    + str(i)
+                                    + "_syn"
+                                    + str(synapse)
+                                    + "_cam"
+                                    + str(camera)
+                                    + ".png"
                             )
                             compress_weight(weights, path)
                             neuron.weight_images.append(path)
@@ -144,13 +162,19 @@ class SpikingNetwork:
     def get_weights(self, neuron_type):
         if neuron_type == "simple":
             weights = []
+<<<<<<< HEAD
             if self.conf["sharingType"] == "full":
                 weights = [neuron.weights for neuron in self.simple_cells[0 : self.conf["L1Depth"]]]
             elif self.conf["sharingType"] == "patch":
+=======
+            if self.conf["SharingType"] == "full":
+                weights = [neuron.weights for neuron in self.simple_cells[0: self.conf["L1Depth"]]]
+            elif self.conf["SharingType"] == "patch":
+>>>>>>> f1adf8ff36671f83e76378e3117064d9981d5178
                 for i in range(
-                    0, self.nb_simple_cells, self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"],
+                        0, self.nb_simple_cells, self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"],
                 ):
-                    weights += [neuron.weights for neuron in self.simple_cells[i : i + self.conf["L1Depth"]]]
+                    weights += [neuron.weights for neuron in self.simple_cells[i: i + self.conf["L1Depth"]]]
             else:
                 weights = [neuron.weights for neuron in self.simple_cells]
             return np.array(weights)
@@ -162,7 +186,7 @@ class SpikingNetwork:
         basis = np.zeros((2 * w, len(weights)))
         for c in range(self.conf["nbCameras"]):
             for i, weight in enumerate(weights):
-                basis[c * w : (c + 1) * w, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
+                basis[c * w: (c + 1) * w, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
         sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
 
         return basis

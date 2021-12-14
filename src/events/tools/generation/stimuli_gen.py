@@ -6,10 +6,10 @@ Created on Tue Aug  4 13:56:18 2020
 @author: thomas
 """
 
-from psychopy import visual
-import numpy as np
 import cv2 as cv
+import numpy as np
 from PIL import Image
+from psychopy import visual
 from scipy import ndimage
 
 
@@ -24,9 +24,7 @@ def counterphase_grating(win, frequency=1 / 346, orientation=0, phase=0, contras
     grat_stim.draw()
 
 
-def grating_generation(
-    folder, display=False, time=0.2, framerate=1000, flash_period=0.1
-):
+def grating_generation(folder, display=False, time=0.2, framerate=1000, flash_period=0.1):
     """
     time # s
     framerate # fps
@@ -102,7 +100,9 @@ def moving_lines(folder, time=10, framerate=1000, speed=200, rotation=0):
         cnt += 1
 
 
-def moving_bars(folder, framerate=1000, speeds=[400, 200, 100, 50], rotation=0):
+def moving_bars(folder, framerate=1000, speeds=None):
+    if speeds is None:
+        speeds = [400, 200, 100, 50]
     frame = 0
     y = np.linspace(0, 260, len(speeds) + 1, dtype=np.uint16)
     shift = 0
@@ -121,13 +121,11 @@ def moving_bars(folder, framerate=1000, speeds=[400, 200, 100, 50], rotation=0):
         frame += 1
 
 
-def disparity_bars(
-    folder,
-    framerate=1000,
-    speeds=[400, 200, 100, 50],
-    disparities=[8, 6, 4, 2],
-    rotation=0,
-):
+def disparity_bars(folder, framerate=1000, speeds=None, disparities=None):
+    if disparities is None:
+        disparities = [8, 6, 4, 2]
+    if speeds is None:
+        speeds = [400, 200, 100, 50]
     frame = 0
     x = np.array(disparities, dtype=np.uint16)
     y = np.linspace(0, 260, len(disparities) + 1, dtype=np.uint16)
@@ -147,14 +145,3 @@ def disparity_bars(
         image = Image.fromarray(img)
         image.save(folder + "img" + str(frame) + ".png")
         frame += 1
-
-
-disparity_bars(
-    "/home/alphat/Desktop/stimulus/disparity_bars/left/", disparities=[0, 0, 0, 0]
-)
-disparity_bars(
-    "/home/alphat/Desktop/stimulus/disparity_bars/right/", disparities=[8, 6, 4, 2]
-)
-
-# for rotation in [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]:
-#     moving_lines("/home/alphat/Desktop/stimulus/lines_"+str(rotation)+"/", rotation=rotation)

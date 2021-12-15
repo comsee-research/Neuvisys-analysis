@@ -9,7 +9,7 @@ Created on Tue Aug  4 13:56:18 2020
 import cv2 as cv
 import numpy as np
 from PIL import Image
-from psychopy import visual
+#from psychopy import visual
 from scipy import ndimage
 
 
@@ -80,8 +80,8 @@ def falling_leaves(time=10, framerate=1000, nb_circle_frame=4):
         cnt += 1
 
 
-def moving_lines(folder, time=10, framerate=1000, speed=200, rotation=0):
-    cnt = 0
+def moving_lines(folder, time=10, framerate=1000, speed=200, rotation=0, frame_start=0):
+    cnt = frame_start
     positions = np.linspace(0, 550, 15, dtype=np.uint16)
 
     for frame in range(int(time * framerate)):

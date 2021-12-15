@@ -1,7 +1,10 @@
+import json
+import os
+import shutil
+
 import numpy as np
 import rosbag
-import json
-import os, shutil
+
 
 def delete_files(path):
     for file in os.scandir(path):
@@ -13,9 +16,11 @@ def delete_files(path):
         except Exception as e:
             print("Failed to delete %s. Reason: %s" % (file.path, e))
 
+
 def load_params(param_path):
     with open(param_path) as file:
         return json.load(file)
+
 
 def write_npz(dest, events):
     if type(events) is tuple:
@@ -67,6 +72,7 @@ def write_npz(dest, events):
             except:
                 raise
 
+
 def txt_to_events(file_path):
     arr = []
     with open(file_path, "r") as file:
@@ -76,6 +82,7 @@ def txt_to_events(file_path):
     events = np.array(arr)
     events = events[events[:, 2].argsort()]
     return events
+
 
 def h5py_to_npy(events):
     npy_events = np.zeros(
@@ -89,6 +96,7 @@ def h5py_to_npy(events):
 
     return npy_events
 
+
 def ros_to_npy(bag_file, topic):
     bag = rosbag.Bag(bag_file)
     npy_events = []
@@ -98,6 +106,7 @@ def ros_to_npy(bag_file, topic):
             npy_events.append([event.ts.to_nsec(), event.x, event.y, event.polarity])
     return np.array(npy_events)
 
+
 def npz_to_arr(t, x, y, p):
     eve = np.zeros((t.shape[0], 4))
     eve[:, 0] = t
@@ -105,6 +114,7 @@ def npz_to_arr(t, x, y, p):
     eve[:, 2] = y
     eve[:, 3] = p
     return eve
+
 
 def npaedat_to_np(events):
     eve = np.zeros((events["timestamp"].shape[0], 4))

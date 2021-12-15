@@ -6,14 +6,16 @@ Created on Wed Apr  8 03:46:47 2020
 @author: thomas
 """
 
+import numpy as np
 from dv import AedatFile
 from dv import LegacyAedatFile
-import numpy as np
+
 
 def load_aedat(file_path):
     with LegacyAedatFile(file_path) as f:
         for e in f:
             print(e.x, e.y)
+
 
 def load_aedat4(file_path):
     with AedatFile(file_path) as f:

@@ -6,24 +6,27 @@ Created on Mon Nov  9 04:47:53 2020
 @author: alphat
 """
 
+import os
+
 import numpy as np
 from PIL import Image
-import os
 from natsort import natsorted
-import matplotlib.pyplot as plt
+
 
 class Pix2Eve:
-    """Transform frames into an event stream"""
+    """Transform frames into an event stream
+    folder: folder which contains the frames
+    time_gap: time between each frames"""
 
     def __init__(
-        self,
-        folder,
-        time_gap,
-        log_threshold=20,
-        map_threshold=0.4,
-        swin=1,
-        n_max=5,
-        adapt_thresh_coef_shift=0.05,
+            self,
+            folder,
+            time_gap,
+            log_threshold=20,
+            map_threshold=0.4,
+            swin=1,
+            n_max=5,
+            adapt_thresh_coef_shift=0.05,
     ):
         self.folder = folder
         self.time_gap = time_gap
@@ -70,10 +73,10 @@ class Pix2Eve:
             )
 
         threshold_map[(delta > threshold_map) | (delta < -threshold_map)] *= (
-            1 + self.adapt_thresh_coef_shift
+                1 + self.adapt_thresh_coef_shift
         )
         threshold_map[(delta <= threshold_map) & (delta >= -threshold_map)] *= (
-            1 - self.adapt_thresh_coef_shift
+                1 - self.adapt_thresh_coef_shift
         )
 
     def run(self):
@@ -157,23 +160,3 @@ class Pix2Eve:
 #                     print(str(100 * frame_id / len(frames)) + "%...")
 
 #         return np.array(events)
-
-def launch():
-    framerate = 1000
-    time_gap = 1e6 * 1 / framerate
-
-    pix2eve = Pix2Eve(
-        "/home/alphat/Desktop/stimulus/disparity_bars/right/",
-        time_gap=time_gap,
-        log_threshold=0,
-        map_threshold=0.4,
-        n_max=5,
-        adapt_thresh_coef_shift=0.05,
-    )
-    events = pix2eve.run()
-    events = events[events[:, 0].argsort()]
-
-    np.save(
-        "/media/alphat/SSD Games/Thesis/videos/artificial_videos/disparity_bar_right.npy",
-        events,
-    )

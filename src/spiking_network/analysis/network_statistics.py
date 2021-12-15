@@ -6,14 +6,14 @@ Created on Tue May 26 16:39:25 2020
 @author: thomas
 """
 
+import json
 import os
-import numpy as np
+from itertools import combinations
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
-import json
-
-from itertools import combinations
 from PIL import Image
 from natsort import natsorted
 
@@ -149,14 +149,14 @@ def direction_norm_length(spike_vector, angles):
 
 def direction_selectivity(spike_vector):
     return (
-        np.max(spike_vector) - spike_vector[(np.argmax(spike_vector) + 8) % 16]
-    ) / np.max(spike_vector)
+                   np.max(spike_vector) - spike_vector[(np.argmax(spike_vector) + 8) % 16]
+           ) / np.max(spike_vector)
 
 
 def orientation_selectivity(spike_vector):
     return (
-        np.max(spike_vector) - spike_vector[(np.argmax(spike_vector) + 4) % 8]
-    ) / np.max(spike_vector)
+                   np.max(spike_vector) - spike_vector[(np.argmax(spike_vector) + 4) % 8]
+           ) / np.max(spike_vector)
 
 
 def weight_centroid(weight):
@@ -205,17 +205,17 @@ def compute_disparity_0(spinet, disparity, residuals, min_resi, max_resi, xs, ys
     for i in range(len(spinet.conf["L1XAnchor"])):
         for j in range(len(spinet.conf["L1YAnchor"])):
             mask_residual = (
-                residuals[cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]]
-                < 30
-            ) & (
-                residuals[cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"]]
-                > 0.5
-            )
+                                    residuals[cnt * spinet.conf["L1Depth"]: (cnt + 1) * spinet.conf["L1Depth"]]
+                                    < 30
+                            ) & (
+                                    residuals[cnt * spinet.conf["L1Depth"]: (cnt + 1) * spinet.conf["L1Depth"]]
+                                    > 0.5
+                            )
             if j != 2:
                 sns.histplot(
                     disparity[
-                        cnt * spinet.conf["L1Depth"] : (cnt + 1) * spinet.conf["L1Depth"],
-                        0,
+                    cnt * spinet.conf["L1Depth"]: (cnt + 1) * spinet.conf["L1Depth"],
+                    0,
                     ][mask_residual],
                     ax=axes[j, i],
                     bins=[4.46, 5.575, 7.43, 11.15, 22.3, 70],
@@ -223,43 +223,43 @@ def compute_disparity_0(spinet, disparity, residuals, min_resi, max_resi, xs, ys
                     color="#2C363F",
                 )
             cnt += 1
-    
+
     for i in range(len(xs)):
         for j in range(len(ys)):
             if j != 2:
                 sns.histplot(mat[i, j][mat[i, j] < 70], ax=axes[j, i], stat="density")
-    
+
     for ax in axes.flat:
         plt.setp(ax.get_xticklabels(), fontsize=15)
         plt.setp(ax.get_yticklabels(), fontsize=15)
         ax.set_ylabel("Density", fontsize=24)
         ax.set_xticks(np.arange(0, 71, 10))
-    
+
     axes[1, 1].set_xlabel("Depth (m)", fontsize=24)
-    
+
     plt.savefig("/home/thomas/Desktop/images/test", bbox_inches="tight")
 
 
 def compute_disparity(
-    spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual
+        spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual
 ):
     cnt = 0
     fig, axes = plt.subplots(2, 3, sharex=False, sharey=True, figsize=(16, 12))
     for i in range(5):
         for j in range(4):
             mask_residual = (
-                residual[cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth]
-                < epsi_residual
+                    residual[cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth]
+                    < epsi_residual
             )
             mask_theta = (
-                theta[0, cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth]
-                > np.pi / 2 + epsi_theta
-            ) | (
-                theta[0, cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth]
-                < np.pi / 2 - epsi_theta
-            )
+                                 theta[0, cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth]
+                                 > np.pi / 2 + epsi_theta
+                         ) | (
+                                 theta[0, cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth]
+                                 < np.pi / 2 - epsi_theta
+                         )
             mask_error = (
-                error[0, cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth] < epsi_error
+                    error[0, cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth] < epsi_error
             )
             if i != 4 and j != 3:
                 axes[j, i].set_title(
@@ -269,15 +269,15 @@ def compute_disparity(
                     + str(
                         np.mean(
                             disparity[
-                                cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth, 0
+                            cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth, 0
                             ][mask_theta & mask_error]
                         )
                     )
                 )
                 axes[j, i].hist(
-                    disparity[cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth, 0][
+                    disparity[cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth, 0][
                         mask_theta & mask_error & mask_residual
-                    ],
+                        ],
                     np.arange(-5.5, 6.5),
                     density=True,
                 )
@@ -288,17 +288,17 @@ def compute_disparity(
     for i in range(5):
         for j in range(4):
             mask_residual = (
-                residual[cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth]
-                < epsi_residual
+                    residual[cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth]
+                    < epsi_residual
             )
             mask_theta = (
-                theta[0, cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth] > epsi_theta
-            ) & (
-                theta[0, cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth]
-                < np.pi - epsi_theta
-            )
+                                 theta[0, cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth] > epsi_theta
+                         ) & (
+                                 theta[0, cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth]
+                                 < np.pi - epsi_theta
+                         )
             mask_error = (
-                error[0, cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth] < epsi_error
+                    error[0, cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth] < epsi_error
             )
             if i != 4 and j != 3:
                 axes[j, i].set_title(
@@ -308,15 +308,15 @@ def compute_disparity(
                     + str(
                         np.mean(
                             disparity[
-                                cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth, 0
+                            cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth, 0
                             ][mask_theta & mask_error]
                         )
                     )
                 )
                 axes[j, i].hist(
-                    disparity[cnt * spinet.l1depth : (cnt + 1) * spinet.l1depth, 1][
+                    disparity[cnt * spinet.l1depth: (cnt + 1) * spinet.l1depth, 1][
                         mask_theta & mask_error & mask_residual
-                    ],
+                        ],
                     np.arange(-5.5, 6.5),
                     density=True,
                 )

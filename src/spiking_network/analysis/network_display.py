@@ -8,12 +8,12 @@ Created on Tue May 19 02:47:43 2020
 
 import os
 import shutil
+
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
-from natsort import natsorted
 from fpdf import FPDF
-from multiprocessing import Pool, Process
-import matplotlib.pyplot as plt
+from natsort import natsorted
 
 
 def pdf_simple_cell(spinet, layer, camera):

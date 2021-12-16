@@ -6,13 +6,16 @@ Created on Mon Jun 29 18:32:36 2020
 @author: thomas
 """
 
-from natsort import natsorted
+import itertools
 import json
 import os
-from PIL import Image
-import scipy.io as sio
+import re
+
 import numpy as np
-import itertools
+import scipy.io as sio
+from PIL import Image
+from natsort import natsorted
+
 from src.events.tools.read_write.events_tools import delete_files
 
 
@@ -65,7 +68,7 @@ class SpikingNetwork:
                 neurons, spikes = self.load_weights(layer, neuron_type, type_to_config[neuron_type])
                 self.neurons.append(neurons)
                 self.spikes.append(spikes)
-                self.layout.append(np.load(path + "weights/layout_"+str(layer)+".npy"))
+                self.layout.append(np.load(path + "weights/layout_" + str(layer) + ".npy"))
 
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:
@@ -85,13 +88,12 @@ class SpikingNetwork:
         spike_train = []
 
         neurons_paths = natsorted(os.listdir(self.path + "weights/" + str(layer) + "/"))
-        for paths in [neurons_paths[i: i + 2] for i in range(0, len(neurons_paths), 2)]:
-            neuron = Neuron(
-                cell_type,
-                self.path + "configs/" + config,
-                self.path + "weights/" + str(layer) + "/",
-                *paths
-            )
+        config_files = list(filter(re.compile(".*json").match, neurons_paths))
+        for index in range(len(config_files)):
+            neuron = Neuron(cell_type, index,
+                            self.path + "configs/" + config,
+                            self.path + "weights/" + str(layer) + "/"
+                            )
             neurons.append(neuron)
             if neuron.conf["TRACKING"] == "partial":
                 spike_train.append(neuron.params["spike_train"])
@@ -107,16 +109,8 @@ class SpikingNetwork:
                             weights = reshape_weights(
                                 neuron.weights[:, camera, synapse], self.n_shape[layer, 0], self.n_shape[layer, 1],
                             )
-                            path = (
-                                    self.path
-                                    + "images/0/"
-                                    + str(i)
-                                    + "_syn"
-                                    + str(synapse)
-                                    + "_cam"
-                                    + str(camera)
-                                    + ".png"
-                            )
+                            path = (self.path + "images/0/" + str(i) + "_syn" + str(synapse) + "_cam" + str(
+                                camera) + ".png")
                             compress_weight(weights, path)
                             neuron.weight_images.append(path)
             else:
@@ -131,15 +125,12 @@ class SpikingNetwork:
     def get_weights(self, neuron_type):
         if neuron_type == "simple":
             weights = []
-            if self.conf["sharingType"] == "full":
-                weights = [neuron.weights for neuron in self.simple_cells[0: self.conf["L1Depth"]]]
-            elif self.conf["sharingType"] == "patch":
-                for i in range(
-                        0, self.nb_simple_cells, self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"],
-                ):
-                    weights += [neuron.weights for neuron in self.simple_cells[i: i + self.conf["L1Depth"]]]
+            if self.conf["sharingType"] == "patch":
+                for i in range(0, len(self.neurons[0]),
+                               self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"]):
+                    weights += [neuron.weights for neuron in self.neurons[0][i: i + self.conf["L1Depth"]]]
             else:
-                weights = [neuron.weights for neuron in self.simple_cells]
+                weights = [neuron.weights for neuron in self.neurons[0]]
             return np.array(weights)
 
     def generate_weight_mat(self):
@@ -173,13 +164,16 @@ class SpikingNetwork:
 class Neuron:
     """Spiking Neuron class"""
 
-    def __init__(self, neuron_type, config_path, path, param_path, weight_path):
+    def __init__(self, neuron_type, index, conf_path, weight_path):
         self.type = neuron_type
-        with open(config_path) as file:
+        self.id = index
+        with open(conf_path) as file:
             self.conf = json.load(file)
-        with open(path + param_path) as file:
+        with open(weight_path + str(self.id) + ".json") as file:
             self.params = json.load(file)
-        self.weights = np.load(path + weight_path)
+        self.weights = np.load(weight_path + str(self.id) + ".npy")
+        if self.type == "simple":
+            self.weights_inhib = np.load(weight_path + str(self.id) + "inhib.npy")
         self.weight_images = []
         self.gabor_image = 0
         self.lambd = 0

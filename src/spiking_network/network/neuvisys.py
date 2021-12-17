@@ -174,6 +174,7 @@ class Neuron:
         self.weights = np.load(weight_path + str(self.id) + ".npy")
         if self.type == "simple":
             self.weights_inhib = np.load(weight_path + str(self.id) + "inhib.npy")
+        self.spike_train = np.array(self.params["spike_train"])
         self.weight_images = []
         self.gabor_image = 0
         self.lambd = 0
@@ -181,6 +182,8 @@ class Neuron:
         self.phase = 0
         self.sigma = 0
         self.error = 0
+        self.mu = None
+        self.orientation = None
 
     def add_gabor(self, image, mu, sigma, lambd, phase, theta, error):
         self.gabor_image = image

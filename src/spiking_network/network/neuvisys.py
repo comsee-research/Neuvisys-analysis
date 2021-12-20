@@ -115,12 +115,17 @@ class SpikingNetwork:
                             neuron.weight_images.append(path)
             else:
                 for i, neuron in enumerate(self.neurons[layer]):
-                    for z in range(self.n_shape[layer, 2]):
-                        dim = np.zeros((self.n_shape[layer, 0], self.n_shape[layer, 1]))
-                        weight = np.stack((neuron.weights[:, :, z], dim, dim), axis=2)
-                        path = self.path + "images/" + str(layer) + "/" + str(i) + "_lay_" + str(z) + ".png"
-                        compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
-                        neuron.weight_images.append(path)
+                    weights = np.mean(neuron.weights, axis=2)
+                    weights = np.stack((weights, np.zeros(weights.shape), np.zeros(weights.shape)), axis=2)
+                    path = self.path + "images/" + str(layer) + "/" + str(i) + ".png"
+                    compress_weight(np.kron(weights, np.ones((7, 7, 1))), path)
+                    neuron.weight_images.append(path)
+                    # for z in range(self.n_shape[layer, 2]):
+                    #     dim = np.zeros((self.n_shape[layer, 0], self.n_shape[layer, 1]))
+                    #     weight = np.stack((neuron.weights[:, :, z], dim, dim), axis=2)
+                    #     path = self.path + "images/" + str(layer) + "/" + str(i) + "_lay_" + str(z) + ".png"
+                    #     compress_weight(np.kron(weight, np.ones((7, 7, 1))), path)
+                    #     neuron.weight_images.append(path)
 
     def get_weights(self, neuron_type):
         if neuron_type == "simple":

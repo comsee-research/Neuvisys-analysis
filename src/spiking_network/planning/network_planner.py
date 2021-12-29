@@ -16,41 +16,43 @@ import numpy as np
 def create_networks(exec_path, network_path, n_iter, params):
     for i in range(n_iter):
         n_path = network_path + "/network_" + str(i)
-        create_network(exec_path + "/neuvisys-exe", n_path)
-        
+        create_network(exec_path, n_path)
+
         conf = open_config_files(n_path + "/configs/")
-        
+
         for neuron_key, neuron_value in params.items():
             sample = list(ParameterSampler(neuron_value, 1))
             for key, value in sample[0].items():
                 conf[neuron_key][key] = value
-                
+
             save_config_files(n_path + "/configs/" + neuron_key + ".json", conf[neuron_key])
-            
+
+
 def random_params(exec_path, network_path, nb_networks):
-    params = {"network_config" : {"actionRate": [400, 500, 600],
-                                  "decayRate": [0.01, 0.02, 0.04],
-                                  "explorationFactor": [30, 50, 70],
-                                  "nu": [0.5, 1, 2],
-                                  "tauR": [0.5, 1, 2]},
-              "simple_cell_config" : {"ETA_INH": [10, 20, 30], 
+    params = {"network_config": {"actionRate": [400, 500, 600],
+                                 "decayRate": [0.01, 0.02, 0.04],
+                                 "explorationFactor": [30, 50, 70],
+                                 "nu": [0.5, 1, 2],
+                                 "tauR": [0.5, 1, 2]},
+              "simple_cell_config": {"ETA_INH": [10, 20, 30],
+                                     "ETA_RP": [0.5, 1, 2],
+                                     "TAU_RP": [10, 20, 30],
+                                     "VTHRESH": [20, 30, 40]},
+              "complex_cell_config": {"ETA_INH": [10, 20, 30],
                                       "ETA_RP": [0.5, 1, 2],
-                                      "TAU_RP": [10, 20, 30], 
-                                      "VTHRESH": [20, 30, 40]},
-              "complex_cell_config" : {"ETA_INH": [10, 20, 30], 
-                                      "ETA_RP": [0.5, 1, 2],
-                                      "TAU_RP": [10, 20, 30], 
+                                      "TAU_RP": [10, 20, 30],
                                       "VTHRESH": [2, 3, 4]},
-              "critic_cell_config" : {"ETA": [0.2, 0.5, 0.8],
-                                      "TAU_E": [250, 500, 750],
-                                      "NU_K": [150, 200, 250],
-                                      "TAU_K": [25, 50, 75],
-                                      "VTHRESH": [1, 2, 3]},
-              "actor_cell_config" : {"ETA": [0.2, 0.5, 0.8], 
+              "critic_cell_config": {"ETA": [0.2, 0.5, 0.8],
                                      "TAU_E": [250, 500, 750],
-                                     "VTHRESH": [1, 2, 3]}  
+                                     "NU_K": [150, 200, 250],
+                                     "TAU_K": [25, 50, 75],
+                                     "VTHRESH": [1, 2, 3]},
+              "actor_cell_config": {"ETA": [0.2, 0.5, 0.8],
+                                    "TAU_E": [250, 500, 750],
+                                    "VTHRESH": [1, 2, 3]}
               }
     create_networks(exec_path, network_path, nb_networks, params)
+
 
 def open_config_files(config_path):
     conf = {}
@@ -65,17 +67,11 @@ def save_config_files(config_path, conf):
         json.dump(conf, f)
 
 
-def toggle_learning(spinet, switch):
-    with open(spinet.path + "configs/complex_cell_config.json", "r") as file:
+def change_param(json_path, key, value):
+    with open(json_path, "r") as file:
         conf = json.load(file)
-    conf["STDP_LEARNING"] = switch
-    with open(spinet.path + "configs/complex_cell_config.json", "w") as file:
-        json.dump(conf, file)
-
-    with open(spinet.path + "configs/simple_cell_config.json", "r") as file:
-        conf = json.load(file)
-    conf["STDP_LEARNING"] = switch
-    with open(spinet.path + "configs/simple_cell_config.json", "w") as file:
+    conf[key] = value
+    with open(json_path, "w") as file:
         json.dump(conf, file)
 
 

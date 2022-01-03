@@ -22,8 +22,6 @@ def pdf_simple_cell(spinet, layer, camera):
     )
     pdf.add_page()
 
-    pos_x = 0
-    pos_y = 0
     for neuron in spinet.neurons[0]:
         x, y, z = neuron.params["position"]
         if z == layer:
@@ -31,6 +29,21 @@ def pdf_simple_cell(spinet, layer, camera):
                 pos_x = x * 11
                 pos_y = y * spinet.conf["neuron1Synapses"] * 11 + i * 11
                 pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
+    return pdf
+
+
+def pdf_complex_cell(spinet, zcell):
+    pdf = FPDF(
+        "P", "mm", (11 * spinet.l_shape[1, 0], 11 * spinet.l_shape[1, 1],),
+    )
+    pdf.add_page()
+
+    for neuron in spinet.neurons[1]:
+        x, y, z = neuron.params["position"]
+        if z == zcell:
+            pos_x = x * 11
+            pos_y = y * 11
+            pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
     return pdf
 
 
@@ -85,8 +98,6 @@ def pdf_weight_sharing(spinet, camera):
     pdf = FPDF("P", "mm", (11 * xpatch * side + (xpatch - 1) * 10, 11 * ypatch * side + (ypatch - 1) * 10,), )
     pdf.add_page()
 
-    pos_x = 0
-    pos_y = 0
     shift = np.arange(spinet.l_shape[0, 2]).reshape((side, side))
     if spinet.conf["sharingType"] == "full":
         cell_range = range(spinet.l_shape[0, 2])
@@ -155,81 +166,81 @@ def display_motor_cell(spinet):
         plt.savefig(spinet.path + "figures/motor_figures/" + str(i), bbox_inches="tight")
 
 
-def pdf_complex_cell(spinet, zcell, layer):
-    pdf = FPDF(
-        "P",
-        "mm",
-        (
-            spinet.p_shape[layer, 0].shape[0] * spinet.l_shape[layer, 0] * 11 + spinet.p_shape[layer, 0].shape[0] * 11,
-            spinet.p_shape[layer, 1].shape[0] * spinet.l_shape[layer, 1] * spinet.n_shape[layer, 2] * 11
-            + spinet.p_shape[layer, 1].shape[0] * 11
-            + spinet.p_shape[layer, 1].shape[0] * 10,
-        ),
-    )
-    pdf.add_page()
+# def pdf_complex_cell(spinet, zcell, layer):
+#     pdf = FPDF(
+#         "P",
+#         "mm",
+#         (
+#             spinet.p_shape[layer, 0].shape[0] * spinet.l_shape[layer, 0] * 11 + spinet.p_shape[layer, 0].shape[0] * 11,
+#             spinet.p_shape[layer, 1].shape[0] * spinet.l_shape[layer, 1] * spinet.n_shape[layer, 2] * 11
+#             + spinet.p_shape[layer, 1].shape[0] * 11
+#             + spinet.p_shape[layer, 1].shape[0] * 10,
+#         ),
+#     )
+#     pdf.add_page()
+#
+#     pdf.set_font("Arial", "", 10)
+#     pdf.multi_cell(0, 5, "")
+#
+#     for c, complex_cell in enumerate(spinet.neurons[layer]):
+#         xc, yc, zc = complex_cell.params["position"]
+#         ox, oy, oz = complex_cell.params["offset"]
+#
+#         heatmap = np.zeros((spinet.n_shape[layer, 0], spinet.n_shape[layer, 1]))
+#         heatmap_rf = np.zeros((120, 120, 3))
+#
+#         if zc == zcell:
+#             maximum = np.max(complex_cell.weights)
+#             for z, k in enumerate(sort_connections(complex_cell, spinet.n_shape[layer, 2])):
+#                 for i in range(ox, ox + spinet.l_shape[layer, 0]):
+#                     for j in range(oy, oy + spinet.l_shape[layer, 1]):
+#                         simple_cell = spinet.neurons[0][spinet.layout[layer - 1][i, j, k]]
+#                         xs, ys, zs = simple_cell.params["position"]
+#
+#                         weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
+#                         img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
+#                         path = (
+#                                 spinet.path
+#                                 + "figures/1/tmp/"
+#                                 + str(c)
+#                                 + "_simple_"
+#                                 + str(spinet.layout[layer - 1][i, j, k])
+#                                 + ".png"
+#                         )
+#                         Image.fromarray(img.astype("uint8")).save(path)
+#
+#                         heatmap[ys - oy, xs - ox] += weight_sc
+#                         if np.argmax(complex_cell.weights[ys - oy, xs - ox]) == k:
+#                             heatmap_rf[30 * (ys - oy): 30 * (ys - oy + 1), 30 * (xs - ox): 30 * (xs - ox + 1), ] = (
+#                                     np.array(Image.open(simple_cell.weight_images[0])) * weight_sc
+#                             )
+#
+#                         pos_x = xc * (11 * spinet.l_shape[layer, 0] + 10) + (xs - ox) * 11
+#                         pos_y = (
+#                                 yc
+#                                 * (
+#                                         11 * spinet.l_shape[layer, 1] * spinet.n_shape[layer, 2]
+#                                         + spinet.n_shape[layer, 2] * 2
+#                                         + 10
+#                                 )
+#                                 + z * (11 * spinet.l_shape[layer, 1] + 2)
+#                                 + (ys - oy) * 11
+#                         )
+#                         pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
+#             plt.figure()
+#             plt.matshow(heatmap)
+#             plt.savefig(spinet.path + "figures/1/" + str(c), bbox_inches="tight")
+#             # h_max = np.max(heatmap.flatten())
+#             # for i in range(4):
+#             #     for j in range(4):
+#             #         heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] = heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] * heatmap[i, j] / h_max
+#             Image.fromarray(heatmap_rf.astype("uint8")).save(
+#                 spinet.path + "figures/1/" + str(c) + "_rf.png"
+#             )
+#     return pdf
 
-    pdf.set_font("Arial", "", 10)
-    pdf.multi_cell(0, 5, "")
 
-    for c, complex_cell in enumerate(spinet.neurons[layer]):
-        xc, yc, zc = complex_cell.params["position"]
-        ox, oy, oz = complex_cell.params["offset"]
-
-        heatmap = np.zeros((spinet.n_shape[layer, 0], spinet.n_shape[layer, 1]))
-        heatmap_rf = np.zeros((120, 120, 3))
-
-        if zc == zcell:
-            maximum = np.max(complex_cell.weights)
-            for z, k in enumerate(sort_connections(spinet, complex_cell, spinet.n_shape[layer, 2])):
-                for i in range(ox, ox + spinet.l_shape[layer, 0]):
-                    for j in range(oy, oy + spinet.l_shape[layer, 1]):
-                        simple_cell = spinet.neurons[0][spinet.layout[layer - 1][i, j, k]]
-                        xs, ys, zs = simple_cell.params["position"]
-
-                        weight_sc = complex_cell.weights[xs - ox, ys - oy, k] / maximum
-                        img = weight_sc * np.array(Image.open(simple_cell.weight_images[0]))
-                        path = (
-                                spinet.path
-                                + "figures/1/tmp/"
-                                + str(c)
-                                + "_simple_"
-                                + str(spinet.layout[layer - 1][i, j, k])
-                                + ".png"
-                        )
-                        Image.fromarray(img.astype("uint8")).save(path)
-
-                        heatmap[ys - oy, xs - ox] += weight_sc
-                        if np.argmax(complex_cell.weights[ys - oy, xs - ox]) == k:
-                            heatmap_rf[30 * (ys - oy): 30 * (ys - oy + 1), 30 * (xs - ox): 30 * (xs - ox + 1), ] = (
-                                    np.array(Image.open(simple_cell.weight_images[0])) * weight_sc
-                            )
-
-                        pos_x = xc * (11 * spinet.l_shape[layer, 0] + 10) + (xs - ox) * 11
-                        pos_y = (
-                                yc
-                                * (
-                                        11 * spinet.l_shape[layer, 1] * spinet.n_shape[layer, 2]
-                                        + spinet.n_shape[layer, 2] * 2
-                                        + 10
-                                )
-                                + z * (11 * spinet.l_shape[layer, 1] + 2)
-                                + (ys - oy) * 11
-                        )
-                        pdf.image(path, x=pos_x, y=pos_y, w=10, h=10)
-            plt.figure()
-            plt.matshow(heatmap)
-            plt.savefig(spinet.path + "figures/1/" + str(c), bbox_inches="tight")
-            # h_max = np.max(heatmap.flatten())
-            # for i in range(4):
-            #     for j in range(4):
-            #         heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] = heatmap_rf[30*i:30*(i+1), 30*j:30*(j+1)] * heatmap[i, j] / h_max
-            Image.fromarray(heatmap_rf.astype("uint8")).save(
-                spinet.path + "figures/1/" + str(c) + "_rf.png"
-            )
-    return pdf
-
-
-def sort_connections(spinet, cell, depth):
+def sort_connections(cell, depth):
     strengths = []
     for z in range(depth):
         strengths.append(np.sum(cell.weights[:, :, z]))
@@ -326,30 +337,21 @@ def display_network(spinets):
         if spinet.conf["sharingType"] == "patch":
             for i in range(spinet.conf["nbCameras"]):
                 pdf = pdf_weight_sharing(spinet, i)
-                pdf.output(
-                    spinet.path + "figures/0/weight_sharing_" + str(i) + ".pdf", "F",
-                )
+                pdf.output(spinet.path + "figures/0/weight_sharing_" + str(i) + ".pdf", "F")
             if spinet.conf["nbCameras"] == 2:
                 pdf = pdf_weight_sharing_left_right_combined(spinet)
-                pdf.output(
-                    spinet.path + "figures/0/weight_sharing_combined.pdf", "F",
-                )
+                pdf.output(spinet.path + "figures/0/weight_sharing_combined.pdf", "F")
         elif spinet.conf["sharingType"] == "none":
             for layer in range(spinet.l_shape[0, 2]):
                 for i in range(spinet.conf["nbCameras"]):
                     pdf = pdf_simple_cell(spinet, layer, i)
-                    pdf.output(
-                        spinet.path + "figures/0/" + str(layer) + "_" + str(i) + ".pdf", "F",
-                    )
+                    pdf.output(spinet.path + "figures/0/" + str(layer) + "_" + str(i) + ".pdf", "F")
                 pdf = pdf_simple_cell_left_right_combined(spinet, layer)
-                pdf.output(
-                    spinet.path + "figures/0/" + str(layer) + "_combined.pdf", "F",
-                )
+                pdf.output(spinet.path + "figures/0/" + str(layer) + "_combined.pdf", "F",)
             # pdf = generate_pdf_layers(spinet, spinet.l1height, spinet.l1width, spinet.neuron1_synapses, spinet.l1depth)
             # pdf.output(spinet.path+"figures/multi_layer.pdf", "F")
 
         if len(spinet.neurons[1]) > 0:
-            os.mkdir(spinet.path + "figures/1/tmp/")
-            # for z in range(spinet.l_shape[1, 2]):
-            #     pdfs = pdf_complex_cell(spinet, z, 1)
-            shutil.rmtree(spinet.path + "figures/1/tmp/")
+            for z in range(spinet.l_shape[1, 2]):
+                pdf = pdf_complex_cell(spinet, z)
+                pdf.output(spinet.path + "figures/1/complex_weights_depth_"+str(z)+".pdf", "F")

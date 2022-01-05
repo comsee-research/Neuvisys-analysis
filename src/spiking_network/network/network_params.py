@@ -1,5 +1,5 @@
-def inhibition_learning_params():
-    return {
+def inhibition_learning_params(params: dict):
+    param_dict = {
         "network_config": {
             'V0': [0],
             'actionRate': [500],
@@ -57,3 +57,7 @@ def inhibition_learning_params():
             'VTHRESH': [3]
         },
     }
+    for key, value in params.items():
+        for key2, value2 in value.items():
+            param_dict[key][key2] = [value2]
+    return param_dict

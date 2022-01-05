@@ -7,17 +7,16 @@ Created on Mon Nov 16 12:47:24 2020
 """
 
 import os
-from shutil import copyfile
+import random
+
+import cv2 as cv
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 from fpdf import FPDF
 from natsort import natsorted
-import random
-import json
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import cv2 as cv
+
 from src.spiking_network.network.neuvisys import SpikingNetwork
-import seaborn as sns
 
 # %%
 
@@ -50,31 +49,35 @@ import seaborn as sns
 # //}
 
 
-#%%
+# %%
 
 tau_k = 0.2
 nu_k = 0.05
 t = np.linspace(0, 2, 10000)
 
+
 def gaussian(a, b, c, x):
-    return a * np.exp(-0.5 * (x - b)**2 / c**2)
+    return a * np.exp(-0.5 * (x - b) ** 2 / c ** 2)
+
 
 def gaussian2D(x, y, A, x0, y0, sigX, sigY):
-    return A * np.exp(-(((x - x0)**2 / 2*sigX**2) + (y - y0)**2 / 2*sigY**2))
+    return A * np.exp(-(((x - x0) ** 2 / 2 * sigX ** 2) + (y - y0) ** 2 / 2 * sigY ** 2))
+
 
 def kernel(time):
     return (np.exp(-time / tau_k) - np.exp(-time / nu_k)) / (tau_k - nu_k)
 
+
 def kernel_dot(time):
     return (np.exp(-time / nu_k) / nu_k - np.exp(-time / tau_k) / tau_k) / (tau_k - nu_k)
+
 
 plt.figure()
 plt.plot(t, kernel(t))
 plt.plot(t, kernel_dot(t))
 plt.show()
 
-
-#%%
+# %%
 
 network_path = "/home/thomas/neuvisys-dv/configuration/network/"
 spinet = SpikingNetwork(network_path)
@@ -82,8 +85,7 @@ array = np.array(spinet.state["nb_events"])
 plt.figure()
 plt.plot(array[100:800])
 
-
-#%%
+# %%
 
 Y = np.cumsum(np.random.exponential(np.random.uniform(0, 10), 100))
 for i in range(9):
@@ -113,12 +115,10 @@ plt.plot(V_dot)
 # plt.plot(V_dot - V)
 plt.show()
 
-
-#%%
+# %%
 
 network_path = ""
 spinet = SpikingNetwork(network_path)
-
 
 # %%
 
@@ -142,10 +142,9 @@ plt.plot(state[:, 0], state[:, 4])
 plt.figure()
 plt.title("Value (blue) vs taur * Value Derivative (orange)")
 plt.plot(state[:, 0], state[:, 2])
-plt.plot(state[:, 0], -1*state[:, 3])
+plt.plot(state[:, 0], -1 * state[:, 3])
 
-
-#%%
+# %%
 
 row = 6
 col = 6
@@ -174,8 +173,7 @@ for i in range(row):
 
 pdf.output("/home/alphat/Desktop/images/directions.pdf", "F")
 
-
-#%%
+# %%
 
 des = np.load("/home/alphat/Desktop/images/dir_exp_sym.npy")
 oes = np.load("/home/alphat/Desktop/images/ori_exp_sym.npy")
@@ -312,8 +310,7 @@ plt.setp(ax.get_xticklabels(), fontsize=26)
 plt.setp(ax.get_yticklabels(), fontsize=26)
 plt.savefig("/home/alphat/Desktop/images/stdp_windows.png", bbox_inches="tight")
 
-
-#%%
+# %%
 
 fig, ax = plt.subplots(figsize=(8, 12))
 
@@ -350,7 +347,7 @@ plt.setp(ax.get_xticklabels(), fontsize=22)
 plt.setp(ax.get_yticklabels(), fontsize=22)
 plt.savefig("/home/alphat/Desktop/images/boxplot_ori_dir.png", bbox_inches="tight")
 
-#%%
+# %%
 
 plt.figure(figsize=(8, 12))
 ax = sns.histplot(
@@ -365,7 +362,7 @@ plt.setp(ax.get_yticklabels(), fontsize=20)
 
 plt.savefig("/home/alphat/Desktop/images/hist_ori.png", bbox_inches="tight")
 
-#%%
+# %%
 
 eta_ltp = 0.2
 eta_ltd = -0.2
@@ -380,20 +377,19 @@ step[(t >= 0) & (t < tau_ltd)] = eta_ltp
 
 lin = np.zeros(10000)
 lin[(t > -tau_ltd) & (t <= 0)] = (
-    -eta_ltd
-    * -t[(t > -tau_ltd) & (t <= 0)][::-1]
-    / np.max(-t[(t > -tau_ltd) & (t <= 0)][::-1])
+        -eta_ltd
+        * -t[(t > -tau_ltd) & (t <= 0)][::-1]
+        / np.max(-t[(t > -tau_ltd) & (t <= 0)][::-1])
 )
 lin[(t >= 0) & (t < tau_ltd)] = (
-    eta_ltp
-    * t[(t >= 0) & (t < tau_ltd)][::-1]
-    / np.max(t[(t >= 0) & (t < tau_ltd)][::-1])
+        eta_ltp
+        * t[(t >= 0) & (t < tau_ltd)][::-1]
+        / np.max(t[(t >= 0) & (t < tau_ltd)][::-1])
 )
 
 exp = np.concatenate(
     (eta_ltd * np.exp(t[t < 0] / tau_ltd), eta_ltp * np.exp(-t[t >= 0] / tau_ltp))
 )
-
 
 fig, axs = plt.subplots(1, 3)
 
@@ -414,8 +410,7 @@ axs[1].set_title("Linear")
 axs[2].plot(t, exp, color="k")
 axs[2].set_title("Exponential")
 
-
-#%%
+# %%
 
 block_size = 3
 min_disp = 0

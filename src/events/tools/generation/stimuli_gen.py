@@ -80,7 +80,7 @@ def falling_leaves(time=10, framerate=1000, nb_circle_frame=4):
         cnt += 1
 
 
-def moving_lines(folder, time=10, framerate=1000, speed=200, rotation=0, frame_start=0):
+def moving_lines(folder, time=10, framerate=1000, speed=200, rotation=0, disparity=0, frame_start=0):
     cnt = frame_start
     positions = np.linspace(0, 550, 15, dtype=np.uint16)
 
@@ -90,8 +90,7 @@ def moving_lines(folder, time=10, framerate=1000, speed=200, rotation=0, frame_s
         shift = int(frame * (speed / framerate))
         for i in positions:
             pos = (i + shift) % 550
-            # cv.line(img, (pos, 0), (pos, 260), (0, 0, 0), 4)
-            cv.line(img, (pos, 0), (pos, 460), (255, 255, 255), 4)
+            cv.line(img, (pos + disparity, 0), (pos + disparity, 460), (255, 255, 255), 4)
 
         img = ndimage.rotate(img, rotation, reshape=False, order=0)
 
@@ -136,9 +135,7 @@ def disparity_bars(folder, framerate=1000, speeds=None, disparities=None):
 
         for i, speed in enumerate(speeds):
             shift = int(frame * (speed / framerate))
-            cv.line(
-                img, (x[i] + shift, y[i]), (x[i] + shift, y[i + 1]), (255, 255, 255), 4
-            )
+            cv.line(img, (x[i] + shift, y[i]), (x[i] + shift, y[i + 1]), (255, 255, 255), 4)
 
         # img = ndimage.rotate(img, rotation, reshape=False, order=0)
 

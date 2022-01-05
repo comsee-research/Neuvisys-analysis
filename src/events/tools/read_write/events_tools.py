@@ -36,21 +36,34 @@ def write_npz(dest, events):
                 events[1]["y"].astype("i2"),
                 events[1]["polarity"].astype("i1"),
             )
-        except:
+        except KeyError:
             try:
                 np.savez(
                     dest,
-                    events[0][:, 0].astype("i8"),
-                    events[0][:, 1].astype("i2"),
-                    events[0][:, 2].astype("i2"),
-                    events[0][:, 3].astype("i1"),
-                    events[1][:, 0].astype("i8"),
-                    events[1][:, 1].astype("i2"),
-                    events[1][:, 2].astype("i2"),
-                    events[1][:, 3].astype("i1"),
+                    events[0]["arr_0"].astype("i8"),
+                    events[0]["arr_1"].astype("i2"),
+                    events[0]["arr_2"].astype("i2"),
+                    events[0]["arr_3"].astype("i1"),
+                    events[1]["arr_0"].astype("i8"),
+                    events[1]["arr_1"].astype("i2"),
+                    events[1]["arr_2"].astype("i2"),
+                    events[1]["arr_3"].astype("i1"),
                 )
-            except:
-                raise
+            except KeyError:
+                try:
+                    np.savez(
+                        dest,
+                        events[0][:, 0].astype("i8"),
+                        events[0][:, 1].astype("i2"),
+                        events[0][:, 2].astype("i2"),
+                        events[0][:, 3].astype("i1"),
+                        events[1][:, 0].astype("i8"),
+                        events[1][:, 1].astype("i2"),
+                        events[1][:, 2].astype("i2"),
+                        events[1][:, 3].astype("i1"),
+                    )
+                except KeyError:
+                    raise
     else:
         try:
             np.savez(
@@ -60,17 +73,26 @@ def write_npz(dest, events):
                 events["y"].astype("i2"),
                 events["polarity"].astype("i1"),
             )
-        except:
+        except KeyError:
             try:
                 np.savez(
                     dest,
-                    events[:, 0].astype("i8"),
-                    events[:, 1].astype("i2"),
-                    events[:, 2].astype("i2"),
-                    events[:, 3].astype("i1"),
+                    events[0]["arr_0"].astype("i8"),
+                    events[0]["arr_1"].astype("i2"),
+                    events[0]["arr_2"].astype("i2"),
+                    events[0]["arr_3"].astype("i1"),
                 )
-            except:
-                raise
+            except KeyError:
+                try:
+                    np.savez(
+                        dest,
+                        events[:, 0].astype("i8"),
+                        events[:, 1].astype("i2"),
+                        events[:, 2].astype("i2"),
+                        events[:, 3].astype("i1"),
+                    )
+                except KeyError:
+                    raise
 
 
 def txt_to_events(file_path):

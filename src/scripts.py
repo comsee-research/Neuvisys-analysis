@@ -24,10 +24,12 @@ import pandas as pd
 from src.spiking_network.network.neuvisys import SpikingNetwork
 
 # network_path = home + "neuvisys-dv/configuration/network/"
-network_path = "/home/thomas/Downloads/network_ref_vh/"
+network_path = "/home/thomas/Desktop/Experiment/network_experiment/"
 
 
 # %% Generate Spiking Network
 
 spinet = SpikingNetwork(network_path)
+
+wi = spinet.neurons[0][1].weights_inhib
 

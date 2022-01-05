@@ -116,6 +116,7 @@ class SpikingNetwork:
             else:
                 for i, neuron in enumerate(self.neurons[layer]):
                     weights = np.mean(neuron.weights, axis=2)
+                    weights = np.swapaxes(weights, 0, 1)
                     weights = np.stack((weights, np.zeros(weights.shape), np.zeros(weights.shape)), axis=2)
                     path = self.path + "images/" + str(layer) + "/" + str(i) + ".png"
                     compress_weight(np.kron(weights, np.ones((7, 7, 1))), path)
@@ -161,8 +162,8 @@ class SpikingNetwork:
         self.orientations = self.directions[0:8] + self.directions[8:16]
 
     def spike_rate(self):
-        time = np.max(self.sspikes)
-        srates = np.count_nonzero(self.sspikes, axis=1) / (time * 1e-6)
+        time = np.max(self.spikes)
+        srates = np.count_nonzero(self.spikes, axis=1) / (time * 1e-6)
         return np.mean(srates), np.std(srates)
 
 
@@ -177,7 +178,7 @@ class Neuron:
         with open(weight_path + str(self.id) + ".json") as file:
             self.params = json.load(file)
         self.weights = np.load(weight_path + str(self.id) + ".npy")
-        if self.type == "simple":
+        if self.type == "SimpleCell":
             self.weights_inhib = np.load(weight_path + str(self.id) + "inhib.npy")
         self.spike_train = np.array(self.params["spike_train"])
         self.weight_images = []

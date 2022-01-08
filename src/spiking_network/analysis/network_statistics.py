@@ -170,51 +170,58 @@ def weight_centroid(weight):
 
 def rf_matching(weights):
     residuals = []
-    disparity = []
+    disparities = []
     for weight in weights:
-        res_ref = np.inf
-        xmax, ymax = 0, 0
-        for x in range(weight.shape[3]):
-            for y in range(weight.shape[4]):
-                res = weight[:, 0, 0] - np.roll(weight[:, 1, 0], (x, y), axis=(1, 2))
-
-                # fig, ax = plt.subplots(2, 3)
-                # fig.suptitle(str(np.sum(np.abs(res))))
-                # ax[0, 0].imshow(weight[0, 0, 0])
-                # ax[0, 1].imshow(np.roll(weight[0, 1, 0], (x, y), axis=(0, 1)))
-                # ax[1, 0].imshow(weight[1, 0, 0])
-                # ax[1, 1].imshow(np.roll(weight[1, 1, 0], (x, y), axis=(0, 1)))
-                # ax[0, 2].imshow(np.abs(res[0]))
-                # ax[1, 2].imshow(np.abs(res[1]))
-
-                res = np.sum(res ** 2)
-                if res < res_ref:
-                    res_ref = res
-                    xmax = x
-                    ymax = y
-        residuals.append(res_ref)
-        disparity.append((xmax, ymax))
-    return np.array(residuals), np.array(disparity)
+        disparity, residual = rf_disparity_matching(weight)
+        residuals.append(residual)
+        disparities.append(disparity)
+    return np.array(residuals), np.array(disparities)
 
 
-def compute_disparity_0(spinet, disparity, residuals, min_resi, max_resi, xs, ys, mat):
+def compute_disparities(spinet):
+    for neuron in spinet.neurons[0]:
+        neuron.add_disparity(rf_disparity_matching(neuron.weights)[0])
+
+
+def rf_disparity_matching(weight: np.ndarray):
+    res_ref = np.inf
+    xmax, ymax = 0, 0
+    for x in range(weight.shape[3]):
+        for y in range(weight.shape[4]):
+            res = weight[:, 0, 0] - np.roll(weight[:, 1, 0], (x, y), axis=(1, 2))
+            res = np.sum(res ** 2)
+            if res < res_ref:
+                res_ref = res
+                xmax = x
+                ymax = y
+    return np.array([xmax, ymax]), res_ref
+
+def disparity_histogram(disparity):
+    plt.figure()
+    plt.hist(disparity[:, 0], bins=np.arange(-5, 5))
+    plt.title("Histogram of simple cell disparities")
+    plt.xlabel("Disparity (px)")
+    plt.ylabel("Count")
+
+
+def compute_disparity_0(spinet, disparity, residuals, xs, ys, mat):
     fig, axes = plt.subplots(2, 3, sharex=True, sharey=True, figsize=(14, 8))
     # fig.suptitle("Ground Truth Depth estimation per region", fontsize=30)
     cnt = 0
 
-    for i in range(len(spinet.conf["L1XAnchor"])):
-        for j in range(len(spinet.conf["L1YAnchor"])):
+    for i in range(len(spinet.p_shape[0, 0])):
+        for j in range(len(spinet.p_shape[0, 1])):
             mask_residual = (
-                                    residuals[cnt * spinet.conf["L1Depth"]: (cnt + 1) * spinet.conf["L1Depth"]]
+                                    residuals[cnt * spinet.l_shape[0, 2]: (cnt + 1) * spinet.l_shape[0, 2]]
                                     < 30
                             ) & (
-                                    residuals[cnt * spinet.conf["L1Depth"]: (cnt + 1) * spinet.conf["L1Depth"]]
+                                    residuals[cnt * spinet.l_shape[0, 2]: (cnt + 1) * spinet.l_shape[0, 2]]
                                     > 0.5
                             )
             if j != 2:
                 sns.histplot(
                     disparity[
-                    cnt * spinet.conf["L1Depth"]: (cnt + 1) * spinet.conf["L1Depth"],
+                    cnt * spinet.l_shape[0, 2]: (cnt + 1) * spinet.l_shape[0, 2],
                     0,
                     ][mask_residual],
                     ax=axes[j, i],
@@ -224,10 +231,10 @@ def compute_disparity_0(spinet, disparity, residuals, min_resi, max_resi, xs, ys
                 )
             cnt += 1
 
-    for i in range(len(xs)):
-        for j in range(len(ys)):
-            if j != 2:
-                sns.histplot(mat[i, j][mat[i, j] < 70], ax=axes[j, i], stat="density")
+    # for i in range(len(xs)):
+    #     for j in range(len(ys)):
+    #         if j != 2:
+    #             sns.histplot(mat[i, j][mat[i, j] < 70], ax=axes[j, i], stat="density")
 
     for ax in axes.flat:
         plt.setp(ax.get_xticklabels(), fontsize=15)
@@ -237,7 +244,7 @@ def compute_disparity_0(spinet, disparity, residuals, min_resi, max_resi, xs, ys
 
     axes[1, 1].set_xlabel("Depth (m)", fontsize=24)
 
-    plt.savefig("/home/thomas/Desktop/images/test", bbox_inches="tight")
+    plt.savefig("/home/thomas/Desktop/test", bbox_inches="tight")
 
 
 def compute_disparity(

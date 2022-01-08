@@ -31,5 +31,5 @@ network_path = "/home/thomas/Desktop/Experiment/network_experiment/"
 
 spinet = SpikingNetwork(network_path)
 
-wi = spinet.neurons[0][1].weights_inhib
+wi = spinet.neurons[0][0].weights_inhib
 

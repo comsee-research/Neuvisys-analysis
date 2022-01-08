@@ -133,8 +133,8 @@ class SpikingNetwork:
             weights = []
             if self.conf["sharingType"] == "patch":
                 for i in range(0, len(self.neurons[0]),
-                               self.conf["L1Depth"] * self.conf["L1Width"] * self.conf["L1Height"]):
-                    weights += [neuron.weights for neuron in self.neurons[0][i: i + self.conf["L1Depth"]]]
+                               self.l_shape[0, 0] * self.l_shape[0, 1] * self.l_shape[0, 2]):
+                    weights += [neuron.weights for neuron in self.neurons[0][i: i + self.l_shape[0, 2]]]
             else:
                 weights = [neuron.weights for neuron in self.neurons[0]]
             return np.array(weights)
@@ -142,7 +142,7 @@ class SpikingNetwork:
     def generate_weight_mat(self):
         weights = self.get_weights("simple")
 
-        w = self.conf["Neuron1Width"] * self.conf["Neuron1Height"]
+        w = self.n_shape[0, 0] * self.n_shape[0, 1]
         basis = np.zeros((2 * w, len(weights)))
         for c in range(self.conf["nbCameras"]):
             for i, weight in enumerate(weights):
@@ -190,6 +190,7 @@ class Neuron:
         self.error = 0
         self.mu = None
         self.orientation = None
+        self.disparity = 0
 
     def add_gabor(self, image, mu, sigma, lambd, phase, theta, error):
         self.gabor_image = image
@@ -200,3 +201,6 @@ class Neuron:
         self.theta = theta
         self.error = error
         self.orientation = self.theta
+
+    def add_disparity(self, disparity):
+        self.disparity = disparity

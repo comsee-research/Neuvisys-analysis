@@ -27,57 +27,69 @@ def spike_trains(strains: np.array):
     return sts
 
 
-def plot_spike_informations(sps: np.array, sts: SpikeTrain, layer, path):
+def raster_plot(sts, layer, path):
     fig, axes = plt.subplots()
     rasterplot_rates(sts, pophistbins=250, histscale=0.1, ax=axes, markerargs={"marker": '.', "markersize": 1})
     axes.set_title("Raster plot")
-    plt.savefig(path+str(layer)+"/rasterplot_rates", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/rasterplot_rates", bbox_inches="tight")
     plt.show()
 
+
+def event_plot(sts, layer, path):
     fig, axes = plt.subplots()
     eventplot(sts, axes=axes)
     axes.set_ylabel('Neurons')
     axes.set_title("Eventplot")
-    plt.savefig(path+str(layer)+"/eventplot", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/eventplot", bbox_inches="tight")
     plt.show()
 
+
+def time_histogram(sts, layer, path):
     fig, axes = plt.subplots()
-    histogram = statistics.time_histogram(sts, bin_size=100*pq.ms)
+    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms)
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
-    plt.savefig(path+str(layer)+"/time_histogram", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/time_histogram", bbox_inches="tight")
     plt.show()
 
+
+def spike_rate_histogram(sps, layer, path):
     fig, axes = plt.subplots()
     spike_count = np.count_nonzero(sps, axis=1)
     axes.hist(spike_count / (np.max(sps) * 1e-6))
     axes.set_title("Spike rate histogram")
     axes.set_xlabel("spike / s")
-    plt.savefig(path+str(layer)+"/spike_rates", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/spike_rates", bbox_inches="tight")
     plt.show()
 
+
+def isi_histogram(sts, layer, path):
     fig, axes = plt.subplots()
-    plot_isi_histogram(sts[0:112], cutoff=1*pq.s, histtype='bar', axes=axes)
+    plot_isi_histogram(sts[0:112], cutoff=1 * pq.s, histtype='bar', axes=axes)
     axes.set_title("ISI histogram")
-    plt.savefig(path+str(layer)+"/isi_histogram", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/isi_histogram", bbox_inches="tight")
     plt.show()
 
+
+def instantaneous_rates(sts, layer, path):
     fig, axes = plt.subplots()
     kernel = kernels.GaussianKernel(sigma=100 * pq.ms)
-    rates = statistics.instantaneous_rate(sts, sampling_period=100*pq.ms, kernel=kernel)
+    rates = statistics.instantaneous_rate(sts, sampling_period=100 * pq.ms, kernel=kernel)
     plot_instantaneous_rates_colormesh(rates, axes=axes)
     axes.set_title("Instantaneous rates")
-    plt.savefig(path+str(layer)+"/instantaneous_rates", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/instantaneous_rates", bbox_inches="tight")
     plt.show()
 
+
+def correlation_coeficient_matrix(sts, layer, path):
     fig, axes = plt.subplots()
-    binned_spiketrains = BinnedSpikeTrain(sts, bin_size=100*pq.ms)
+    binned_spiketrains = BinnedSpikeTrain(sts, bin_size=100 * pq.ms)
     corrcoef_matrix = correlation_coefficient(binned_spiketrains)
     plot_corrcoef(corrcoef_matrix, axes=axes)
     axes.set_xlabel('Neuron')
     axes.set_ylabel('Neuron')
     axes.set_title("Correlation coefficient matrix")
-    plt.savefig(path+str(layer)+"/corrcoef", bbox_inches="tight")
+    plt.savefig(path + str(layer) + "/corrcoef", bbox_inches="tight")
     plt.show()
 
 
@@ -94,4 +106,3 @@ def spike_plots_inhibited_neurons(spinet, layer, neuron_id):
         eveplot.append(spinet.spikes[layer][i][spinet.spikes[layer][i] != 0])
 
     plt.eventplot(eveplot, colors=colors1)
-

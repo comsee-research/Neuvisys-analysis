@@ -175,7 +175,10 @@ def rf_matching(weights):
         disparity, residual = rf_disparity_matching(weight)
         residuals.append(residual)
         disparities.append(disparity)
-    return np.array(residuals), np.array(disparities)
+    disparities = np.array(disparities)
+    residuals = np.array(residuals)
+    disparities[disparities >= 5] -= 10
+    return residuals, disparities
 
 
 def compute_disparities(spinet):

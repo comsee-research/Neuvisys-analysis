@@ -36,7 +36,7 @@ def write_npz(dest, events):
                 events[1]["y"].astype("i2"),
                 events[1]["polarity"].astype("i1"),
             )
-        except KeyError:
+        except (IndexError, KeyError) as e:
             try:
                 np.savez(
                     dest,
@@ -49,7 +49,7 @@ def write_npz(dest, events):
                     events[1]["arr_2"].astype("i2"),
                     events[1]["arr_3"].astype("i1"),
                 )
-            except KeyError:
+            except (IndexError, KeyError) as e:
                 try:
                     np.savez(
                         dest,
@@ -62,7 +62,7 @@ def write_npz(dest, events):
                         events[1][:, 2].astype("i2"),
                         events[1][:, 3].astype("i1"),
                     )
-                except KeyError:
+                except (IndexError, KeyError) as e:
                     raise
     else:
         try:
@@ -73,7 +73,7 @@ def write_npz(dest, events):
                 events["y"].astype("i2"),
                 events["polarity"].astype("i1"),
             )
-        except KeyError:
+        except (IndexError, KeyError) as e:
             try:
                 np.savez(
                     dest,
@@ -82,7 +82,7 @@ def write_npz(dest, events):
                     events[0]["arr_2"].astype("i2"),
                     events[0]["arr_3"].astype("i1"),
                 )
-            except KeyError:
+            except (IndexError, KeyError) as e:
                 try:
                     np.savez(
                         dest,
@@ -91,7 +91,7 @@ def write_npz(dest, events):
                         events[:, 2].astype("i2"),
                         events[:, 3].astype("i1"),
                     )
-                except KeyError:
+                except (IndexError, KeyError) as e:
                     raise
 
 

@@ -2,6 +2,7 @@ import random
 from PIL import Image, ImageDraw
 import numpy as np
 from src.events.tools.read_write.aedat_tools import load_aedat4
+from src.events.tools.read_write.events_tools import npz_to_arr
 
 
 def concatenate_files(aedat4_files):
@@ -15,6 +16,19 @@ def concatenate_files(aedat4_files):
         last_tmsp = events[-1]["timestamp"]
         list_events.append(events)
     return np.hstack(list_events)
+
+
+def concatenate_npz(event_files):
+    list_events = []
+    last_tmsp = 0
+
+    for i, events in enumerate(event_files):
+        events = npz_to_arr(events)
+        if i != 0:
+            events[:, 0] += last_tmsp - events[0, 0]
+        last_tmsp = events[-1, 0]
+        list_events.append(events)
+    return np.vstack(list_events)
 
 
 def divide_events(events, chunk_size):

@@ -177,7 +177,7 @@ def rf_matching(weights):
         disparities.append(disparity)
     disparities = np.array(disparities)
     residuals = np.array(residuals)
-    disparities[disparities >= 5] -= 10
+    # disparities[disparities >= 5] -= 10
     return residuals, disparities
 
 
@@ -199,9 +199,10 @@ def rf_disparity_matching(weight: np.ndarray):
                 ymax = y
     return np.array([xmax, ymax]), res_ref
 
+
 def disparity_histogram(disparity):
     plt.figure()
-    plt.hist(disparity[:, 0], bins=np.arange(-5, 5))
+    plt.hist(disparity[:, 0])
     plt.title("Histogram of simple cell disparities")
     plt.xlabel("Disparity (px)")
     plt.ylabel("Count")

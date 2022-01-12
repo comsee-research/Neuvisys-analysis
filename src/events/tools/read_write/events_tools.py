@@ -129,12 +129,10 @@ def ros_to_npy(bag_file, topic):
     return np.array(npy_events)
 
 
-def npz_to_arr(t, x, y, p):
-    eve = np.zeros((t.shape[0], 4))
-    eve[:, 0] = t
-    eve[:, 1] = x
-    eve[:, 2] = y
-    eve[:, 3] = p
+def npz_to_arr(npz):
+    eve = np.zeros((npz["arr_0"].shape[0], len(npz.keys())))
+    for i, k in enumerate(npz.keys()):
+        eve[:, i] = npz[k]
     return eve
 
 

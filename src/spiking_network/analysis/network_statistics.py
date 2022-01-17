@@ -202,7 +202,7 @@ def rf_disparity_matching(weight: np.ndarray):
 
 def disparity_histogram(disparity):
     plt.figure()
-    plt.hist(disparity[:, 0])
+    plt.hist(disparity[:, 0], bins=np.arange(0, 10))
     plt.title("Histogram of simple cell disparities")
     plt.xlabel("Disparity (px)")
     plt.ylabel("Count")

@@ -78,7 +78,7 @@ def inhibition_disparity_params(params=None):
             'layerCellTypes': [['SimpleCell', 'ComplexCell']],
             'layerInhibitions': [[True, True]],
             'layerPatches': [[[[33], [110], [0]], [[0], [0], [0]]]],
-            'layerSizes': [[[28, 4, 144], [7, 1, 16]]],
+            'layerSizes': [[[4, 4, 144], [1, 1, 16]]],
             'minActionRate': [100],
             'nbCameras': [2],
             'neuron1Synapses': [1],

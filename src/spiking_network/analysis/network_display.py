@@ -17,7 +17,7 @@ from PIL import Image
 
 def pdf_simple_cell(spinet, layer, camera):
     pdf = FPDF(
-        "P", "mm", (11 * spinet.conf["L1Width"], 11 * spinet.conf["L1Height"] * spinet.conf["Neuron1Synapses"],),
+        "P", "mm", (11 * spinet.l_shape[0, 0], 11 * spinet.l_shape[0, 1] * spinet.conf["neuron1Synapses"],),
     )
     pdf.add_page()
 
@@ -48,12 +48,10 @@ def pdf_complex_cell(spinet, zcell):
 
 def pdf_simple_cell_left_right_combined(spinet, layer):
     pdf = FPDF(
-        "P", "mm", (11 * spinet.conf["L1Width"], 24 * spinet.conf["L1Height"] * spinet.conf["Neuron1Synapses"],),
+        "P", "mm", (11 * spinet.l_shape[0, 0], 24 * spinet.l_shape[0, 1] * spinet.conf["neuron1Synapses"],),
     )
     pdf.add_page()
 
-    pos_x = 0
-    pos_y = 0
     for neuron in spinet.neurons[0]:
         x, y, z = neuron.params["position"]
         if z == layer:

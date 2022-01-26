@@ -10,7 +10,7 @@ import itertools
 import json
 import os
 import re
-
+import random
 import numpy as np
 import scipy.io as sio
 from PIL import Image
@@ -27,6 +27,18 @@ def compress_weight(weights, path):
 def reshape_weights(weights, width, height):
     weights = np.concatenate((weights, np.zeros((1, width, height))), axis=0)
     return np.kron(np.swapaxes(weights, 0, 2), np.ones((3, 3, 1)))
+
+
+def shuffle_weights(path):
+    neurons_paths = natsorted(os.listdir(path))
+    weight_files = list(filter(re.compile(".*inhib").match, neurons_paths))
+    shuffled_weight_files = random.sample(weight_files, len(weight_files))
+
+    for old_name, new_name in zip(weight_files, shuffled_weight_files):
+        os.rename(path + old_name, path + new_name + "bis")
+
+    for name in weight_files:
+        os.rename(path + name + "bis", path + name)
 
 
 def clean_network(path, layers):

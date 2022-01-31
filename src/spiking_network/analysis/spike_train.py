@@ -48,7 +48,7 @@ def event_plot(sts, layer, path):
 
 def time_histogram(sts, layer, path):
     fig, axes = plt.subplots()
-    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms)
+    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output='rate')
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
     if path:

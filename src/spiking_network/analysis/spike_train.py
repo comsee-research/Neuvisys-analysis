@@ -19,6 +19,29 @@ from elephant.conversion import BinnedSpikeTrain
 from elephant.spike_train_correlation import correlation_coefficient
 
 
+def time_histogram_comparison(sts_control, sts_experiment):
+    plt.figure()
+    histogram_control = statistics.time_histogram(sts_control, bin_size=100 * pq.ms, output='mean')
+    histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=100 * pq.ms, output='mean')
+
+    units = pq.Quantity(1, 's')
+    width = histogram_control.sampling_period.rescale(units).item()
+    times = histogram_control.times.rescale(units).magnitude
+
+    # Create the plot
+    plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
+    plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
+    plt.xlabel(f"Time ({units.dimensionality})")
+    plt.ylabel("Spike Rate (Hz)")
+
+    plt.title("Time histogram")
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.bar(times, histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude, align='edge', width=width)
+
+
 def spike_trains(strains: np.array):
     sts = []
     tstop = np.max(strains)

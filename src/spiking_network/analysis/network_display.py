@@ -235,7 +235,7 @@ def plot_directions(spinet, directions, rotations):
     angles = np.append(rotations, 0) * np.pi / 180
     spike_vector = temp
 
-    vectors = create_figure(spinet, spike_vector, angles, "complex_directions")
+    vectors = create_figures(spinet, spike_vector, angles, "complex_directions")
     return vectors
 
 
@@ -246,11 +246,11 @@ def plot_orientations(spinet, orientations, rotations):
     angles = np.append(rotations[::2], 0) * np.pi / 180
     spike_vector = temp
 
-    vectors = create_figure(spinet, spike_vector, angles, "complex_orientations")
+    vectors = create_figures(spinet, spike_vector, angles, "complex_orientations")
     return vectors
 
 
-def create_figure(spinet, spike_vector, angles, name):
+def create_figures(spinet, spike_vector, angles, name):
     vectors = []
     for i in range(spike_vector.shape[1]):
         mean = mean_response(spike_vector[:-1, i], angles[:-1])
@@ -279,7 +279,7 @@ def create_figure(spinet, spike_vector, angles, name):
         plt.setp(ax.get_yticklabels(), fontsize=13)
         ax.set_xticklabels(["0°", "22.5°", "45°", "67.5°", "90°", "112.5°", "135°", "157.5°"])
         plt.savefig(spinet.path + "figures/" + name + "/" + str(i), bbox_inches="tight")
-        return vectors
+    return vectors
 
 
 def mean_response(directions, angles):

@@ -23,17 +23,17 @@ def inhibition_learning_params(params=None):
             'tauR': [1]
         },
         "simple_cell_config": {
-            'ETA_INH': [10],
+            'ETA_INH': [20],
             'ETA_LTD': [-0.0021],
             'ETA_LTP': [0.0077],
             'ETA_ILTP': [7.7],
             'ETA_ILTD': [-2.1],
             'ETA_RP': [1],
             'ETA_SRA': [0.6],
-            'ETA_TA': [1],
+            'ETA_TA': [0],
             'MIN_THRESH': [4],
             'NORM_FACTOR': [4],
-            'STDP_LEARNING': ["excitatory"],
+            'STDP_LEARNING': ["all"],
             'SYNAPSE_DELAY': [0],
             'TARGET_SPIKE_RATE': [0.75],
             'TAU_LTD': [14],
@@ -43,7 +43,7 @@ def inhibition_learning_params(params=None):
             'TAU_SRA': [100],
             'TRACKING': ['partial'],
             'VRESET': [-20],
-            'VTHRESH': [30]
+            'VTHRESH': [4]
         },
         "complex_cell_config": {
             'ETA_INH': [15],

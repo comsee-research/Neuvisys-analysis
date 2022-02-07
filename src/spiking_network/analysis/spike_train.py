@@ -31,14 +31,14 @@ def time_histogram_comparison(sts_control, sts_experiment):
     times = histogram_control.times.rescale(units).magnitude
 
     # Create the plot
-    # plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
-    # plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
-    # plt.xlabel(f"Time ({units.dimensionality})")
-    # plt.ylabel("Spike Rate (Hz)")
-    #
-    # plt.title("Time histogram")
-    # plt.legend()
-    # plt.show()
+    plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
+    plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
+    plt.xlabel(f"Time ({units.dimensionality})")
+    plt.ylabel("Spike Rate (Hz)")
+
+    plt.title("Time histogram")
+    plt.legend()
+    plt.show()
 
     plt.figure()
     histogram_diff = histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude
@@ -84,16 +84,9 @@ def event_plot(sts, layer, path):
     plt.show()
 
 
-<<<<<<< HEAD
-def time_histogram(sts, layer, path, axes=None):
-    if axes is None:
-        fig, axes = plt.subplots()
-    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output="rate")
-=======
 def time_histogram(sts, layer, path):
     fig, axes = plt.subplots()
     histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output='rate')
->>>>>>> 6dde7b61e26fce2022a2d039d907bfce0620cf68
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
     if path:

@@ -46,14 +46,15 @@ def event_plot(sts, layer, path):
     plt.show()
 
 
-def time_histogram(sts, layer, path):
-    fig, axes = plt.subplots()
-    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms)
+def time_histogram(sts, layer, path, axes=None):
+    if axes is None:
+        fig, axes = plt.subplots()
+    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output="rate")
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
     if path:
         plt.savefig(path + str(layer) + "/time_histogram", bbox_inches="tight")
-    plt.show()
+    # plt.show()
 
 
 def spike_rate_histogram(sps, layer, path):

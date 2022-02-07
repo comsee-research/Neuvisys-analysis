@@ -223,22 +223,22 @@ def hists_preferred_orientations(spinet):
     hists_o = []
     hists_ro = []
 
-    for i in range(spinet.nb_complex_cells):
-        complex_cell = spinet.complex_cells[i]
+    for i in range(len(spinet.neurons[1])):
+        complex_cell = spinet.neurons[1][i]
         ox, oy, oz = complex_cell.params["offset"]
 
         orientations = []
         strengths = []
         maximum = np.max(complex_cell.weights)
         for connection in complex_cell.params["in_connections"]:
-            simple_cell = spinet.simple_cells[connection]
+            simple_cell = spinet.neurons[0][connection]
             xs, ys, zs = simple_cell.params["position"]
             strengths.append(complex_cell.weights[xs - ox, ys - oy, zs] / maximum)
             orientations.append(simple_cell.orientation * 180 / np.pi)
 
         hists_o.append(compute_histogram(orientations, 180, 8, strengths))
 
-        if i % spinet.conf["L2Depth"] == 0:
+        if i % spinet.l_shape[1, 2] == 0:
             hists_ro.append(compute_histogram(orientations, 180, 8))
 
     return np.array(hists_o), np.array(hists_ro)

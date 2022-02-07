@@ -18,6 +18,44 @@ from viziphant.spike_train_correlation import plot_corrcoef
 from elephant.conversion import BinnedSpikeTrain
 from elephant.spike_train_correlation import correlation_coefficient
 
+from scipy.stats import laplace
+
+
+def time_histogram_comparison(sts_control, sts_experiment):
+    plt.figure()
+    histogram_control = statistics.time_histogram(sts_control, bin_size=100 * pq.ms, output='mean')
+    histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=100 * pq.ms, output='mean')
+
+    units = pq.Quantity(1, 's')
+    width = histogram_control.sampling_period.rescale(units).item()
+    times = histogram_control.times.rescale(units).magnitude
+
+    # Create the plot
+    # plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
+    # plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
+    # plt.xlabel(f"Time ({units.dimensionality})")
+    # plt.ylabel("Spike Rate (Hz)")
+    #
+    # plt.title("Time histogram")
+    # plt.legend()
+    # plt.show()
+
+    plt.figure()
+    histogram_diff = histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude
+    plt.bar(times, histogram_diff, align='edge', width=width)
+
+    fig = plt.figure()
+    gs = fig.add_gridspec(2, hspace=0)
+    axes = gs.subplots(sharex=True)
+    axes[0].bar(11.25*times[:len(times)//2], histogram_diff[:len(histogram_diff)//2])
+
+    rotations = [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
+    draw = laplace(0, 1).rvs(size=50)
+    draw = np.round(draw)
+
+    hist = np.histogram(draw, bins=np.arange(-8.5, 8.5), density=True)
+    axes[1].bar(rotations, np.roll(hist[0], 8), width=22.5)
+
 
 def spike_trains(strains: np.array):
     sts = []
@@ -46,10 +84,16 @@ def event_plot(sts, layer, path):
     plt.show()
 
 
+<<<<<<< HEAD
 def time_histogram(sts, layer, path, axes=None):
     if axes is None:
         fig, axes = plt.subplots()
     histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output="rate")
+=======
+def time_histogram(sts, layer, path):
+    fig, axes = plt.subplots()
+    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output='rate')
+>>>>>>> 6dde7b61e26fce2022a2d039d907bfce0620cf68
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
     if path:

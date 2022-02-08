@@ -125,6 +125,8 @@ class SpikingNetwork:
                                 camera) + ".png")
                             compress_weight(weights, path)
                             neuron.weight_images.append(path)
+                        if self.conf["nbCameras"] == 2:
+                            pass
             else:
                 for i, neuron in enumerate(self.neurons[layer]):
                     weights = np.mean(neuron.weights, axis=2)

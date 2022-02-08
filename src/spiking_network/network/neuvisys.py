@@ -9,8 +9,9 @@ Created on Mon Jun 29 18:32:36 2020
 import itertools
 import json
 import os
-import re
 import random
+import re
+
 import numpy as np
 import scipy.io as sio
 from PIL import Image
@@ -77,6 +78,11 @@ class SpikingNetwork:
         self.shared_id = []
         type_to_config = {"SimpleCell": "simple_cell_config.json", "ComplexCell": "complex_cell_config.json",
                           "CriticCell": "critic_cell_config.json", "ActorCell": "actor_cell_config.json"}
+
+        self.p_shape = np.array(self.conf["layerPatches"])
+        self.l_shape = np.array(self.conf["layerSizes"])
+        self.n_shape = np.array(self.conf["neuronSizes"])
+
         if loading:
             for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
                 neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
@@ -93,10 +99,6 @@ class SpikingNetwork:
         if os.path.exists(self.path + "gabors/data/direction_response.npy"):
             self.directions = np.load(self.path + "gabors/data/direction_response.npy")
             self.orientations = self.directions[0:8] + self.directions[8:16]
-
-        self.p_shape = np.array(self.conf["layerPatches"])
-        self.l_shape = np.array(self.conf["layerSizes"])
-        self.n_shape = np.array(self.conf["neuronSizes"])
 
     def load_neurons(self, layer, neuron_type, config):
         neurons = []
@@ -117,14 +119,17 @@ class SpikingNetwork:
 
     def load_weights(self, layer, neuron_type):
         weights = []
-        if neuron_type == "simple" and self.conf["sharingType"] == "patch":
-                step = self.l_shape[layer, 0] * self.l_shape[layer, 1] * self.l_shape[layer, 2]
-                for r_id in enumerate(range(0, len(self.neurons[layer]), step)):
-                    for weight in self.neurons[layer][r_id: r_id + self.l_shape[layer, 2]]:
-                        weights.append(weight)
-                        self.shared_id.append(np.arange(r_id, r_id + step, self.l_shape[layer, 0] * self.l_shape[layer, 1]))
+        if neuron_type == "SimpleCell" and self.conf["sharingType"] == "patch":
+            step = self.l_shape[layer, 0] * self.l_shape[layer, 1] * self.l_shape[layer, 2]
+            for r_id in range(0, len(self.neurons[layer]), step):
+                for i, neuron in enumerate(self.neurons[layer][r_id: r_id + self.l_shape[layer, 2]]):
+                    weights.append(neuron.weights)
+                    self.shared_id.append(
+                        np.arange(r_id + i, r_id + i + step, self.l_shape[layer, 2]))
+            self.shared_id = np.array(self.shared_id)
         else:
             weights = [neuron.weights for neuron in self.neurons[layer]]
+
         return np.array(weights)
 
     def generate_weight_images(self):
@@ -139,8 +144,8 @@ class SpikingNetwork:
                             path = (self.path + "images/0/" + str(i) + "_syn" + str(synapse) + "_cam" + str(
                                 camera) + ".png")
                             compress_weight(n_weight, path)
-                            if self.shared_id:
-                                for shared in self.shared_id:
+                            if np.any(self.shared_id):
+                                for shared in self.shared_id[i]:
                                     self.neurons[layer][shared].weight_images.append(path)
                             else:
                                 self.neurons[layer][i].weight_images.append(path)

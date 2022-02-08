@@ -173,12 +173,11 @@ def rf_matching(spinet):
     disparities = []
     for i, weight in enumerate(spinet.weights[0]):
         disparity, residual = rf_disparity_matching(weight)
-        if disparity >= 5:
-            disparity -= 10
+        disparity[disparity >= 5] -= 10
         residuals.append(residual)
         disparities.append(disparity)
-        if spinet.shared_id:
-            for shared in spinet.shared_id:
+        if np.any(spinet.shared_id):
+            for shared in spinet.shared_id[i]:
                 spinet.neurons[0][shared].add_disparity(disparity)
         else:
             spinet.neurons[0][i].add_disparity(disparity)

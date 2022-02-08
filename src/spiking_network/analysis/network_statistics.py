@@ -168,22 +168,22 @@ def weight_centroid(weight):
     return x_coord, y_coord
 
 
-def rf_matching(weights):
+def rf_matching(spinet):
     residuals = []
     disparities = []
-    for weight in weights:
+    for i, weight in enumerate(spinet.weights[0]):
         disparity, residual = rf_disparity_matching(weight)
+        if disparity >= 5:
+            disparity -= 10
         residuals.append(residual)
         disparities.append(disparity)
-    disparities = np.array(disparities)
-    residuals = np.array(residuals)
-    disparities[disparities >= 5] -= 10
-    return residuals, disparities
+        if spinet.shared_id:
+            for shared in spinet.shared_id:
+                spinet.neurons[0][shared].add_disparity(disparity)
+        else:
+            spinet.neurons[0][i].add_disparity(disparity)
 
-
-def compute_disparities(spinet):
-    for neuron in spinet.neurons[0]:
-        neuron.add_disparity(rf_disparity_matching(neuron.weights)[0])
+    return np.array(residuals), np.array(disparities)
 
 
 def rf_disparity_matching(weight: np.ndarray):

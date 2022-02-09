@@ -18,6 +18,69 @@ from PIL import Image
 from natsort import natsorted
 
 
+def inhibition_weight_against_orientation(spinet):
+    rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
+
+    pref_cc_ori = np.argmax(spinet.orientations, axis=0)
+    sorted_pref_cc_ori = rotations[np.sort(pref_cc_ori)]
+    values, indices = np.unique(sorted_pref_cc_ori, return_index=True)
+    index_pref_cc_ori = np.argsort(pref_cc_ori)
+
+    weight_sums = inhibition_weight_sum(spinet)[index_pref_cc_ori]
+
+    plt.figure()
+    x = np.arange(len(weight_sums))
+    y = weight_sums / np.max(weight_sums)
+    last_index = 0
+    for index in indices:
+        plt.bar(x[last_index:index], y[last_index:index])
+        last_index = index
+        plt.xticks(indices, values, rotation=45)
+
+    plt.title("Normalized sum of inhibition weights sorted by preferred complex cell orientation")
+    plt.ylabel("Normalized sum of inhibition weights")
+    plt.xlabel("Complex cell preferred orientation in degrees (°)")
+    plt.show()
+
+
+def inhibition_weight_against_disparity(spinet):
+    disparities = np.array([-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8])
+
+    pref_cc_disp = np.argmax(spinet.disparities, axis=0)
+    sorted_pref_cc_disp = disparities[np.sort(pref_cc_disp)]
+    values, indices = np.unique(sorted_pref_cc_disp, return_index=True)
+    index_pref_cc_disp = np.argsort(pref_cc_disp)
+
+    weight_sums = inhibition_weight_sum(spinet)[index_pref_cc_disp]
+
+    plt.figure()
+    x = np.arange(len(weight_sums))
+    y = weight_sums / np.max(weight_sums)
+    last_index = 0
+    for index in indices:
+        plt.bar(x[last_index:index], y[last_index:index])
+        last_index = index
+        plt.xticks(indices, values, rotation=45)
+
+    plt.title("Normalized sum of inhibition weights sorted by preferred complex cell disparity")
+    plt.ylabel("Normalized sum of inhibition weights")
+    plt.xlabel("Complex cell preferred disparity (px)")
+    plt.show()
+
+
+def inhibition_weight_sum(spinet):
+    weight_sums = []
+    for complex_cell in spinet.neurons[1][::spinet.l_shape[1, 2]]:
+        simple_cells = complex_cell.params["in_connections"]
+
+        weight = []
+        for simple_cell in simple_cells:
+            weight.append(spinet.neurons[0][simple_cell].weights_inhib[0, 0, :])
+        weight_sums.append(np.sum(np.array(weight), axis=0))
+
+    return np.array(weight_sums).flatten()
+
+
 def inhibition_boxplot(directory):
     dist = []
     for network_id in range(2):
@@ -201,7 +264,7 @@ def rf_disparity_matching(weight: np.ndarray):
 
 def disparity_histogram(disparity):
     plt.figure()
-    plt.hist(disparity[:, 0], bins=np.arange(-5, 5), align="left")
+    plt.hist(disparity[:, 0], bins=np.arange(-6, 6), align="left")
     plt.title("Histogram of simple cell disparities")
     plt.xlabel("Disparity (px)")
     plt.ylabel("Count")

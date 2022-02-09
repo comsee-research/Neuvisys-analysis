@@ -100,6 +100,9 @@ class SpikingNetwork:
             self.directions = np.load(self.path + "gabors/data/direction_response.npy")
             self.orientations = self.directions[0:8] + self.directions[8:16]
 
+        if os.path.exists(self.path + "gabors/data/disparity_response.npy"):
+            self.disparities = np.load(self.path + "gabors/data/disparity_response.npy")
+
     def load_neurons(self, layer, neuron_type, config):
         neurons = []
         spike_train = []
@@ -183,6 +186,15 @@ class SpikingNetwork:
         np.save(self.path + "gabors/data/direction_response", spike_vector)
         self.directions = spike_vector
         self.orientations = self.directions[0:8] + self.directions[8:16]
+
+    def save_complex_disparities(self, spikes, disparities):
+        spike_vector = []
+        for disp in range(disparities.size):
+            spike_vector.append(np.count_nonzero(spikes[disp], axis=1))
+        spike_vector = np.array(spike_vector)
+
+        np.save(self.path + "gabors/data/disparity_response", spike_vector)
+        self.disparities = spike_vector
 
     def spike_rate(self):
         time = np.max(self.spikes)

@@ -60,11 +60,15 @@ def inhibition_weight_against_disparity(spinet):
     for index in indices:
         plt.bar(x[last_index:index], y[last_index:index])
         last_index = index
-        plt.xticks(indices, values, rotation=45)
+        plt.xticks(indices, values)
 
     plt.title("Normalized sum of inhibition weights sorted by preferred complex cell disparity")
     plt.ylabel("Normalized sum of inhibition weights")
     plt.xlabel("Complex cell preferred disparity (px)")
+
+    if not os.path.exists(spinet.path + "figures/1/disparities/"):
+        os.mkdir(spinet.path + "figures/1/disparities/")
+    plt.savefig(spinet.path + "figures/1/disparities/inhibition_weights", bbox_inches="tight")
     plt.show()
 
 
@@ -262,12 +266,14 @@ def rf_disparity_matching(weight: np.ndarray):
     return np.array([xmax, ymax]), res_ref
 
 
-def disparity_histogram(disparity):
+def disparity_histogram(spinet, disparity):
     plt.figure()
-    plt.hist(disparity[:, 0], bins=np.arange(-6, 6), align="left")
+    plt.hist(disparity[:, 0], bins=np.arange(-8, 9), align="left")
     plt.title("Histogram of simple cell disparities")
     plt.xlabel("Disparity (px)")
     plt.ylabel("Count")
+    plt.savefig(spinet.path + "figures/0/disparity_histogram", bbox_inches="tight")
+    plt.show()
 
 
 def compute_disparity_0(spinet, disparity, residuals, xs, ys, mat):

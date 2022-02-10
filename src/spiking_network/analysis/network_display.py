@@ -250,6 +250,29 @@ def plot_orientations(spinet, orientations, rotations):
     return vectors
 
 
+def complex_cell_disparities(spinet, disparities, disp):
+    ndisp = disp + np.abs(np.min(disp))
+    ndisp = ndisp / np.max(ndisp) * 8
+
+    for i, disparity in enumerate(disparities.T):
+        plt.figure()
+        ax = plt.subplot(111, polar=True)
+        ax.set_title("Cell "+str(i))
+        print(disparity)
+        plt.bar(ndisp, disparity)
+
+        ax.set_thetamax(360)
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+        plt.setp(ax.get_xticklabels(), fontsize=15)
+        plt.setp(ax.get_yticklabels(), fontsize=13)
+        ax.set_xticklabels(disp[::2])
+        if not os.path.exists(spinet.path + "figures/1/disparities/complex_disparities"):
+            os.mkdir(spinet.path + "figures/1/disparities/complex_disparities")
+        plt.savefig(spinet.path + "figures/1/disparities/complex_disparities/" + str(i), bbox_inches="tight")
+        plt.show()
+
+
 def create_figures(spinet, spike_vector, angles, name):
     vectors = []
     for i in range(spike_vector.shape[1]):

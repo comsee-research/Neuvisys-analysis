@@ -126,12 +126,18 @@ class SpikingNetwork:
             step = self.l_shape[layer, 0] * self.l_shape[layer, 1] * self.l_shape[layer, 2]
             for r_id in range(0, len(self.neurons[layer]), step):
                 for i, neuron in enumerate(self.neurons[layer][r_id: r_id + self.l_shape[layer, 2]]):
-                    weights.append(neuron.weights)
+                    weights.append(np.load(self.path + "weights/0/" + str(neuron.id) + ".npy"))
                     self.shared_id.append(
                         np.arange(r_id + i, r_id + i + step, self.l_shape[layer, 2]))
             self.shared_id = np.array(self.shared_id)
+
+            for i, weight in enumerate(weights):
+                for shared in self.shared_id[i]:
+                    self.neurons[layer][shared].link_weights(weight)
         else:
-            weights = [neuron.weights for neuron in self.neurons[layer]]
+            for neuron in self.neurons[layer]:
+                neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + ".npy"))
+                weights.append(neuron.weights)
 
         return np.array(weights)
 
@@ -212,10 +218,10 @@ class Neuron:
             self.conf = json.load(file)
         with open(weight_path + str(self.id) + ".json") as file:
             self.params = json.load(file)
-        self.weights = np.load(weight_path + str(self.id) + ".npy")
-        if self.type == "SimpleCell":
-            self.weights_inhib = np.load(weight_path + str(self.id) + "inhib.npy")
+        # if self.type == "SimpleCell":
+        #     self.weights_inhib = np.load(weight_path + str(self.id) + "inhib.npy")
         self.spike_train = np.array(self.params["spike_train"])
+        self.weights = 0
         self.weight_images = []
         self.gabor_image = 0
         self.lambd = 0
@@ -226,6 +232,9 @@ class Neuron:
         self.mu = None
         self.orientation = None
         self.disparity = 0
+
+    def link_weights(self, weights):
+        self.weights = weights
 
     def add_gabor(self, image, mu, sigma, lambd, phase, theta, error):
         self.gabor_image = image

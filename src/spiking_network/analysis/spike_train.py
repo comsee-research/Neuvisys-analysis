@@ -22,7 +22,7 @@ from elephant.spike_train_correlation import correlation_coefficient
 from scipy.stats import laplace
 
 
-def time_histogram_comparison(spinet, sts_control, sts_experiment, distribution):
+def time_histogram_comparison(spinet, sts_control, sts_experiment, distribution, layer):
     histogram_control = statistics.time_histogram(sts_control, bin_size=100 * pq.ms, output='mean')
     histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=100 * pq.ms, output='mean')
     units = pq.Quantity(1, 's')
@@ -30,12 +30,12 @@ def time_histogram_comparison(spinet, sts_control, sts_experiment, distribution)
     width = histogram_control.sampling_period.rescale(units).item()
     histogram_diff = histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude
 
-    control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units)
+    control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer)
     control_experiment_diff(histogram_diff, times, width, units)
     diff_distribution(histogram_diff, times, distribution)
 
 
-def control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units):
+def control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer):
     plt.figure()
     plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
     plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
@@ -43,9 +43,9 @@ def control_vs_experiment(spinet, histogram_control, histogram_experiment, times
     plt.ylabel("Spike Rate (Hz)")
     plt.title("Time histogram")
     plt.legend()
-    if not os.path.exists(spinet.path + "figures/0/activity_comparison"):
-        os.mkdir(spinet.path + "figures/0/activity_comparison")
-    plt.savefig(spinet.path + "figures/0/activity_comparison/control_vs_experiment", bbox_inches="tight")
+    if not os.path.exists(spinet.path + "figures/"+str(layer)+"/activity_comparison"):
+        os.mkdir(spinet.path + "figures/"+str(layer)+"/activity_comparison")
+    plt.savefig(spinet.path + "figures/"+str(layer)+"/activity_comparison/control_vs_experiment", bbox_inches="tight")
     plt.show()
 
 

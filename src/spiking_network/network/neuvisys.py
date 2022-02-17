@@ -20,8 +20,8 @@ from natsort import natsorted
 from src.events.tools.read_write.events_tools import delete_files
 
 
-def compress_weight(weights, path):
-    img = np.array(255 * (weights / weights.max()), dtype=np.uint8)
+def compress_weight(weights, path, max_weight):
+    img = np.array(255 * (weights / max_weight), dtype=np.uint8)
     Image.fromarray(img).save(path)
 
 
@@ -145,6 +145,7 @@ class SpikingNetwork:
         for layer in range(self.p_shape.shape[0]):
             if layer == 0:
                 for i, weights in enumerate(self.weights[layer]):
+                    max_weight = np.max(weights)
                     for synapse in range(self.conf["neuron1Synapses"]):
                         for camera in range(self.conf["nbCameras"]):
                             n_weight = reshape_weights(
@@ -152,7 +153,8 @@ class SpikingNetwork:
                             )
                             path = (self.path + "images/0/" + str(i) + "_syn" + str(synapse) + "_cam" + str(
                                 camera) + ".png")
-                            compress_weight(n_weight, path)
+
+                            compress_weight(n_weight, path, max_weight)
                             if np.any(self.shared_id):
                                 for shared in self.shared_id[i]:
                                     self.neurons[layer][shared].weight_images.append(path)
@@ -164,7 +166,7 @@ class SpikingNetwork:
                     weights = np.swapaxes(weights, 0, 1)
                     weights = np.stack((weights, np.zeros(weights.shape), np.zeros(weights.shape)), axis=2)
                     path = self.path + "images/" + str(layer) + "/" + str(i) + ".png"
-                    compress_weight(np.kron(weights, np.ones((7, 7, 1))), path)
+                    compress_weight(np.kron(weights, np.ones((7, 7, 1))), path, weights.max())
                     neuron.weight_images.append(path)
                     # for z in range(self.n_shape[layer, 2]):
                     #     dim = np.zeros((self.n_shape[layer, 0], self.n_shape[layer, 1]))

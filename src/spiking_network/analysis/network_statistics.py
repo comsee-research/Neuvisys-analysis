@@ -249,21 +249,25 @@ def rf_matching(spinet):
         else:
             spinet.neurons[0][i].add_disparity(disparity)
 
-    return np.array(residuals), np.array(disparities)
+    return np.array(disparities), np.array(residuals)
 
 
 def rf_disparity_matching(weight: np.ndarray):
-    res_ref = np.inf
+    residual_ref = np.inf
     xmax, ymax = 0, 0
+    left_to_right_ratio = np.sum(weight[:, 0]) / (np.sum(weight[:, 0]) + np.sum(weight[:, 1]))
+    if left_to_right_ratio > 0.9 or left_to_right_ratio < 0.1:
+        return np.array([np.nan, np.nan]), residual_ref
+
     for x in range(weight.shape[3]):
         for y in range(weight.shape[4]):
-            res = weight[:, 0, 0] - np.roll(weight[:, 1, 0], (x, y), axis=(1, 2))
-            res = np.sum(res ** 2)
-            if res < res_ref:
-                res_ref = res
+            residual = weight[:, 0, 0] - np.roll(weight[:, 1, 0], (x, y), axis=(1, 2))
+            residual = np.sum(residual ** 2)
+            if residual < residual_ref:
+                residual_ref = residual
                 xmax = x
                 ymax = y
-    return np.array([xmax, ymax]), res_ref
+    return np.array([xmax, ymax]), residual_ref
 
 
 def disparity_histogram(spinet, disparity):

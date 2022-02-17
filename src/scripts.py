@@ -39,13 +39,13 @@ list_disparities = [home + "Videos/disparity/base_disp/" + str(disp) + ".npz" fo
                     [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]]
 
 params = inhibition_disparity_params({'network_config': {'layerSizes': [[8, 8, 100], [2, 2, 16]],
-                                                         'neuronSizes': [[10, 10, 1], [4, 4, 100]]},
+                                                        'neuronSizes': [[10, 10, 1], [4, 4, 100]]},
                                       'simple_cell_config': {'VTHRESH': 20,
-                                                             'ETA_INH': 15,
+                                                             'ETA_INH': 10,
                                                              'STDP_LEARNING': 'excitatory',
                                                              'NORM_FACTOR': 4,
-                                                             'ETA_LTP': 0.0000257,
-                                                             'ETA_LTD': -0.000007, }})
+                                                             'ETA_LTP': 2 * 0.000077,
+                                                             'ETA_LTD': 2 * -0.000021,}})
 create_networks(exec_path, networks_path, 1, params)
 
 path = networks_path + "network_0/"

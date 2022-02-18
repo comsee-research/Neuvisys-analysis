@@ -20,6 +20,15 @@ def delete_files(path):
 def load_params(param_path):
     with open(param_path) as file:
         return json.load(file)
+    
+def ros_to_npy(self, bag_file, topic):
+    bag = rosbag.Bag(bag_file)
+    npy_events = []
+
+    for topic, msg, t in bag.read_messages(topics=[topic]):
+        for event in msg.events:
+            npy_events.append([event.ts.to_nsec(), event.x, event.y, event.polarity])
+    return np.array(npy_events)
 
 
 def write_npz(dest, events):
@@ -104,42 +113,3 @@ def txt_to_events(file_path):
     events = np.array(arr)
     events = events[events[:, 2].argsort()]
     return events
-
-
-def h5py_to_npy(events):
-    npy_events = np.zeros(
-        events.shape[0],
-        dtype=([("timestamp", "i8"), ("x", "i8"), ("y", "i8"), ("polarity", "i1")]),
-    )
-    npy_events["timestamp"] = np.array(1e7 * events[:, 2], dtype="i8")
-    npy_events["x"] = np.array(events[:, 0], dtype="i8")
-    npy_events["y"] = np.array(events[:, 1], dtype="i8")
-    npy_events["polarity"] = np.array((events[:, 3] + 1) / 2, dtype="i1")
-
-    return npy_events
-
-
-def ros_to_npy(bag_file, topic):
-    bag = rosbag.Bag(bag_file)
-    npy_events = []
-
-    for topic, msg, t in bag.read_messages(topics=[topic]):
-        for event in msg.events:
-            npy_events.append([event.ts.to_nsec(), event.x, event.y, event.polarity])
-    return np.array(npy_events)
-
-
-def npz_to_arr(npz):
-    eve = np.zeros((npz["arr_0"].shape[0], len(npz.keys())))
-    for i, k in enumerate(npz.keys()):
-        eve[:, i] = npz[k]
-    return eve
-
-
-def npaedat_to_np(events):
-    eve = np.zeros((events["timestamp"].shape[0], 4))
-    eve[:, 0] = events["timestamp"]
-    eve[:, 1] = events["x"]
-    eve[:, 2] = events["y"]
-    eve[:, 3] = events["polarity"]
-    return eve

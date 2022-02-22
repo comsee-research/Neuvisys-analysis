@@ -11,13 +11,23 @@ import json
 import os
 import random
 import re
+import shutil
 
 import numpy as np
 import scipy.io as sio
 from PIL import Image
 from natsort import natsorted
 
-from src.events.tools.read_write.events_tools import delete_files
+
+def delete_files(folder):
+    for file in os.scandir(folder):
+        try:
+            if os.path.isfile(file.path) or os.path.islink(file.path):
+                os.unlink(file.path)
+            elif os.path.isdir(file.path):
+                shutil.rmtree(file.path)
+        except Exception as e:
+            print("Failed to delete %s. Reason: %s" % (file.path, e))
 
 
 def compress_weight(weights, path, max_weight):

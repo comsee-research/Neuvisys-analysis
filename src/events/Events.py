@@ -26,7 +26,10 @@ def npz_to_ndarray(npz):
             left_events[:, i] = npz[k]
         else:
             right_events[:, i - 4] = npz[k]
-    return left_events, right_events
+    if right_events.any():
+        return left_events, right_events
+    else:
+        return left_events
 
 
 def npaedat_to_ndarray(events):
@@ -167,9 +170,13 @@ class Events:
             if isinstance(l_events, str):
                 if l_events.endswith(".npz"):
                     self.l_events = npz_to_ndarray(np.load(l_events))
+                elif l_events.endswith(".h5"):
+                    self.l_events = h5py_to_ndarray(load_h5(l_events))
             if isinstance(r_events, str):
-                if l_events.endswith(".npz"):
+                if r_events.endswith(".npz"):
                     self.r_events = npz_to_ndarray(np.load(r_events))
+                elif r_events.endswith(".h5"):
+                    self.r_events = h5py_to_ndarray(load_h5(r_events))
         else:
             self.stereo = False
             if isinstance(l_events, np.ndarray):
@@ -181,7 +188,6 @@ class Events:
                         self.stereo = True
                         self.l_events, self.r_events = npz_to_ndarray(eve)
                     else:
-                        self.stereo = False
                         self.events = npz_to_ndarray(eve)
                 elif l_events.endswith(".h5"):
                     self.events = h5py_to_ndarray(load_h5(l_events))
@@ -200,7 +206,7 @@ class Events:
     def __next__(self):
         return self.events.__next__()
 
-    def write_npz(self, dest):
+    def save_file(self, dest):
         if self.stereo:
             np.savez(
                 dest,
@@ -241,6 +247,29 @@ class Events:
                 img = render(events[:, 1], events[:, 2], events[:, 3], height, width)
                 writer.writeFrame(img)
             writer.close()
+
+    def remove_events(self, timestamp_starts, timestamp_end):
+        for i, j in zip(timestamp_starts, timestamp_end):
+            if self.stereo:
+                self.l_events = np.delete(
+                    self.l_events, (self.l_events[:, 0] >= i) & (self.l_events[:, 0] <= j)
+                )
+                self.r_events = np.delete(
+                    self.r_events, (self.r_events[:, 0] >= i) & (self.r_events[:, 0] <= j)
+                )
+            else:
+                self.events = np.delete(
+                    self.events, (self.events[:, 0] >= i) & (self.events[:, 0] <= j)
+                )
+
+    def resize_events(self, width, height):
+        if self.stereo:
+            self.l_events = np.delete(self.l_events, (self.l_events[:, 1] >= width) | (self.l_events[:, 2] >= height),
+                                      axis=0)
+            self.r_events = np.delete(self.r_events, (self.r_events[:, 1] >= width) | (self.r_events[:, 2] >= height),
+                                      axis=0)
+        else:
+            self.events = np.delete(self.events, (self.events[:, 1] >= width) | (self.events[:, 2] >= height), axis=0)
 
     def _finalizer(self):
         pass

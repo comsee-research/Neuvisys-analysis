@@ -1,8 +1,8 @@
 import random
 from PIL import Image, ImageDraw
 import numpy as np
-from src.events.tools.read_write.aedat_tools import load_aedat4
-from src.events.tools.read_write.events_tools import npz_to_arr
+
+from src.events.Events import Events
 
 
 def concatenate_files(aedat4_files):
@@ -10,10 +10,10 @@ def concatenate_files(aedat4_files):
     last_tmsp = 0
 
     for i, file in enumerate(aedat4_files):
-        events = load_aedat4(file)
+        events = Events(file).events
         if i != 0:
-            events["timestamp"] += last_tmsp - events[0]["timestamp"]
-        last_tmsp = events[-1]["timestamp"]
+            events[:, 0] += last_tmsp - events[0][:, 0]
+        last_tmsp = events[-1][:, 0]
         list_events.append(events)
     return np.hstack(list_events)
 
@@ -23,7 +23,7 @@ def concatenate_npz(event_files):
     last_tmsp = 0
 
     for i, events in enumerate(event_files):
-        events = npz_to_arr(events)
+        events = Events(events).events
         if i != 0:
             events[:, 0] += last_tmsp - events[0, 0]
         last_tmsp = events[-1, 0]
@@ -53,7 +53,7 @@ def build_mixed_file(files, chunk_size):
     f_timestamps = []
 
     for file in files:
-        div, first_timestamp = divide_events(load_aedat4(file), chunk_size)
+        div, first_timestamp = divide_events(Events(file).events, chunk_size)
         splits += div
         f_timestamps.append(first_timestamp)
     random.shuffle(splits)
@@ -65,7 +65,7 @@ def build_mixed_file(files, chunk_size):
 
 
 def remove_blank_space(aedat4_file, outfile, x_size, y_size):
-    events = load_aedat4(aedat4_file)
+    events = Events(aedat4_file).events
     times = events["timestamp"]
 
     diff = np.diff(times)
@@ -114,20 +114,5 @@ def rectify_events(events, lx, ly, rx, ry):
         & (events[1]["y"] < 260)
         & (events[1]["y"] >= 0)
         ]
-
-    return l_events, r_events
-
-
-def remove_events(events, timestamp_starts, timestamp_end):
-    l_events = events[0]
-    r_events = events[1]
-
-    for i, j in zip(timestamp_starts, timestamp_end):
-        l_events = np.delete(
-            l_events, (l_events["timestamp"] >= i) & (l_events["timestamp"] <= j)
-        )
-        r_events = np.delete(
-            r_events, (r_events["timestamp"] >= i) & (r_events["timestamp"] <= j)
-        )
 
     return l_events, r_events

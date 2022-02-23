@@ -42,14 +42,15 @@ def reshape_weights(weights, width, height):
 
 def shuffle_weights(path):
     neurons_paths = natsorted(os.listdir(path))
-    weight_files = list(filter(re.compile(".*inhib").match, neurons_paths))
-    shuffled_weight_files = random.sample(weight_files, len(weight_files))
+    for pattern in [".*tdi", ".*li"]:
+        weight_files = list(filter(re.compile(pattern).match, neurons_paths))
+        shuffled_weight_files = random.sample(weight_files, len(weight_files))
 
-    for old_name, new_name in zip(weight_files, shuffled_weight_files):
-        os.rename(path + old_name, path + new_name + "bis")
+        for old_name, new_name in zip(weight_files, shuffled_weight_files):
+            os.rename(path + old_name, path + new_name + "bis")
 
-    for name in weight_files:
-        os.rename(path + name + "bis", path + name)
+        for name in weight_files:
+            os.rename(path + name + "bis", path + name)
 
 
 def clean_network(path, layers):
@@ -230,8 +231,9 @@ class Neuron:
             self.conf = json.load(file)
         with open(weight_path + str(self.id) + ".json") as file:
             self.params = json.load(file)
-        # if self.type == "SimpleCell":
-        #     self.weights_inhib = np.load(weight_path + str(self.id) + "inhib.npy")
+        if self.type == "SimpleCell":
+            self.weights_tdi = np.load(weight_path + str(self.id) + "tdi.npy")
+            self.weights_li = np.load(weight_path + str(self.id) + "li.npy")
         self.spike_train = np.array(self.params["spike_train"])
         self.weights = 0
         self.weight_images = []

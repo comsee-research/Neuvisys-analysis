@@ -22,7 +22,7 @@ from elephant.spike_train_correlation import correlation_coefficient
 from scipy.stats import laplace
 
 
-def time_histogram_comparison(spinet, sts_control, sts_experiment, distribution, layer):
+def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, distribution=None):
     histogram_control = statistics.time_histogram(sts_control, bin_size=100 * pq.ms, output='mean')
     histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=100 * pq.ms, output='mean')
     units = pq.Quantity(1, 's')
@@ -32,7 +32,8 @@ def time_histogram_comparison(spinet, sts_control, sts_experiment, distribution,
 
     control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer)
     control_experiment_diff(histogram_diff, times, width, units)
-    diff_distribution(histogram_diff, times, distribution)
+    if distribution is not None:
+        diff_distribution(histogram_diff, times, distribution)
 
 
 def control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer):
@@ -70,7 +71,7 @@ def diff_distribution(histogram_diff, times, distribution):
 
     rotations = [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
     hist = np.histogram(distribution, bins=np.arange(-8.5, 8.5), density=True)
-    axes[1].bar(rotations, np.roll(hist[0], 8), width=22.5)
+    axes[1].bar(rotations, np.roll(hist[0], 8), width=22.5, align='edge')
     axes[1].set_ylabel("Density")
 
 

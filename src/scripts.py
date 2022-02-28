@@ -19,6 +19,9 @@ else:
 
 # %% Generate Spiking Network
 
-events = Events("/home/thomas/Videos/DSEC/interlaken_00_d_events_left/events.h5")
-events.resize_events(147, 110, 346, 260)
-# events.event_to_video(50, "/home/thomas/Bureau/test", 346, 260)
+events = Events("/home/thomas/Videos/DSEC/car_left.npz", "/home/thomas/Videos/DSEC/car_right.npz")
+events.save_file("/home/thomas/Videos/DSEC/car")
+
+# events.resize_events(147, 110, 346, 260)
+# events.save_file("/home/thomas/Videos/DSEC/car_left")
+# events.event_to_video(50, "/home/thomas/Videos/DSEC/car_left", 640, 480)

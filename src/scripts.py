@@ -19,5 +19,6 @@ else:
 
 # %% Generate Spiking Network
 
-events = Events("/home/thomas/Videos/disparity/disp_backward/-8.npz")
-events.event_to_video(50, "/home/thomas/Bureau/test", 346, 260)
+events = Events("/home/thomas/Videos/DSEC/interlaken_00_d_events_left/events.h5")
+events.resize_events(147, 110, 346, 260)
+# events.event_to_video(50, "/home/thomas/Bureau/test", 346, 260)

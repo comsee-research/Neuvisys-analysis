@@ -262,14 +262,21 @@ class Events:
                     self.events, (self.events[:, 0] >= i) & (self.events[:, 0] <= j)
                 )
 
-    def resize_events(self, width, height):
+    def resize_events(self, w_start, h_start, width, height):
         if self.stereo:
-            self.l_events = np.delete(self.l_events, (self.l_events[:, 1] >= width) | (self.l_events[:, 2] >= height),
+            self.l_events = np.delete(self.l_events,
+                                      (self.l_events[:, 1] < w_start) | (self.l_events[:, 1] >= w_start + width) |
+                                      (self.l_events[:, 2] < h_start) | (self.l_events[:, 2] >= h_start + height),
                                       axis=0)
-            self.r_events = np.delete(self.r_events, (self.r_events[:, 1] >= width) | (self.r_events[:, 2] >= height),
+            self.r_events = np.delete(self.r_events,
+                                      (self.r_events[:, 1] < w_start) | (self.r_events[:, 1] >= w_start + width) |
+                                      (self.r_events[:, 2] < h_start) | (self.r_events[:, 2] >= h_start + height),
                                       axis=0)
         else:
-            self.events = np.delete(self.events, (self.events[:, 1] >= width) | (self.events[:, 2] >= height), axis=0)
+            self.events = np.delete(self.events,
+                                    (self.events[:, 1] < w_start) | (self.events[:, 1] >= w_start + width) |
+                                    (self.events[:, 2] < h_start) | (self.events[:, 2] >= h_start + height),
+                                    axis=0)
 
     def _finalizer(self):
         pass

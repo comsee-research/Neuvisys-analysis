@@ -26,23 +26,7 @@ def inhibition_weight_against_orientation(spinet):
         if layer == 0:
             lateral_inhibition_weight_sum(spinet, spinet.orientations[layer], rotation_stimulus)
         elif layer == 1:
-            index_pref_stimulus, change_stimulus, change_stimulus_indices = preffered_stimulus(
-                spinet.orientations[layer], rotation_stimulus)
-            weight_sums = top_down_inhibition_weight_sum(spinet)[index_pref_stimulus]
-
-            plt.figure()
-            x = np.arange(len(weight_sums))
-            y = weight_sums / np.max(weight_sums)
-            last_index = 0
-            for index in change_stimulus_indices:
-                plt.bar(x[last_index:index], y[last_index:index])
-                last_index = index
-
-            plt.xticks(change_stimulus_indices, change_stimulus, rotation=45)
-            plt.title("Normalized sum of inhibition weights sorted by preferred complex cell orientation")
-            plt.ylabel("Normalized sum of inhibition weights")
-            plt.xlabel("Complex cell preferred orientation in degrees (°)")
-            plt.show()
+            top_down_inhibition_weight_sum(spinet, spinet.orientations[layer], rotation_stimulus)
 
 
 def inhibition_weight_against_disparity(spinet):
@@ -70,7 +54,7 @@ def inhibition_weight_against_disparity(spinet):
     plt.show()
 
 
-def top_down_inhibition_weight_sum(spinet):
+def top_down_inhibition_weight_sum(spinet, responses: np.ndarray, stimulus: []):
     weight_sums = []
     for complex_cell in spinet.neurons[1][::spinet.l_shape[1, 2]]:
         simple_cells = complex_cell.params["in_connections"]
@@ -79,8 +63,30 @@ def top_down_inhibition_weight_sum(spinet):
         for simple_cell in simple_cells:
             weight.append(spinet.neurons[0][simple_cell].weights_tdi)
         weight_sums.append(np.sum(np.array(weight), axis=0))
+    weight_sums = np.array(weight_sums).flatten()
 
-    return np.array(weight_sums).flatten()
+    index_pref_stimulus, change_stimulus, change_stimulus_indices = preffered_stimulus(responses, stimulus)
+
+    plt.figure()
+    x = np.arange(len(weight_sums))
+    y = weight_sums / np.max(weight_sums)
+    last_index = 0
+
+    full_sum = []
+    for index in change_stimulus_indices:
+        plt.bar(x[last_index:index], y[last_index:index])
+        full_sum.append(np.sum(y[last_index:index]))
+        last_index = index
+
+    plt.xticks(change_stimulus_indices, change_stimulus, rotation=45)
+    plt.title("Normalized sum of inhibition weights sorted by preferred complex cell orientation")
+    plt.ylabel("Normalized sum of inhibition weights")
+    plt.xlabel("Complex cell preferred orientation in degrees (°)")
+    plt.show()
+
+    plt.figure()
+    plt.bar(np.arange(len(full_sum)), full_sum)
+    plt.show()
 
 
 def lateral_inhibition_weight_sum(spinet: SpikingNetwork, responses: np.ndarray, stimulus: []):
@@ -92,14 +98,22 @@ def lateral_inhibition_weight_sum(spinet: SpikingNetwork, responses: np.ndarray,
         x = np.arange(len(simple_cell.weights_li))
         y = simple_cell.weights_li# / np.max(simple_cell.weights_li)
         last_index = 0
+
+        full_sum = []
         for index in change_stimulus_indices:
             plt.bar(x[last_index:index], y[last_index:index])
+            full_sum.append(np.sum(y[last_index:index]))
             last_index = index
-        plt.title(str(responses[:, simple_cell.id]))
+
+        plt.xticks(change_stimulus_indices, change_stimulus, rotation=45)
+        plt.title("Normalized sum of inhibition weights sorted by preferred orientation")
+        plt.ylabel("Normalized sum of inhibition weights")
+        plt.xlabel("Complex cell preferred orientation in degrees (°)")
         plt.show()
 
-        if simple_cell.id > 20:
-            break
+        plt.figure()
+        plt.bar(np.arange(len(full_sum)), full_sum)
+        plt.show()
 
 
 def preffered_stimulus(responses, stimulus):

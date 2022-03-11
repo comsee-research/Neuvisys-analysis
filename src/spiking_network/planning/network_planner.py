@@ -100,15 +100,15 @@ def create_network(exec_path, network_path):
         print(path, end="")
 
 
-def divide_visual_field(nbrx, nbry, srx, sry):
-    spacing_x = (346 - (srx * nbrx)) / (nbrx - 1)
-    spacing_y = (260 - (srx * nbrx)) / (nbrx - 1)
+def divide_visual_field(nb_x_region, nb_y_region, size_x_region, size_y_region):
+    spacing_x = (346 - (size_x_region * nb_x_region)) / (nb_x_region - 1)
+    spacing_y = (260 - (size_x_region * nb_x_region)) / (nb_x_region - 1)
 
     X = []
-    for x in range(nbrx):
-        X.append(x * (srx + spacing_x))
+    for x in range(nb_x_region):
+        X.append(x * (size_x_region + spacing_x))
     Y = []
-    for y in range(nbry):
-        Y.append(y * (sry + spacing_y))
+    for y in range(nb_y_region):
+        Y.append(y * (size_y_region + spacing_y))
 
     return X, Y

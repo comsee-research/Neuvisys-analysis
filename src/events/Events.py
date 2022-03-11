@@ -272,11 +272,17 @@ class Events:
                                       (self.r_events[:, 1] < w_start) | (self.r_events[:, 1] >= w_start + width) |
                                       (self.r_events[:, 2] < h_start) | (self.r_events[:, 2] >= h_start + height),
                                       axis=0)
+            self.l_events[:, 1] -= np.min(self.l_events[:, 1])
+            self.l_events[:, 2] -= np.min(self.l_events[:, 2])
+            self.r_events[:, 1] -= np.min(self.r_events[:, 1])
+            self.r_events[:, 2] -= np.min(self.r_events[:, 2])
         else:
             self.events = np.delete(self.events,
                                     (self.events[:, 1] < w_start) | (self.events[:, 1] >= w_start + width) |
                                     (self.events[:, 2] < h_start) | (self.events[:, 2] >= h_start + height),
                                     axis=0)
+            self.events[:, 1] -= np.min(self.events[:, 1])
+            self.events[:, 2] -= np.min(self.events[:, 2])
 
     def _finalizer(self):
         pass

@@ -90,7 +90,7 @@ class SpikingNetwork:
         type_to_config = {"SimpleCell": "simple_cell_config.json", "ComplexCell": "complex_cell_config.json",
                           "CriticCell": "critic_cell_config.json", "ActorCell": "actor_cell_config.json"}
 
-        self.p_shape = np.array(self.conf["layerPatches"])
+        self.p_shape = np.array(self.conf["layerPatches"], dtype=object)
         self.l_shape = np.array(self.conf["layerSizes"])
         self.n_shape = np.array(self.conf["neuronSizes"])
 

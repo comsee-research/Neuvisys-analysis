@@ -89,8 +89,8 @@ def pdf_weight_sharing(spinet, nb_cameras, camera):
         pad = 11
     else:
         pad = 24
-    xpatch = spinet.p_shape[0, 0].shape[0]
-    ypatch = spinet.p_shape[0, 1].shape[0]
+    xpatch = len(spinet.p_shape[0, 0])
+    ypatch = len(spinet.p_shape[0, 1])
     pdf = FPDF("P", "mm", (11 * xpatch * side + (xpatch - 1) * 10, pad * ypatch * side + (ypatch - 1) * 10))
     pdf.add_page()
 

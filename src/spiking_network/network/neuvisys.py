@@ -107,9 +107,13 @@ class SpikingNetwork:
                 self.spikes[i] = np.array(list(itertools.zip_longest(*self.spikes[i], fillvalue=0))).T
                 self.spikes[i][self.spikes[i] != 0] -= np.min(self.spikes[i][self.spikes[i] != 0])
 
-        if os.path.exists(self.path + "gabors/data/direction_response.npy"):
-            self.directions = np.load(self.path + "gabors/data/direction_response.npy")
-            self.orientations = self.directions[0:8] + self.directions[8:16]
+        if os.path.exists(self.path + "gabors/0/rotation_response.npy"):
+            self.directions = []
+            self.orientations = []
+            for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
+                if layer < 2:
+                    self.directions.append(np.load(self.path + "gabors/"+str(layer)+"/rotation_response.npy"))
+                    self.orientations.append(self.directions[layer][0:8] + self.directions[layer][8:16])
 
         if os.path.exists(self.path + "gabors/data/disparity_response.npy"):
             self.disparities = np.load(self.path + "gabors/data/disparity_response.npy")
@@ -196,15 +200,17 @@ class SpikingNetwork:
 
         return basis
 
-    def save_complex_directions(self, spikes, rotations):
-        spike_vector = []
-        for rot in range(rotations.size):
-            spike_vector.append(np.count_nonzero(spikes[rot], axis=1))
-        spike_vector = np.array(spike_vector)
-
-        np.save(self.path + "gabors/data/direction_response", spike_vector)
-        self.directions = spike_vector
-        self.orientations = self.directions[0:8] + self.directions[8:16]
+    def save_rotation_response(self, spikes, rotations):
+        self.directions = []
+        self.orientations = []
+        for layer, response in enumerate(spikes):
+            spike_vector = []
+            for rot in range(rotations.size):
+                spike_vector.append(np.count_nonzero(response[rot], axis=1))
+            spike_vector = np.array(spike_vector)
+            np.save(self.path + "gabors/"+str(layer)+"/rotation_response", spike_vector)
+            self.directions = spike_vector
+            self.orientations = self.directions[0:8] + self.directions[8:16]
 
     def save_complex_disparities(self, spikes, disparities):
         spike_vector = []

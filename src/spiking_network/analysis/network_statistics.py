@@ -19,39 +19,33 @@ from natsort import natsorted
 
 
 def inhibition_weight_against_orientation(spinet):
-    rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])
+    rotation_stimulus = [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
+    for layer in range(len(spinet.neurons)):
+        index_pref_stimulus, values, indices = preffered_stimulus(spinet.orientations[layer], np.array(rotation_stimulus))
+        if layer == 0:
+            weight_sums = lateral_inhibition_weight_sum(spinet)[index_pref_stimulus]
+        elif layer == 1:
+            weight_sums = top_down_inhibition_weight_sum(spinet)[index_pref_stimulus]
 
-    pref_cc_ori = np.argmax(spinet.orientations, axis=0)
-    sorted_pref_cc_ori = rotations[np.sort(pref_cc_ori)]
-    values, indices = np.unique(sorted_pref_cc_ori, return_index=True)
-    index_pref_cc_ori = np.argsort(pref_cc_ori)
+        plt.figure()
+        x = np.arange(len(weight_sums))
+        y = weight_sums / np.max(weight_sums)
+        last_index = 0
+        for index in indices:
+            plt.bar(x[last_index:index], y[last_index:index])
+            last_index = index
+            plt.xticks(indices, values, rotation=45)
 
-    weight_sums = inhibition_weight_sum(spinet)[index_pref_cc_ori]
-
-    plt.figure()
-    x = np.arange(len(weight_sums))
-    y = weight_sums / np.max(weight_sums)
-    last_index = 0
-    for index in indices:
-        plt.bar(x[last_index:index], y[last_index:index])
-        last_index = index
-        plt.xticks(indices, values, rotation=45)
-
-    plt.title("Normalized sum of inhibition weights sorted by preferred complex cell orientation")
-    plt.ylabel("Normalized sum of inhibition weights")
-    plt.xlabel("Complex cell preferred orientation in degrees (°)")
-    plt.show()
+        plt.title("Normalized sum of inhibition weights sorted by preferred complex cell orientation")
+        plt.ylabel("Normalized sum of inhibition weights")
+        plt.xlabel("Complex cell preferred orientation in degrees (°)")
+        plt.show()
 
 
 def inhibition_weight_against_disparity(spinet):
-    disparities = np.array([-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8])
-
-    pref_cc_disp = np.argmax(spinet.disparities, axis=0)
-    sorted_pref_cc_disp = disparities[np.sort(pref_cc_disp)]
-    values, indices = np.unique(sorted_pref_cc_disp, return_index=True)
-    index_pref_cc_disp = np.argsort(pref_cc_disp)
-
-    weight_sums = inhibition_weight_sum(spinet)[index_pref_cc_disp]
+    disparities_stimulus = [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+    index_pref_stimulus, values, indices = preffered_stimulus(spinet.disparities, np.array(disparities_stimulus))
+    weight_sums = top_down_inhibition_weight_sum(spinet)[index_pref_stimulus]
 
     plt.figure()
     x = np.arange(len(weight_sums))
@@ -72,17 +66,38 @@ def inhibition_weight_against_disparity(spinet):
     plt.show()
 
 
-def inhibition_weight_sum(spinet):
+def top_down_inhibition_weight_sum(spinet):
     weight_sums = []
     for complex_cell in spinet.neurons[1][::spinet.l_shape[1, 2]]:
         simple_cells = complex_cell.params["in_connections"]
 
         weight = []
         for simple_cell in simple_cells:
-            weight.append(spinet.neurons[0][simple_cell].weights_inhib[0, 0, :])
+            weight.append(spinet.neurons[0][simple_cell].weights_tdi)
         weight_sums.append(np.sum(np.array(weight), axis=0))
 
     return np.array(weight_sums).flatten()
+
+
+def lateral_inhibition_weight_sum(spinet):
+    weight_sums = []
+    for simple_cell in spinet.neurons[0]:
+        adjacent_cells = simple_cell.params["lateral_dynamic_inhibition"]
+
+        # weight = []
+        # for adjacent_cell in adjacent_cells:
+        #     weight.append(spinet.neurons[0][adjacent_cell].weights_li)
+        # weight_sums.append(np.sum(np.array(weight), axis=0))
+
+    return np.array(weight_sums).flatten()
+
+
+def preffered_stimulus(responses, stimulus):
+    pref_stimulus = np.argmax(responses, axis=0)
+    index_pref_stimulus = np.argsort(pref_stimulus)
+    sorted_pref_stimulus = stimulus[np.sort(pref_stimulus)]
+    values, indices = np.unique(sorted_pref_stimulus, return_index=True)
+    return index_pref_stimulus, values, indices
 
 
 def inhibition_boxplot(directory):

@@ -73,6 +73,7 @@ def diff_distribution(histogram_diff, times, distribution):
     hist = np.histogram(distribution, bins=np.arange(-8.5, 8.5), density=True)
     axes[1].bar(rotations, np.roll(hist[0], 8), width=22.5, align='edge')
     axes[1].set_ylabel("Density")
+    axes[1].set_xlabel("Input orientation in degree(°)")
 
 
 def spike_trains(strains: np.array):
@@ -104,7 +105,7 @@ def event_plot(sts, layer, path):
 
 def time_histogram(sts, layer, path):
     fig, axes = plt.subplots()
-    histogram = statistics.time_histogram(sts, bin_size=100 * pq.ms, output='rate')
+    histogram = statistics.time_histogram(sts, bin_size=50 * pq.ms, output='rate')
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
     if path:

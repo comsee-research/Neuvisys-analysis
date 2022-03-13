@@ -35,6 +35,7 @@ def base_learning_params(params=None):
             'NORM_FACTOR': [4],
             'STDP_LEARNING': ["excitatory"],
             'SYNAPSE_DELAY': [0],
+            'DECAY_LEARNING': [0],
             'TARGET_SPIKE_RATE': [0.75],
             'TAU_LTD': [14],
             'TAU_LTP': [7],
@@ -52,6 +53,7 @@ def base_learning_params(params=None):
             'ETA_RP': [1],
             'NORM_FACTOR': [10],
             'STDP_LEARNING': ["excitatory"],
+            'DECAY_LEARNING': [0],
             'TAU_LTD': [20],
             'TAU_LTP': [20],
             'TAU_M': [20],
@@ -89,6 +91,19 @@ def inhibition_orientation():
          })
 
 
+def inhibition_orientation_9regions():
+    return base_learning_params(
+        {'network_config': {'layerPatches': [[[0, 153, 306], [0, 110, 220], [0]],
+                                             [[0, 4, 8], [0, 4, 8], [0]]],
+                            'layerSizes': [[4, 4, 100], [1, 1, 16]],
+                            'neuronSizes': [[10, 10, 1], [4, 4, 100]]},
+         'simple_cell_config': {'VTHRESH': 25,
+                                'ETA_INH': 15,
+                                'ETA_LTP': 0.00077,
+                                'ETA_LTD': -0.00021}
+         })
+
+
 def inhibition_disparity():
     return base_learning_params(
         {'network_config': {'nbCameras': 2,
@@ -98,9 +113,6 @@ def inhibition_disparity():
                             'neuronSizes': [[10, 10, 1], [4, 4, 100]]},
          'simple_cell_config': {'VTHRESH': 25,
                                 'ETA_INH': 15,
-                                'STDP_LEARNING': 'excitatory',
-                                'NORM_FACTOR': 4,
                                 'ETA_LTP': 0.000077,
-                                'ETA_LTD': -0.000021,
-                                'DECAY_RATE': 0}
+                                'ETA_LTD': -0.000021}
          })

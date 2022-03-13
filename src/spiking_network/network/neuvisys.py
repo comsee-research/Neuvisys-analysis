@@ -107,8 +107,8 @@ class SpikingNetwork:
                 self.spikes[i] = np.array(list(itertools.zip_longest(*self.spikes[i], fillvalue=0))).T
                 self.spikes[i][self.spikes[i] != 0] -= np.min(self.spikes[i][self.spikes[i] != 0])
 
-        if os.path.exists(self.path + "gabors/data/direction_response.npy"):
-            self.directions = np.load(self.path + "gabors/data/direction_response.npy")
+        if os.path.exists(self.path + "gabors/0/rotation_response.npy"):
+            self.directions = np.load(self.path + "gabors/0/rotation_response.npy")
             self.orientations = self.directions[0:8] + self.directions[8:16]
 
         if os.path.exists(self.path + "gabors/data/disparity_response.npy"):

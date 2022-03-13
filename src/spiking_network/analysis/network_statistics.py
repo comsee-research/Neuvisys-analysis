@@ -17,6 +17,8 @@ import seaborn as sns
 from PIL import Image
 from natsort import natsorted
 
+from src.spiking_network.network.neuvisys import SpikingNetwork
+
 
 def inhibition_weight_against_orientation(spinet):
     rotations = np.array([0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338])

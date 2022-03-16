@@ -83,7 +83,7 @@ def reinforcement_learning():
 
 def inhibition_orientation():
     return base_learning_params(
-        {'network_config': {'layerPatches': [[[20], [20], [0]], [[0], [0], [0]]],
+        {'network_config': {'layerPatches': [[[93], [50], [0]], [[0], [0], [0]]],
                             'layerSizes': [[16, 16, 144], [4, 4, 16]],
                             'neuronSizes': [[10, 10, 1], [4, 4, 144]]},
          'simple_cell_config': {'ETA_LTP': 0.00077,
@@ -104,13 +104,25 @@ def inhibition_orientation_9regions():
          })
 
 
-def inhibition_disparity():
+def inhibition_disparity_9regions():
     return base_learning_params(
         {'network_config': {'nbCameras': 2,
                             'layerPatches': [[[0, 153, 306], [0, 110, 220], [0]],
                                              [[0, 4, 8], [0, 4, 8], [0]]],
                             'layerSizes': [[4, 4, 100], [1, 1, 16]],
                             'neuronSizes': [[10, 10, 1], [4, 4, 100]]},
+         'simple_cell_config': {'VTHRESH': 25,
+                                'ETA_INH': 15,
+                                'ETA_LTP': 0.000077,
+                                'ETA_LTD': -0.000021}
+         })
+
+def inhibition_disparity():
+    return base_learning_params(
+        {'network_config': {'nbCameras': 2,
+                            'layerPatches': [[[20], [20], [0]], [[0], [0], [0]]],
+                            'layerSizes': [[16, 16, 144], [4, 4, 16]],
+                            'neuronSizes': [[10, 10, 1], [4, 4, 144]]},
          'simple_cell_config': {'VTHRESH': 25,
                                 'ETA_INH': 15,
                                 'ETA_LTP': 0.000077,

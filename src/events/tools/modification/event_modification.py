@@ -28,7 +28,7 @@ def concatenate_npz(event_files):
             events[:, 0] += last_tmsp - events[0, 0]
         last_tmsp = events[-1, 0]
         list_events.append(events)
-    return np.vstack(list_events)
+    return Events(np.vstack(list_events))
 
 
 def divide_events(events, chunk_size):

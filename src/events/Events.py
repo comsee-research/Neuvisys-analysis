@@ -141,17 +141,17 @@ def write_npz(dest, events):
                     raise
 
 
-def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, H: int, W: int) -> np.ndarray:
+def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, height: int, width: int) -> np.ndarray:
     assert x.size == y.size == pol.size
-    assert H > 0
-    assert W > 0
-    img = np.full((H, W, 3), fill_value=255, dtype='uint8')
-    mask = np.zeros((H, W), dtype='int32')
+    assert height > 0
+    assert width > 0
+    img = np.full((height, width, 3), fill_value=255, dtype='uint8')
+    mask = np.zeros((height, width), dtype='int32')
     pol = pol.astype('int')
     x = x.astype('int')
     y = y.astype('int')
     pol[pol == 0] = -1
-    mask1 = (x >= 0) & (y >= 0) & (W > x) & (H > y)
+    mask1 = (x >= 0) & (y >= 0) & (width > x) & (height > y)
     mask[y[mask1], x[mask1]] = pol[mask1]
     img[mask == 0] = [255, 255, 255]
     img[mask == -1] = [255, 0, 0]
@@ -228,7 +228,7 @@ class Events:
                 self.events[:, 3].astype("i1"),
             )
 
-    def event_to_video(self, dt_miliseconds, dest, width, height):
+    def to_video(self, dt_miliseconds, dest, width, height):
         if self.stereo:
             writer = skvideo.io.FFmpegWriter(Path(dest + "_left.mp4"))
             for events in tqdm(EventSlicer(self.l_events, dt_miliseconds)):

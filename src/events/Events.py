@@ -59,15 +59,6 @@ def load_h5(filepath):
     return events
 
 
-def h5py_to_ndarray(events):
-    npy_events = np.zeros((events["p"].shape[0], 4))
-    npy_events[:, 0] = np.asarray(events["t"])
-    npy_events[:, 1] = np.asarray(events["x"])
-    npy_events[:, 2] = np.asarray(events["y"])
-    npy_events[:, 3] = np.asarray(events["p"])
-    return npy_events
-
-
 def write_npz(dest, events):
     if type(events) is tuple:
         try:
@@ -160,39 +151,52 @@ def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, height: int, width: in
 
 
 class Events:
-    def __init__(self, l_events, r_events=None):
-        if r_events is not None:
-            self.stereo = True
-            if isinstance(l_events, np.ndarray):
-                self.l_events = l_events
-            if isinstance(r_events, np.ndarray):
-                self.r_events = r_events
-            if isinstance(l_events, str):
-                if l_events.endswith(".npz"):
-                    self.l_events = npz_to_ndarray(np.load(l_events))
-                elif l_events.endswith(".h5"):
-                    self.l_events = h5py_to_ndarray(load_h5(l_events))
-            if isinstance(r_events, str):
-                if r_events.endswith(".npz"):
-                    self.r_events = npz_to_ndarray(np.load(r_events))
-                elif r_events.endswith(".h5"):
-                    self.r_events = h5py_to_ndarray(load_h5(r_events))
-        else:
-            self.stereo = False
-            if isinstance(l_events, np.ndarray):
-                self.events = l_events
-            elif isinstance(l_events, str):
-                if l_events.endswith(".npz"):
-                    eve = np.load(l_events)
-                    if len(eve.keys()) > 4:
-                        self.stereo = True
-                        self.l_events, self.r_events = npz_to_ndarray(eve)
-                    else:
-                        self.events = npz_to_ndarray(eve)
-                elif l_events.endswith(".h5"):
-                    self.events = h5py_to_ndarray(load_h5(l_events))
-                elif l_events.endswith(".aedat4"):
-                    self.events = npaedat_to_ndarray(load_aedat4(l_events))
+    def __init__(self, event_files, cameras):
+        self.dtype = np.dtype([('t', '<u4'), ('x', '<u2'), ('y', '<u2'), ('p', 'u1'), ('c', 'u1')])
+        self.event_array = np.zeros(0, self.dtype)
+        
+        for event_file, camera in zip(event_files, cameras):
+            self.add_events(event_file, camera)
+
+    def load_hdf5(self, filepath, camera):
+        file = h5py.File(str(filepath), 'r')
+        event_dataset = file["events"]
+        
+        event_array = np.zeros(event_dataset["t"].size, self.dtype)
+        event_array['t'] = np.asarray(event_dataset["t"])
+        event_array['x'] = np.asarray(event_dataset["x"])
+        event_array['y'] = np.asarray(event_dataset["y"])
+        event_array['p'] = np.asarray(event_dataset["p"])
+        event_array['c'].fill(camera)
+        
+        self.event_array = np.hstack((self.event_array, event_array))
+        
+    def add_events(self, event_file, camera):
+        if isinstance(event_file, np.ndarray):
+            self.event_array = event_file
+        if isinstance(event_file, str):
+            if event_file.endswith(".npz"):
+                npz_to_ndarray(np.load(event_file))
+            elif event_file.endswith(".h5"):
+                self.load_hdf5(event_file, camera)
+                
+    def sort_events(self):
+        self.event_array = self.event_array[self.event_array["t"].argsort()]
+        
+    def get_events(self):
+        return self.event_array
+    
+    def get_timestamps(self):
+        return self.event_array['t']
+    
+    def get_x(self):
+        return self.event_array['x']
+    
+    def get_y(self):
+        return self.event_array['y']
+    
+    def get_polarities(self):
+        return self.event_array['p']
 
     def __enter__(self):
         return self
@@ -201,88 +205,50 @@ class Events:
         self._finalizer()
 
     def __iter__(self):
-        return self.events.__iter__()
+        return self.event_array.__iter__()
 
     def __next__(self):
-        return self.events.__next__()
+        return self.event_array.__next__()
 
-    def save_file(self, dest):
-        if self.stereo:
+    def save_as_file(self, dest, extension):
+        if extension == ".npz":
             np.savez(
                 dest,
-                self.l_events[:, 0].astype("i8"),
-                self.l_events[:, 1].astype("i2"),
-                self.l_events[:, 2].astype("i2"),
-                self.l_events[:, 3].astype("i1"),
-                self.r_events[:, 0].astype("i8"),
-                self.r_events[:, 1].astype("i2"),
-                self.r_events[:, 2].astype("i2"),
-                self.r_events[:, 3].astype("i1"),
+                self.events["t"].astype("i8"),
+                self.events["x"].astype("i2"),
+                self.events["y"].astype("i2"),
+                self.events["p"].astype("i1"),
+                self.events["c"].astype("i1"),
             )
-        else:
-            np.savez(
-                dest,
-                self.events[:, 0].astype("i8"),
-                self.events[:, 1].astype("i2"),
-                self.events[:, 2].astype("i2"),
-                self.events[:, 3].astype("i1"),
-            )
+        elif extension == ".h5":
+            with h5py.File(dest + ".h5", "a") as file :
+                group = file.create_group("events")
+                group.create_dataset("t", self.event_array["t"].shape, dtype=self.event_array["t"].dtype, data=self.event_array["t"], compression="gzip")
+                group.create_dataset("x", self.event_array["x"].shape, dtype=self.event_array["x"].dtype, data=self.event_array["x"], compression="gzip")
+                group.create_dataset("y", self.event_array["y"].shape, dtype=self.event_array["y"].dtype, data=self.event_array["y"], compression="gzip")
+                group.create_dataset("p", self.event_array["p"].shape, dtype=self.event_array["p"].dtype, data=self.event_array["p"], compression="gzip")
+                group.create_dataset("c", self.event_array["c"].shape, dtype=self.event_array["c"].dtype, data=self.event_array["c"], compression="gzip")
 
     def to_video(self, dt_miliseconds, dest, width, height):
-        if self.stereo:
-            writer = skvideo.io.FFmpegWriter(Path(dest + "_left.mp4"))
-            for events in tqdm(EventSlicer(self.l_events, dt_miliseconds)):
-                img = render(events[:, 1], events[:, 2], events[:, 3], height, width)
-                writer.writeFrame(img)
-            writer.close()
-
-            writer = skvideo.io.FFmpegWriter(Path(dest + "_right.mp4"))
-            for events in tqdm(EventSlicer(self.r_events, dt_miliseconds)):
-                img = render(events[:, 1], events[:, 2], events[:, 3], height, width)
-                writer.writeFrame(img)
-            writer.close()
-        else:
-            writer = skvideo.io.FFmpegWriter(Path(dest + ".mp4"))
-            for events in tqdm(EventSlicer(self.events, dt_miliseconds)):
-                img = render(events[:, 1], events[:, 2], events[:, 3], height, width)
-                writer.writeFrame(img)
-            writer.close()
+        writer = skvideo.io.FFmpegWriter(Path(dest + ".mp4"))
+        for events in tqdm(EventSlicer(self.get_events(), dt_miliseconds)):
+            img = render(events["x"], events["y"], events["p"], height, width)
+            writer.writeFrame(img)
+        writer.close()
 
     def remove_events(self, timestamp_starts, timestamp_end):
         for i, j in zip(timestamp_starts, timestamp_end):
-            if self.stereo:
-                self.l_events = np.delete(
-                    self.l_events, (self.l_events[:, 0] >= i) & (self.l_events[:, 0] <= j)
-                )
-                self.r_events = np.delete(
-                    self.r_events, (self.r_events[:, 0] >= i) & (self.r_events[:, 0] <= j)
-                )
-            else:
-                self.events = np.delete(
-                    self.events, (self.events[:, 0] >= i) & (self.events[:, 0] <= j)
-                )
+            self.event_array = np.delete(
+                self.event_array, (self.event_array["t"] >= i) & (self.event_array["t"] <= j)
+            )
 
     def resize_events(self, w_start, h_start, width, height):
-        if self.stereo:
-            self.l_events = np.delete(self.l_events,
-                                      (self.l_events[:, 1] < w_start) | (self.l_events[:, 1] >= w_start + width) |
-                                      (self.l_events[:, 2] < h_start) | (self.l_events[:, 2] >= h_start + height),
-                                      axis=0)
-            self.r_events = np.delete(self.r_events,
-                                      (self.r_events[:, 1] < w_start) | (self.r_events[:, 1] >= w_start + width) |
-                                      (self.r_events[:, 2] < h_start) | (self.r_events[:, 2] >= h_start + height),
-                                      axis=0)
-            self.l_events[:, 1] -= np.min(self.l_events[:, 1])
-            self.l_events[:, 2] -= np.min(self.l_events[:, 2])
-            self.r_events[:, 1] -= np.min(self.r_events[:, 1])
-            self.r_events[:, 2] -= np.min(self.r_events[:, 2])
-        else:
-            self.events = np.delete(self.events,
-                                    (self.events[:, 1] < w_start) | (self.events[:, 1] >= w_start + width) |
-                                    (self.events[:, 2] < h_start) | (self.events[:, 2] >= h_start + height),
-                                    axis=0)
-            self.events[:, 1] -= np.min(self.events[:, 1])
-            self.events[:, 2] -= np.min(self.events[:, 2])
+        self.event_array = np.delete(self.event_array,
+                                (self.event_array["x"] < w_start) | (self.event_array["x"] >= w_start + width) |
+                                (self.event_array["y"] < h_start) | (self.event_array["y"] >= h_start + height),
+                                axis=0)
+        self.event_array["x"] -= np.min(self.event_array["x"])
+        self.event_array["y"] -= np.min(self.event_array["y"])
 
     def _finalizer(self):
         pass
@@ -292,8 +258,8 @@ class EventSlicer:
     def __init__(self, events, dt_milliseconds: int):
         self.events = events
         self.dt_us = int(dt_milliseconds * 1000)
-        self.t_start_us = self.events[0, 0]
-        self.t_end_us = self.events[-1, 0]
+        self.t_start_us = self.events["t"][0]
+        self.t_end_us = self.events["t"][-1]
 
         self._length = (self.t_end_us - self.t_start_us) // self.dt_us
 
@@ -321,7 +287,7 @@ class EventSlicer:
         return events
 
     def get_events(self, t_start_us: int, t_end_us: int):
-        return self.events[(self.events[:, 0] > t_start_us) & (self.events[:, 0] < t_end_us)]
+        return self.events[(self.events["t"] > t_start_us) & (self.events["t"] < t_end_us)]
 
     def _finalizer(self):
         pass

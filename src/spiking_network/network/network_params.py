@@ -81,6 +81,20 @@ def reinforcement_learning():
          })
 
 
+def reinforcement_learning_rotation():
+    return base_learning_params(
+        {'network_config': {'layerCellTypes': ["SimpleCell", "ComplexCell", "CriticCell", "ActorCell"],
+                            'layerInhibitions': [True, True, False, False],
+                            'interLayerConnections': [0, 0, 1, 1],
+                            'layerPatches': [[[33], [110], [0]], [[0], [0], [0]], [[0], [0], [0]], [[0], [0], [0]]],
+                            'layerSizes': [[16, 16, 144], [4, 4, 16], [100, 1, 1], [2, 1, 1]],
+                            'neuronSizes': [[10, 10, 1], [4, 4, 144], [4, 4, 16], [4, 4, 16]],
+                            'neuronOverlap': [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]},
+         'simple_cell_config': {'ETA_LTP': 0.00077,
+                                'ETA_LTD': -0.00021}
+         })
+
+
 def inhibition_orientation():
     return base_learning_params(
         {'network_config': {'layerPatches': [[[93], [50], [0]], [[0], [0], [0]]],

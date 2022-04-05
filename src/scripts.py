@@ -58,18 +58,24 @@ else:
     os.chdir("/home/thomas/neuvisys-analysis/src")
     home = "/home/thomas/"
 
+
+# %%
+
+events = Events(["/home/thomas/Videos/dsec/interlaken_00_c/events/left/events.h5", "/home/thomas/Videos/dsec/interlaken_00_c/events/right/events.h5"], [0, 1])
+
+
 # %% Generate Spiking Network
 
-exec_path = home + "neuvisys-dv/cmake-build-release/neuvisys-exe"
-networks_path = home + "Desktop/Experiment/"
-event_path = home + "Videos/disparity/"
+# exec_path = home + "neuvisys-dv/cmake-build-release/neuvisys-exe"
+# networks_path = home + "Desktop/Experiment/"
+# event_path = home + "Videos/disparity/"
 
-create_networks(exec_path, networks_path, 1, inhibition_orientation_9regions())
+# create_networks(exec_path, networks_path, 1, inhibition_orientation_9regions())
 
-path = networks_path + "network_0/"
+# path = networks_path + "network_0/"
 
-for i in range(100):
-    launch_neuvisys_multi_pass(exec_path, path + "configs/network_config.json", "/home/thomas/Videos/DSEC/car_left.npz", 1)
+# for i in range(100):
+#     launch_neuvisys_multi_pass(exec_path, path + "configs/network_config.json", "/home/thomas/Videos/DSEC/car_left.npz", 1)
 
 # events = Events("/home/thomas/Videos/DSEC/car_left.npz", "/home/thomas/Videos/DSEC/car_right.npz")
 # events.save_file("/home/thomas/Videos/DSEC/car")

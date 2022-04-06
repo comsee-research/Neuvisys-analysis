@@ -7,6 +7,14 @@ Created on Thu Jul  2 16:58:28 2020
 """
 
 import os
+
+if os.path.exists("/home/alphat"):
+    os.chdir("/home/alphat/neuvisys-analysis/")
+    home = "/home/alphat/"
+else:
+    os.chdir("/home/thomas/neuvisys-analysis/")
+    home = "/home/thomas/"
+
 import shutil
 import numpy as np
 from scipy.stats import laplace
@@ -14,7 +22,6 @@ import matplotlib.pyplot as plt
 
 from src.events.Events import (
     Events,
-    write_npz,
 )
 from src.events.tools.generation.pix2nvs import Pix2Eve
 from src.events.tools.generation.stimuli_gen import (
@@ -51,17 +58,8 @@ from src.spiking_network.planning.network_planner import (
     divide_visual_field,
 )
 
-if os.path.exists("/home/alphat"):
-    os.chdir("/home/alphat/neuvisys-analysis/src")
-    home = "/home/alphat/"
-else:
-    os.chdir("/home/thomas/neuvisys-analysis/src")
-    home = "/home/thomas/"
-
 
 # %%
-
-events = Events(["/home/thomas/Videos/dsec/interlaken_00_c/events/left/events.h5", "/home/thomas/Videos/dsec/interlaken_00_c/events/right/events.h5"], [0, 1])
 
 
 # %% Generate Spiking Network

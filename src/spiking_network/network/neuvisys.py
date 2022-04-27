@@ -122,17 +122,21 @@ class SpikingNetwork:
         neurons = []
         spike_train = []
 
-        weights = np.load(self.path + "weights/" + str(layer) + "/weights.npz")
-        with open(self.path + "configs/" + ".json") as file:
-            config = json.load(file)
-
-        neurons_paths = natsorted(os.listdir(self.path + "weights/" + str(layer) + "/"))
+        weight_path = self.path + "weights/" + str(layer) + "/"
+        neurons_paths = natsorted(os.listdir(weight_path))
         config_files = list(filter(re.compile(".*json").match, neurons_paths))
 
+        with open(self.path + "configs/" + config) as file:
+            config = json.load(file)
+
         for index in range(len(config_files)):
-            with open(self.path + "weights/" + str(index) + ".json") as file:
+            with open(self.path + "weights/" + str(layer) + "/" + str(index) + ".json") as file:
                 params = json.load(file)
-            neuron = Neuron(neuron_type, index, config, params, weights[str(index)])
+            neuron = Neuron(neuron_type, index, config, params)
+            if os.path.exists(weight_path + str(neuron.id) + "li.npy"):
+                neuron.link_weights_li(np.load(weight_path + str(neuron.id) + "li.npy"))
+            if os.path.exists(weight_path + str(neuron.id) + "tdi.npy"):
+                neuron.link_weights_tdi(np.load(weight_path + str(neuron.id) + "tdi.npy"))
             neurons.append(neuron)
             if neuron.conf["TRACKING"] == "partial":
                 spike_train.append(neuron.params["spike_train"])
@@ -234,16 +238,15 @@ class SpikingNetwork:
 class Neuron:
     """Spiking Neuron class"""
 
-    def __init__(self, neuron_type, index, config, params, weights):
+    def __init__(self, neuron_type, index, config, params):
         self.type = neuron_type
         self.id = index
         self.conf = config
         self.params = params
-        # if self.type == "SimpleCell":
-        #     self.weights_tdi = np.load(weight_path + str(self.id) + "tdi.npy")
-        #     self.weights_li = np.load(weight_path + str(self.id) + "li.npy")
         self.spike_train = np.array(self.params["spike_train"])
         self.weights = 0
+        self.weights_li = 0
+        self.weights_tdi = 0
         self.weight_images = []
         self.gabor_image = 0
         self.lambd = 0
@@ -258,6 +261,12 @@ class Neuron:
     def link_weights(self, weights):
         self.weights = weights
 
+    def link_weights_li(self, weights_li):
+        self.weights_li = weights_li
+
+    def link_weights_tdi(self, weights_tdi):
+        self.weights_tdi = weights_tdi
+
     def add_gabor(self, image, mu, sigma, lambd, phase, theta, error):
         self.gabor_image = image
         self.mu = mu
@@ -270,3 +279,40 @@ class Neuron:
 
     def add_disparity(self, disparity):
         self.disparity = disparity
+
+# def load_weights_layer(self, layer, neuron_type):
+#     weight_path = self.path + "weights/" + str(layer) + "/weights.npz"
+#     weight_li_path = self.path + "weights/" + str(layer) + "/weightsLI.npz"
+#     weight_tdi_path = self.path + "weights/" + str(layer) + "/weightsTDI.npz"
+#
+#     weights = np.load(weight_path)
+#     weights_li = 0
+#     weights_tdi = 0
+#     if os.path.exists(weight_li_path):
+#         weights_li = np.load(weight_li_path)
+#     if os.path.exists(weight_tdi_path):
+#         weights_tdi = np.load(weight_tdi_path)
+#
+#     patch = False
+#     if neuron_type == "SimpleCell" and self.conf["sharingType"] == "patch":
+#         patch = True
+#         step = self.l_shape[layer, 0] * self.l_shape[layer, 1] * self.l_shape[layer, 2]
+#         for r_id in range(0, len(self.neurons[layer]), step):
+#             for i, neuron in enumerate(self.neurons[layer][r_id: r_id + self.l_shape[layer, 2]]):
+#                 self.shared_id.append(np.arange(r_id + i, r_id + i + step, self.l_shape[layer, 2]))
+#         self.shared_id = np.array(self.shared_id)
+#
+#         for ind in weights:
+#             if isinstance(ind, int):
+#                 for shared in self.shared_id[ind]:
+#                     self.neurons[layer][shared].link_weights(weights[ind])
+#
+#     for neuron in self.neurons[layer]:
+#         if not patch:
+#             neuron.link_weights(weights[str(neuron.id)])
+#         if os.path.exists(weight_li_path):
+#             neuron.link_weights_li(weights_li[str(neuron.id)])
+#         if os.path.exists(weight_tdi_path):
+#             neuron.link_weights_tdi(weights_tdi[str(neuron.id)])
+#
+#     return weights

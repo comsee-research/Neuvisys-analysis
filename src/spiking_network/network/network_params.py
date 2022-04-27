@@ -106,7 +106,7 @@ def disparity_9regions():
                                              [[0, 4, 8], [0, 4, 8], [0]]],
                             'layerSizes': [[4, 4, 100], [1, 1, 16]],
                             'neuronSizes': [[10, 10, 1], [4, 4, 100]],
-                            'sharingType': 'uni-patch'},
+                            'sharingType': 'full'},
          'simple_cell_config': {'VTHRESH': 25,
                                 'ETA_INH': 15,
                                 'ETA_LTP': 0.000077,

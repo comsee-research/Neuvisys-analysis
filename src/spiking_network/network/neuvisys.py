@@ -112,7 +112,7 @@ class SpikingNetwork:
             self.orientations = []
             for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
                 if layer < 2:
-                    self.directions.append(np.load(self.path + "gabors/"+str(layer)+"/rotation_response.npy"))
+                    self.directions.append(np.load(self.path + "gabors/" + str(layer) + "/rotation_response.npy"))
                     self.orientations.append(self.directions[layer][0:8] + self.directions[layer][8:16])
 
         if os.path.exists(self.path + "gabors/data/disparity_response.npy"):
@@ -148,11 +148,19 @@ class SpikingNetwork:
         if neuron_type == "SimpleCell" and self.conf["sharingType"] == "patch":
             step = self.l_shape[layer, 0] * self.l_shape[layer, 1] * self.l_shape[layer, 2]
             for r_id in range(0, len(self.neurons[layer]), step):
-                for i, neuron in enumerate(self.neurons[layer][r_id: r_id + self.l_shape[layer, 2]]):
+                for i, neuron in enumerate(self.neurons[layer][r_id:r_id + self.l_shape[layer, 2]]):
                     weights.append(np.load(self.path + "weights/0/" + str(neuron.id) + ".npy"))
-                    self.shared_id.append(
-                        np.arange(r_id + i, r_id + i + step, self.l_shape[layer, 2]))
+                    self.shared_id.append(np.arange(r_id + i, r_id + i + step, self.l_shape[layer, 2]))
             self.shared_id = np.array(self.shared_id)
+
+            for i, weight in enumerate(weights):
+                for shared in self.shared_id[i]:
+                    self.neurons[layer][shared].link_weights(weight)
+        elif neuron_type == "SimpleCell" and self.conf["sharingType"] == "full":
+            step = self.l_shape[layer, 0] * self.l_shape[layer, 1] * self.l_shape[layer, 2]
+            for i, neuron in enumerate(self.neurons[layer][:self.l_shape[layer, 2]]):
+                weights.append(np.load(self.path + "weights/0/" + str(neuron.id) + ".npy"))
+                self.shared_id.append(np.arange(i, i + step, self.l_shape[layer, 2]))
 
             for i, weight in enumerate(weights):
                 for shared in self.shared_id[i]:
@@ -216,7 +224,7 @@ class SpikingNetwork:
             for rot in range(rotations.size):
                 spike_vector.append(np.count_nonzero(response[rot], axis=1))
             spike_vector = np.array(spike_vector)
-            np.save(self.path + "gabors/"+str(layer)+"/rotation_response", spike_vector)
+            np.save(self.path + "gabors/" + str(layer) + "/rotation_response", spike_vector)
             self.directions = spike_vector
             self.orientations = self.directions[0:8] + self.directions[8:16]
 

@@ -117,6 +117,34 @@ def pdf_weight_sharing(spinet, nb_cameras, camera):
     return pdf
 
 
+def pdf_weight_sharing_full(spinet, nb_cameras, camera):
+    side = int(np.sqrt(spinet.l_shape[0, 2]))
+    if nb_cameras == 1:
+        pad = 11
+    else:
+        pad = 24
+    pdf = FPDF("P", "mm", (11 * side, pad * side))
+    pdf.add_page()
+
+    shift = np.arange(spinet.l_shape[0, 2]).reshape((side, side))
+    for neuron in spinet.neurons[0][0:spinet.l_shape[0, 2]]:
+        x, y, z = neuron.params["position"]
+        pos_x = (
+                (x // spinet.l_shape[0, 0]) * side * 11
+                + np.where(shift == z)[0][0] * 11
+        )  # patch size + weight sharing shift
+        pos_y = (
+                (y // spinet.l_shape[0, 1]) * side * pad
+                + np.where(shift == z)[1][0] * pad
+        )
+        if nb_cameras == 1:
+            pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
+        else:
+            pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
+            pdf.image(neuron.weight_images[1], x=pos_x, y=pos_y + 11, w=10, h=10)
+    return pdf
+
+
 def display_motor_cell(spinet):
     for i, motor_cell in enumerate(spinet.motor_cells):
         heatmap = np.mean(motor_cell.weights, axis=2)
@@ -319,6 +347,13 @@ def display_network(spinets):
                 pdf.output(spinet.path + "figures/0/weight_sharing_" + str(i) + ".pdf", "F")
             if spinet.conf["nbCameras"] == 2:
                 pdf = pdf_weight_sharing(spinet, spinet.conf["nbCameras"], 0)
+                pdf.output(spinet.path + "figures/0/weight_sharing_combined.pdf", "F")
+        elif spinet.conf["sharingType"] == "full":
+            for i in range(spinet.conf["nbCameras"]):
+                pdf = pdf_weight_sharing_full(spinet, 1, i)
+                pdf.output(spinet.path + "figures/0/weight_sharing_" + str(i) + ".pdf", "F")
+            if spinet.conf["nbCameras"] == 2:
+                pdf = pdf_weight_sharing_full(spinet, spinet.conf["nbCameras"], 0)
                 pdf.output(spinet.path + "figures/0/weight_sharing_combined.pdf", "F")
         elif spinet.conf["sharingType"] == "none":
             for layer in range(spinet.l_shape[0, 2]):

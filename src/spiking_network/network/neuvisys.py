@@ -122,13 +122,17 @@ class SpikingNetwork:
         neurons = []
         spike_train = []
 
+        weights = np.load(self.path + "weights/" + str(layer) + "/weights.npz")
+        with open(self.path + "configs/" + ".json") as file:
+            config = json.load(file)
+
         neurons_paths = natsorted(os.listdir(self.path + "weights/" + str(layer) + "/"))
         config_files = list(filter(re.compile(".*json").match, neurons_paths))
+
         for index in range(len(config_files)):
-            neuron = Neuron(neuron_type, index,
-                            self.path + "configs/" + config,
-                            self.path + "weights/" + str(layer) + "/"
-                            )
+            with open(self.path + "weights/" + str(index) + ".json") as file:
+                params = json.load(file)
+            neuron = Neuron(neuron_type, index, config, params, weights[str(index)])
             neurons.append(neuron)
             if neuron.conf["TRACKING"] == "partial":
                 spike_train.append(neuron.params["spike_train"])
@@ -230,16 +234,14 @@ class SpikingNetwork:
 class Neuron:
     """Spiking Neuron class"""
 
-    def __init__(self, neuron_type, index, conf_path, weight_path):
+    def __init__(self, neuron_type, index, config, params, weights):
         self.type = neuron_type
         self.id = index
-        with open(conf_path) as file:
-            self.conf = json.load(file)
-        with open(weight_path + str(self.id) + ".json") as file:
-            self.params = json.load(file)
-        if self.type == "SimpleCell":
-            self.weights_tdi = np.load(weight_path + str(self.id) + "tdi.npy")
-            self.weights_li = np.load(weight_path + str(self.id) + "li.npy")
+        self.conf = config
+        self.params = params
+        # if self.type == "SimpleCell":
+        #     self.weights_tdi = np.load(weight_path + str(self.id) + "tdi.npy")
+        #     self.weights_li = np.load(weight_path + str(self.id) + "li.npy")
         self.spike_train = np.array(self.params["spike_train"])
         self.weights = 0
         self.weight_images = []

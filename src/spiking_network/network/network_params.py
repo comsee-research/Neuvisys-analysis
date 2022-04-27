@@ -3,24 +3,28 @@ def base_learning_params(params=None):
         params = {}
     param_dict = {
         "network_config": {
-            'V0': [0],
-            'actionRate': [500],
-            'decayRate': [0.02],
-            'explorationFactor': [50],
             'interLayerConnections': [[0, 0]],
             'layerCellTypes': [['SimpleCell', 'ComplexCell']],
-            'layerInhibitions': [[True, True]],
+            'layerInhibitions': [[['static'], ['static']]],
             'layerPatches': [[[[0], [0], [0]], [[0], [0], [0]]]],
             'layerSizes': [[[16, 16, 64], [4, 4, 16]]],
-            'minActionRate': [100],
             'nbCameras': [1],
             'neuron1Synapses': [1],
             'neuronOverlap': [[[0, 0, 0], [0, 0, 0]]],
             'neuronSizes': [[[10, 10, 1], [4, 4, 64]]],
-            'nu': [1],
             'saveData': [True],
             'sharingType': ['patch'],
-            'tauR': [1]
+
+        },
+        "rl_config": {
+            'V0': [0],
+            'actionRate': [500],
+            'actionMapping': [[[1, 5], [1, -5]]],
+            'minActionRate': [100],
+            'decayRate': [0.02],
+            'explorationFactor': [50],
+            'nu': [1],
+            'tauR': [1],
         },
         "simple_cell_config": {
             'ETA_INH': [20],
@@ -95,9 +99,25 @@ def reinforcement_learning_rotation():
          })
 
 
+def disparity_9regions():
+    return base_learning_params(
+        {'network_config': {'nbCameras': 2,
+                            'layerPatches': [[[0, 153, 306], [0, 110, 220], [0]],
+                                             [[0, 4, 8], [0, 4, 8], [0]]],
+                            'layerSizes': [[4, 4, 100], [1, 1, 16]],
+                            'neuronSizes': [[10, 10, 1], [4, 4, 100]],
+                            'sharingType': 'uni-patch'},
+         'simple_cell_config': {'VTHRESH': 25,
+                                'ETA_INH': 15,
+                                'ETA_LTP': 0.000077,
+                                'ETA_LTD': -0.000021}
+         })
+
+
 def inhibition_orientation():
     return base_learning_params(
         {'network_config': {'layerPatches': [[[93], [50], [0]], [[0], [0], [0]]],
+                            'layerInhibitions': [["static", "topdown", "lateral"], ["static"]],
                             'layerSizes': [[16, 16, 144], [4, 4, 16]],
                             'neuronSizes': [[10, 10, 1], [4, 4, 144]]},
          'simple_cell_config': {'ETA_LTP': 0.00077,
@@ -130,6 +150,7 @@ def inhibition_disparity_9regions():
                                 'ETA_LTP': 0.000077,
                                 'ETA_LTD': -0.000021}
          })
+
 
 def inhibition_disparity():
     return base_learning_params(

@@ -101,8 +101,11 @@ def create_network(exec_path, network_path):
 
 
 def divide_visual_field(nb_x_region, nb_y_region, size_x_region, size_y_region):
+    if nb_x_region == 1 and nb_y_region == 1:
+        return [(346 - size_x_region) / 2], [(260 - size_y_region) / 2]
+
     spacing_x = (346 - (size_x_region * nb_x_region)) / (nb_x_region - 1)
-    spacing_y = (260 - (size_x_region * nb_x_region)) / (nb_x_region - 1)
+    spacing_y = (260 - (size_y_region * nb_y_region)) / (nb_y_region - 1)
 
     X = []
     for x in range(nb_x_region):

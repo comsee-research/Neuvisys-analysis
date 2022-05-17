@@ -12,7 +12,6 @@ import os
 import subprocess
 import numpy as np
 
-
 def create_networks(exec_path, network_path, n_iter, params):
     for i in range(n_iter):
         n_path = network_path + "/network_" + str(i)

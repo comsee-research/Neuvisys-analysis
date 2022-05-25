@@ -94,25 +94,3 @@ def show_event_images(events, time_gap, width, height, dest, rec, side):
         cnt += 1
         time += time_gap
         img = np.zeros((height, width, 3))
-
-
-def rectify_events(events, lx, ly, rx, ry):
-    events[0]["x"] += lx
-    events[0]["y"] += ly
-    events[1]["x"] += rx
-    events[1]["y"] += ry
-
-    l_events = events[0][
-        (events[0]["x"] < 346)
-        & (events[0]["x"] >= 0)
-        & (events[0]["y"] < 260)
-        & (events[0]["y"] >= 0)
-        ]
-    r_events = events[1][
-        (events[1]["x"] < 346)
-        & (events[1]["x"] >= 0)
-        & (events[1]["y"] < 260)
-        & (events[1]["y"] >= 0)
-        ]
-
-    return l_events, r_events

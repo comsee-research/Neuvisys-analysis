@@ -107,10 +107,13 @@ class Events:
             event_array["x"] = np.asarray(event_dataset["x"])
             event_array["y"] = np.asarray(event_dataset["y"])
             event_array["p"] = np.asarray(event_dataset["p"])
-            if "c" in event_dataset.keys():
-                event_array["c"] = np.asarray(event_dataset["c"])
-            else:
+            if camera == 1:
                 event_array["c"].fill(camera)
+            else:
+                if "c" in event_dataset.keys():
+                    event_array["c"] = np.asarray(event_dataset["c"])
+                else:
+                    event_array["c"].fill(camera)
 
         self.event_array = np.hstack((self.event_array, event_array))
 

@@ -121,8 +121,10 @@ class Events:
             event_array["x"] = npz["arr_1"]
             event_array["y"] = npz["arr_2"]
             event_array["p"] = npz["arr_3"]
-            event_array["c"] = npz["arr_4"]
-
+            try:
+                event_array["c"] = npz["arr_4"]
+            except KeyError:
+                pass
         self.event_array = np.hstack((self.event_array, event_array))
 
     def load_aedat4(self, filepath, camera):

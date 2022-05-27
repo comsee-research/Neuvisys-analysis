@@ -70,7 +70,7 @@ class Events:
         None.
 
         """
-        self.dtype = np.dtype([("t", "<u4"), ("x", "<u2"), ("y", "<u2"), ("p", "u1"), ("c", "u1")])
+        self.dtype = np.dtype([("t", "<u4"), ("x", "<i2"), ("y", "<i2"), ("p", "i1"), ("c", "i1")])
         self.event_array = np.zeros(0, self.dtype)
 
         if len(args) > 1:
@@ -138,7 +138,8 @@ class Events:
         event_array["p"] = aedat4["polarity"]
         event_array["c"].fill(camera)
 
-        del aedat4
+        # del aedat4
+        # gc.collect()
 
         self.event_array = np.hstack((self.event_array, event_array))
 
@@ -149,11 +150,11 @@ class Events:
         if dest.endswith(".npz"):
             np.savez(
                 dest,
-                self.events["t"].astype("i8"),
-                self.events["x"].astype("i2"),
-                self.events["y"].astype("i2"),
-                self.events["p"].astype("i1"),
-                self.events["c"].astype("i1"),
+                self.event_array["t"].astype("i8"),
+                self.event_array["x"].astype("i2"),
+                self.event_array["y"].astype("i2"),
+                self.event_array["p"].astype("i1"),
+                self.event_array["c"].astype("i1"),
             )
         elif dest.endswith(".h5") or dest.endswith(".hdf5"):
             with h5py.File(dest, "a") as file:
@@ -170,11 +171,16 @@ class Events:
                                      data=self.event_array["c"], compression="gzip")
 
     def to_video(self, dt_miliseconds, dest, width, height):
-        writer = skvideo.io.FFmpegWriter(Path(dest + ".mp4"))
-        for events in tqdm(EventSlicer(self.get_events(), dt_miliseconds)):
-            img = render(events["x"], events["y"], events["p"], height, width)
-            writer.writeFrame(img)
-        writer.close()
+        if len(self.get_events()[self.get_cameras() == 1]) > 0:
+            cameras = [0, 1]
+        else:
+            cameras = [0]
+        for camera in cameras:
+            writer = skvideo.io.FFmpegWriter(Path(dest + "_" + str(camera) + ".mp4"))
+            for events in tqdm(EventSlicer(self.get_events()[self.get_cameras() == camera], dt_miliseconds)):
+                img = render(events["x"], events["y"], events["p"], height, width)
+                writer.writeFrame(img)
+            writer.close()
 
     def remove_events(self, timestamp_starts, timestamp_end):
         for i, j in zip(timestamp_starts, timestamp_end):
@@ -190,6 +196,22 @@ class Events:
         self.event_array["x"] -= np.min(self.event_array["x"])
         self.event_array["y"] -= np.min(self.event_array["y"])
 
+    def rectify_events(self, lx, ly, rx, ry):
+        left = self.event_array[self.event_array["c"] == 0]
+        right = self.event_array[self.event_array["c"] == 1]
+        left["x"] += lx
+        left["y"] += ly
+        right["x"] += rx
+        right["y"] += ry
+
+        self.event_array[self.event_array["c"] == 0] = left
+        self.event_array[self.event_array["c"] == 1] = right
+
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["x"] < 0) | (self.event_array["x"] >= 346) |
+                                     (self.event_array["y"] < 0) | (self.event_array["y"] >= 260),
+                                     axis=0)
+
     def get_events(self):
         return self.event_array
 
@@ -204,6 +226,9 @@ class Events:
 
     def get_polarities(self):
         return self.event_array["p"]
+
+    def get_cameras(self):
+        return self.event_array["c"]
 
     def __enter__(self):
         return self

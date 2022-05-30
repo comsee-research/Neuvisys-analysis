@@ -103,14 +103,15 @@ def event_plot(sts, layer, path):
     plt.show()
 
 
-def time_histogram(sts, layer, path):
+def time_histogram(sts, layer, bin_size, path):
     fig, axes = plt.subplots()
-    histogram = statistics.time_histogram(sts, bin_size=50 * pq.ms, output='rate')
+    histogram = statistics.time_histogram(sts, bin_size=bin_size * pq.ms, output='rate')
     plot_time_histogram(histogram, units='s', axes=axes)
     axes.set_title("Time histogram")
     if path:
         plt.savefig(path + str(layer) + "/time_histogram", bbox_inches="tight")
-    # plt.show()
+    plt.show()
+    return histogram
 
 
 def spike_rate_histogram(sps, layer, path):
@@ -144,9 +145,9 @@ def instantaneous_rates(sts, layer, path):
     plt.show()
 
 
-def correlation_coeficient_matrix(sts, layer, path):
+def correlation_coeficient_matrix(sts, layer, bin_size, path):
     fig, axes = plt.subplots()
-    binned_spiketrains = BinnedSpikeTrain(sts, bin_size=100 * pq.ms)
+    binned_spiketrains = BinnedSpikeTrain(sts, bin_size=bin_size * pq.ms)
     corrcoef_matrix = correlation_coefficient(binned_spiketrains)
     plot_corrcoef(corrcoef_matrix, axes=axes)
     axes.set_xlabel('Neuron')

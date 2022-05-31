@@ -111,7 +111,6 @@ def time_histogram(sts, layer, bin_size, path):
     if path:
         plt.savefig(path + str(layer) + "/time_histogram", bbox_inches="tight")
     plt.show()
-    return histogram
 
 
 def spike_rate_histogram(sps, layer, path):

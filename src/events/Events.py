@@ -185,13 +185,21 @@ class Events:
                 writer.writeFrame(img)
             writer.close()
 
-    def remove_events(self, timestamp_starts, timestamp_end):
-        for i, j in zip(timestamp_starts, timestamp_end):
+    def remove_events(self, timestamp_starts, timestamp_ends):
+        for i, j in zip(timestamp_starts, timestamp_ends):
             self.event_array = np.delete(
                 self.event_array, (self.event_array["t"] >= i) & (self.event_array["t"] <= j)
             )
 
-    def resize_events(self, w_start, h_start, width, height):
+    def cut_events_time(self, timestamp_start, timestamp_end):
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["t"] < timestamp_start) | (self.event_array["t"] > timestamp_end)
+                                     )
+
+    def shift_timestamps(self):
+        self.event_array["t"] -= self.event_array["t"][0]
+
+    def resize_events_position(self, w_start, h_start, width, height):
         self.event_array = np.delete(self.event_array,
                                      (self.event_array["x"] < w_start) | (self.event_array["x"] >= w_start + width) |
                                      (self.event_array["y"] < h_start) | (self.event_array["y"] >= h_start + height),

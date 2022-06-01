@@ -38,7 +38,7 @@ class Events:
     Container for event based data.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args, width=346, height=260):
         """
         Parameters
         ----------
@@ -70,6 +70,8 @@ class Events:
         None.
 
         """
+        self.width = width
+        self.height = height
         self.dtype = np.dtype([("t", "<u4"), ("x", "<i2"), ("y", "<i2"), ("p", "i1"), ("c", "i1")])
         self.event_array = np.zeros(0, self.dtype)
 
@@ -141,9 +143,6 @@ class Events:
         event_array["p"] = aedat4["polarity"]
         event_array["c"].fill(camera)
 
-        # del aedat4
-        # gc.collect()
-
         self.event_array = np.hstack((self.event_array, event_array))
 
     def sort_events(self):
@@ -173,7 +172,7 @@ class Events:
                 group.create_dataset("c", self.event_array["c"].shape, dtype=self.event_array["c"].dtype,
                                      data=self.event_array["c"], compression="gzip")
 
-    def to_video(self, dt_miliseconds, dest, width, height):
+    def to_video(self, dt_miliseconds, dest):
         if len(self.get_events()[self.get_cameras() == 1]) > 0:
             cameras = [0, 1]
         else:
@@ -181,7 +180,7 @@ class Events:
         for camera in cameras:
             writer = skvideo.io.FFmpegWriter(Path(dest + "_" + str(camera) + ".mp4"))
             for events in tqdm(EventSlicer(self.get_events()[self.get_cameras() == camera], dt_miliseconds)):
-                img = render(events["x"], events["y"], events["p"], height, width)
+                img = render(events["x"], events["y"], events["p"], self.height, self.width)
                 writer.writeFrame(img)
             writer.close()
 
@@ -191,15 +190,10 @@ class Events:
                 self.event_array, (self.event_array["t"] >= i) & (self.event_array["t"] <= j)
             )
 
-    def cut_events_time(self, timestamp_start, timestamp_end):
-        self.event_array = np.delete(self.event_array,
-                                     (self.event_array["t"] < timestamp_start) | (self.event_array["t"] > timestamp_end)
-                                     )
-
-    def shift_timestamps(self):
+    def shift_timestamps_to_0(self):
         self.event_array["t"] -= self.event_array["t"][0]
 
-    def resize_events_position(self, w_start, h_start, width, height):
+    def crop(self, w_start, h_start, width, height):
         self.event_array = np.delete(self.event_array,
                                      (self.event_array["x"] < w_start) | (self.event_array["x"] >= w_start + width) |
                                      (self.event_array["y"] < h_start) | (self.event_array["y"] >= h_start + height),
@@ -222,6 +216,19 @@ class Events:
                                      (self.event_array["x"] < 0) | (self.event_array["x"] >= 346) |
                                      (self.event_array["y"] < 0) | (self.event_array["y"] >= 260),
                                      axis=0)
+
+    def resize(self, width, height):
+        x = self.event_array["x"].astype(np.float)
+        y = self.event_array["y"].astype(np.float)
+
+        x = (x / self.width) * width
+        y = (y / self.height) * height
+
+        self.event_array["x"] = x.astype("<i2")
+        self.event_array["y"] = y.astype("<i2")
+
+        self.width = width
+        self.height = height
 
     def get_events(self):
         return self.event_array

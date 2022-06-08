@@ -1,9 +1,17 @@
 clear all;close all;clc
+
 addpath('Funcs Gabor Fit');
-bfilename = 'examplebasis_ZQP';
-load_filename = [bfilename '.mat'];
+folder = '/home/alphat/neuvisys-dv/configuration/network/gabors/data/right/';
+load_filename = [folder 'weights_right.mat'];
 load(load_filename);
-gaborFit(bases(:,1:16));
+
+[mu_table, sigma_table, theta_table, phase_table, lambda_table, error_table] = gaborFit_onepatch(data, folder);
+save([folder 'mu.mat'], 'mu_table');
+save([folder 'sigma.mat'], 'sigma_table');
+save([folder 'lambda.mat'], 'lambda_table');
+save([folder 'phase.mat'], 'phase_table');
+save([folder 'theta.mat'], 'theta_table');
+save([folder 'error.mat'], 'error_table');
 
 %% draw basis
-drawBasis(bases,20,10);
+%drawBasis(data(:, 1:256), 20, 10);

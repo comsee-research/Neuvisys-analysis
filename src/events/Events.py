@@ -104,20 +104,20 @@ class Events:
         with h5py.File(str(filepath), "r") as file:
             event_dataset = file["events"]
 
-            event_array = np.zeros(event_dataset["t"].size, self.dtype)
-            event_array["t"] = np.asarray(event_dataset["t"])
-            event_array["x"] = np.asarray(event_dataset["x"])
-            event_array["y"] = np.asarray(event_dataset["y"])
-            event_array["p"] = np.asarray(event_dataset["p"])
+            start = self.event_array["t"].size
+            self.event_array = np.hstack((self.event_array, np.zeros(event_dataset["t"].size, self.dtype)))
+
+            self.event_array["t"][start:] = np.asarray(event_dataset["t"])
+            self.event_array["x"][start:] = np.asarray(event_dataset["x"])
+            self.event_array["y"][start:] = np.asarray(event_dataset["y"])
+            self.event_array["p"][start:] = np.asarray(event_dataset["p"])
             if camera == 1:
-                event_array["c"].fill(camera)
+                self.event_array["c"][start:].fill(camera)
             else:
                 if "c" in event_dataset.keys():
-                    event_array["c"] = np.asarray(event_dataset["c"])
+                    self.event_array["c"][start:] = np.asarray(event_dataset["c"])
                 else:
-                    event_array["c"].fill(camera)
-
-        self.event_array = np.hstack((self.event_array, event_array))
+                    self.event_array["c"][start:].fill(camera)
 
     def load_npz(self, filepath):
         with np.load(filepath) as npz:
@@ -201,6 +201,9 @@ class Events:
         self.event_array["x"] -= np.min(self.event_array["x"])
         self.event_array["y"] -= np.min(self.event_array["y"])
 
+        self.width = width
+        self.height = height
+
     def rectify_events(self, lx, ly, rx, ry):
         left = self.event_array[self.event_array["c"] == 0]
         right = self.event_array[self.event_array["c"] == 1]
@@ -217,18 +220,53 @@ class Events:
                                      (self.event_array["y"] < 0) | (self.event_array["y"] >= 260),
                                      axis=0)
 
+    def create_disparity(self, patches: [], width, height):
+        for patch in patches:
+            x, y, left_disp, right_disp = patch
+            left = self.event_array[
+                (self.event_array["c"] == 0) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)]
+            right = self.event_array[
+                (self.event_array["c"] == 1) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)]
+            left["x"] += left_disp
+            right["x"] += right_disp
+
+            self.event_array[
+                (self.event_array["c"] == 0) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)] = left
+            self.event_array[
+                (self.event_array["c"] == 1) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)] = right
+
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["x"] < 0) | (self.event_array["x"] >= 346) |
+                                     (self.event_array["y"] < 0) | (self.event_array["y"] >= 260),
+                                     axis=0)
+
     def resize(self, width, height):
-        x = self.event_array["x"].astype(np.float)
-        y = self.event_array["y"].astype(np.float)
+        self.event_array["x"] = self.event_array["x"].astype(np.float)
+        self.event_array["y"] = self.event_array["y"].astype(np.float)
 
-        x = (x / self.width) * width
-        y = (y / self.height) * height
+        self.event_array["x"] = (self.event_array["x"] / self.width) * width
+        self.event_array["y"] = (self.event_array["y"] / self.height) * height
 
-        self.event_array["x"] = x.astype("<i2")
-        self.event_array["y"] = y.astype("<i2")
+        self.event_array["x"] = self.event_array["x"].astype("<i2")
+        self.event_array["y"] = self.event_array["y"].astype("<i2")
 
         self.width = width
         self.height = height
+
+    def downsample(self):
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["x"] % 2 == 0) | (self.event_array["y"] % 2 == 0))
+        self.event_array["x"] -= 1
+        self.event_array["x"] //= 2
+        self.event_array["y"] -= 1
+        self.event_array["y"] //= 2
+
+        self.width //= 2
+        self.height //= 2
 
     def get_events(self):
         return self.event_array

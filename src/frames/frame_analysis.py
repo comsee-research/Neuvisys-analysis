@@ -13,6 +13,8 @@ import rosbag
 import seaborn as sns
 from dv import AedatFile
 from PIL import Image, ImageDraw
+import subprocess
+import os
 
 def load_frames(path):
     with AedatFile(path) as f:
@@ -29,6 +31,7 @@ def load_frames(path):
                 frames.append(fr.image)
             return np.array(frames)
 
+
 def shift(arr, num, axis, fill_value=0):
     arr = np.roll(arr, num, axis=axis)
     if num < 0:
@@ -43,6 +46,14 @@ def shift(arr, num, axis, fill_value=0):
             arr[:, :, :num] = fill_value
     return arr
 
+
+def extract_frames_video(video_paths: []):
+    for i, video_path in enumerate(video_paths):
+        folder = video_path.rsplit("/", 1)[0] + "/" + str(i)
+        os.mkdir(folder)
+        subprocess.run(["ffmpeg", "-i", video_path, folder + "/" + "%03d.bmp"])
+
+
 def rectify_frames(frames, lx, ly, rx, ry):
     rect_frames = np.array(frames).copy()
     rect_frames[0] = shift(rect_frames[0], ly, 1)
@@ -51,6 +62,7 @@ def rectify_frames(frames, lx, ly, rx, ry):
     rect_frames[1] = shift(rect_frames[1], rx, 2)
 
     return rect_frames
+
 
 def write_frames(dest, frames, rec):
     for i in range(frames.shape[1]):
@@ -64,6 +76,7 @@ def write_frames(dest, frames, rec):
                 rdraw.rectangle([x, y, x + 31, y + 31], outline=255)
         lim.save(dest + "img" + str(i) + "_left.jpg")
         rim.save(dest + "img" + str(i) + "_right.jpg")
+
 
 def load_depth_images_rosbag(bag_file):
     bag = rosbag.Bag(bag_file)

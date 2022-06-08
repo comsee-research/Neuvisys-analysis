@@ -29,7 +29,6 @@ from src.events.tools.generation.stimuli_gen import (
     disparity_bars
 )
 from src.events.tools.modification.event_modification import (
-    rectify_events,
     concatenate_npz,
 )
 from src.frames.frame_analysis import (

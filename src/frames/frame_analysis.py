@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw
 import subprocess
 import os
 
+
 def load_frames(path):
     with AedatFile(path) as f:
         try:
@@ -134,7 +135,7 @@ def stereo_matching(folder, xs, ys, range_imgs):
     for i in range(21):
         vec[i] = []
 
-    for i in np.arange(0, 824):
+    for i in np.arange(100, 824):
         lframe = cv.imread(folder + "img" + str(i) + "_left.jpg")
         rframe = cv.imread(folder + "img" + str(i) + "_right.jpg")
 
@@ -154,7 +155,7 @@ def stereo_matching(folder, xs, ys, range_imgs):
 
             x_shift = lp[0] - rp[0]
             y_shift = lp[1] - rp[1]
-            # print("{:.1f}, {:.1f}".format(*lp), "|", "{:.1f}, {:.1f}".format(*rp), "->", "{:.2f}".format(x_shift), "|", "{:.2f}".format(y_shift))
+            #print("{:.1f}, {:.1f}".format(*lp), "|", "{:.1f}, {:.1f}".format(*rp), "->", "{:.2f}".format(x_shift), "|", "{:.2f}".format(y_shift))
 
             if np.abs(x_shift) < 20 and np.abs(y_shift) < 20:
                 vec[mat[int(np.round((lp[0]))), int(np.round(lp[1]))]].append(

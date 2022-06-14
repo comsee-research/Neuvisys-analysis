@@ -13,6 +13,7 @@ import numpy as np
 import skvideo.io
 from dv import AedatFile
 from tqdm import tqdm
+from PIL import Image, ImageDraw
 
 
 def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, height: int, width: int) -> np.ndarray:
@@ -172,7 +173,16 @@ class Events:
                 group.create_dataset("c", self.event_array["c"].shape, dtype=self.event_array["c"].dtype,
                                      data=self.event_array["c"], compression="gzip")
 
-    def to_video(self, dt_miliseconds, dest):
+    def to_video(self, dt_miliseconds, dest, network_vf=None):
+        """
+        Generate a mp4 video from the events.
+        @param dt_miliseconds: bin size for the video.
+        @param dest: path the video will be saved to.
+        @param network_vf: receptive field coordinates of the network, superimposed as rectangles on the video.
+            - Formatted as list of 2 points (x0, y0, x1, y1) that defines a rectangle.
+
+        Example: events.to_video(50, "/home/thomas/Bureau/video", [[50, 40, 90, 80], [...]])
+        """
         if len(self.get_events()[self.get_cameras() == 1]) > 0:
             cameras = [0, 1]
         else:
@@ -181,7 +191,14 @@ class Events:
             writer = skvideo.io.FFmpegWriter(Path(dest + "_" + str(camera) + ".mp4"))
             for events in tqdm(EventSlicer(self.get_events()[self.get_cameras() == camera], dt_miliseconds)):
                 img = render(events["x"], events["y"], events["p"], self.height, self.width)
-                writer.writeFrame(img)
+                if network_vf is not None:
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    for rect in network_vf:
+                        draw.rectangle(rect, outline="green")
+                    writer.writeFrame(np.asarray(img_pil))
+                else:
+                    writer.writeFrame(img)
             writer.close()
 
     def remove_events(self, timestamp_starts, timestamp_ends):
@@ -203,6 +220,15 @@ class Events:
 
         self.width = width
         self.height = height
+
+    def rotate(self, radians, origin=(0, 0)):
+        ox, oy = origin
+
+        qx = ox + np.cos(radians) * (self.event_array["x"] - ox) + np.sin(radians) * (self.event_array["y"] - oy)
+        qy = oy + -np.sin(radians) * (self.event_array["x"] - ox) + np.cos(radians) * (self.event_array["y"] - oy)
+
+        self.event_array["x"] = qx
+        self.event_array["y"] = qy
 
     def rectify_events(self, lx, ly, rx, ry):
         left = self.event_array[self.event_array["c"] == 0]
@@ -285,6 +311,9 @@ class Events:
 
     def get_cameras(self):
         return self.event_array["c"]
+
+    def get_nb_events(self):
+        return self.event_array["t"].size
 
     def __enter__(self):
         return self

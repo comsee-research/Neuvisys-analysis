@@ -30,14 +30,14 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
     cnt = 0
     indices = np.arange(
         0,
-        spinet.nb_simple_cells,
-        spinet.conf["L1Depth"] * spinet.conf["L1Width"] * spinet.conf["L1Height"],
+        len(spinet.neurons[0]),
+        spinet.l_shape[0, 0] * spinet.l_shape[0, 1] * spinet.spinet.l_shape[0, 2],
     )
     if spinet.conf["SharingType"] == "full":
-        for i in range(spinet.conf["L1Depth"]):
+        for i in range(spinet.spinet.l_shape[0, 2]):
             path = dest + "{0:.2f}".format(error[0, i]) + str(i) + "_" + side + ".png"
-            plot_gabor_image(spinet.simple_cells[i], est_basis, error, path, i, side)
-        for neuron in spinet.simple_cells:
+            plot_gabor_image(spinet.neurons[0][i], est_basis, error, path, i, side)
+        for neuron in spinet.neurons[0]:
             x, y, z = neuron.params["position"]
             path = dest + "{0:.2f}".format(error[0, z]) + str(z) + "_" + side + ".png"
             neuron.add_gabor(
@@ -51,15 +51,8 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
             )
     elif spinet.conf["SharingType"] == "patch":
         for i, ind in enumerate(indices):
-            for neuron in spinet.simple_cells[ind : ind + spinet.conf["L1Depth"]]:
-                path = (
-                    dest
-                    + str(cnt)
-                    + "_{0:.2f}".format(error[0, cnt])
-                    + "_"
-                    + side
-                    + ".png"
-                )
+            for neuron in spinet.neurons[0][ind: ind + spinet.spinet.l_shape[0, 2]]:
+                path = dest + str(cnt) + "_{0:.2f}".format(error[0, cnt]) + "_" + side + ".png"
                 plot_gabor_image(neuron, est_basis, error, path, cnt, side)
                 neuron.add_gabor(
                     path,
@@ -71,19 +64,12 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
                     error[0, cnt],
                 )
                 cnt += 1
-            for j, neuron in enumerate(
-                spinet.simple_cells[
-                    ind
-                    + spinet.conf["L1Depth"] : ind
-                    + spinet.conf["L1Depth"]
-                    * spinet.conf["L1Width"]
-                    * spinet.conf["L1Height"]
-                ]
-            ):
-                c = i * spinet.conf["L1Depth"] + j % spinet.conf["L1Depth"]
-                path = (
-                    dest + str(c) + "_{0:.2f}".format(error[0, c]) + "_" + side + ".png"
-                )
+            for j, neuron in enumerate(spinet.neurons[0][
+                                       ind + spinet.spinet.l_shape[0, 2]: ind + spinet.spinet.l_shape[0, 0] *
+                                                                          spinet.spinet.l_shape[0, 1] *
+                                                                          spinet.spinet.l_shape[0, 2]]):
+                c = i * spinet.spinet.l_shape[0, 2] + j % spinet.spinet.l_shape[0, 2]
+                path = dest + str(c) + "_{0:.2f}".format(error[0, c]) + "_" + side + ".png"
                 neuron.add_gabor(
                     path,
                     mu[0, c],
@@ -94,7 +80,8 @@ def plot_gabors(spinet, mu, sigma, lambd, phase, theta, error, est_basis, dest, 
                     error[0, c],
                 )
     else:
-        for neuron in spinet.simple_cells:
+        for neuron in spinet.neurons[0]:
+            path = dest + str(cnt) + "_{0:.2f}".format(error[0, cnt]) + "_" + side + ".png"
             neuron.add_gabor(
                 path,
                 mu[0, cnt],
@@ -112,8 +99,8 @@ def plot_polar_chart(depth, nb_ticks, theta, error, err_thresh, dest):
     fig, axes = plt.subplots(3, 3, subplot_kw=dict(projection="polar"))
     for i in range(3):
         for j in range(3):
-            sub_theta = theta[(i * 3 + j) * depth : (i * 3 + j + 1) * depth]
-            sub_error = error[(i * 3 + j) * depth : (i * 3 + j + 1) * depth]
+            sub_theta = theta[(i * 3 + j) * depth: (i * 3 + j + 1) * depth]
+            sub_error = error[(i * 3 + j) * depth: (i * 3 + j + 1) * depth]
             hist = compute_histogram(
                 sub_theta[sub_error < err_thresh] * 180 / np.pi, 180, nb_ticks
             )
@@ -184,7 +171,7 @@ def create_gabor_basis(spinet, side, nb_ticks):
         side,
     )
     plot_polar_chart(
-        spinet.conf["L1Depth"],
+        spinet.l_shape[0, 2],
         nb_ticks,
         theta,
         error,

@@ -16,8 +16,49 @@ import pandas as pd
 import seaborn as sns
 from PIL import Image
 from natsort import natsorted
-
+from sklearn.metrics import r2_score
 from src.spiking_network.network.neuvisys import SpikingNetwork
+from src.events.Events import Events
+
+
+def event_vs_network_activity(spinet, event_path, bins=50):
+    events = Events(event_path)
+    events.shift_timestamps_to_0()
+    events.crop(93, 50, 160, 160)
+
+    sp_train = spinet.spikes[0].flatten()
+    sp_train = sp_train[sp_train != 0]
+    sp_train = np.sort(sp_train)
+
+    hist_bin = np.arange(0, events.get_timestamps()[-1], int(1e3 * bins))
+    event_variation, _ = np.histogram(events.get_timestamps(), bins=hist_bin)
+    event_variation_norm = event_variation / np.max(event_variation)
+    activity_variation, _ = np.histogram(sp_train, bins=hist_bin)
+    activity_variation_norm = activity_variation / np.max(activity_variation)
+
+    plt.figure()
+    plt.title("Hisogram of event activity vs network activity variation over time")
+    plt.plot(event_variation_norm, label="event variation")
+    plt.plot(activity_variation_norm, label="activity variation")
+    plt.xlabel("Time (bin of 50ms)")
+    plt.ylabel("Normalized count")
+    plt.legend()
+    plt.show()
+
+    plt.figure()
+    plt.title("Event activity variation against network activity variation")
+    plt.xlabel("Event activity variation (number of events)")
+    plt.ylabel("Network activity variation (number of spikes)")
+    plt.scatter(event_variation, activity_variation)
+
+    xseq = np.linspace(0, event_variation.max(), 1000)
+    coeffs = np.polyfit(event_variation, activity_variation, deg=1)
+    p = np.poly1d(coeffs)
+    r2 = r2_score(activity_variation, p(event_variation))
+    plt.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="k", lw=2.5)
+    plt.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 100),
+                 xycoords="figure points")
+    plt.show()
 
 
 def inhibition_weight_against_orientation(spinet):
@@ -78,7 +119,7 @@ def lateral_inhibition_weight_sum(spinet: SpikingNetwork, responses: np.ndarray,
 
         plt.figure()
         x = np.arange(len(simple_cell.weights_li))
-        y = simple_cell.weights_li# / np.max(simple_cell.weights_li)
+        y = simple_cell.weights_li  # / np.max(simple_cell.weights_li)
         last_index = 0
 
         full_sum = []

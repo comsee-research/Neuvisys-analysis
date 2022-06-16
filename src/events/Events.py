@@ -77,14 +77,17 @@ class Events:
         self.event_array = np.zeros(0, self.dtype)
 
         if len(args) > 1:
+            self.concatenate = False
             if isinstance(args[0], list) or isinstance(args[0], tuple):
                 for event_file, camera in zip(args[0], args[1]):
                     self.add_events(event_file, camera)
             else:
                 print("Invalid arguments")
         elif isinstance(args[0], str) or isinstance(args[0], np.ndarray):
+            self.concatenate = True
             self.add_events(args[0])
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
+            self.concatenate = True
             for event_file in args[0]:
                 self.add_events(event_file)
         else:
@@ -92,7 +95,7 @@ class Events:
 
     def add_events(self, event_file, camera=0):
         if isinstance(event_file, np.ndarray):
-            self.event_array = np.hstack((self.event_array, event_file))
+            self.load_ndarray(event_file)
         if isinstance(event_file, str):
             if event_file.endswith(".npz"):
                 self.load_npz(event_file)
@@ -100,6 +103,21 @@ class Events:
                 self.load_hdf5(event_file, camera)
             elif event_file.endswith(".aedat4"):
                 self.load_aedat4(event_file, camera)
+
+    def load_ndarray(self, events):
+        event_array = np.zeros(events.shape[0], self.dtype)
+        if self.concatenate:
+            event_array["t"] = self.get_timestamps()[-1] + events[:, 0] - events[:, 0][0]
+        else:
+            event_array["t"] = events[:, 0]
+        event_array["x"] = events[:, 1]
+        event_array["y"] = events[:, 2]
+        event_array["p"] = events[:, 3]
+        try:
+            event_array["c"] = events[:, 4]
+        except IndexError:
+            pass
+        self.event_array = np.hstack((self.event_array, event_array))
 
     def load_hdf5(self, filepath, camera):
         with h5py.File(str(filepath), "r") as file:
@@ -123,7 +141,10 @@ class Events:
     def load_npz(self, filepath):
         with np.load(filepath) as npz:
             event_array = np.zeros(npz["arr_0"].shape[0], self.dtype)
-            event_array["t"] = npz["arr_0"]
+            if self.concatenate:
+                event_array["t"] = self.get_timestamps()[-1] + npz["arr_0"] - npz["arr_0"][0]
+            else:
+                event_array["t"] = npz["arr_0"]
             event_array["x"] = npz["arr_1"]
             event_array["y"] = npz["arr_2"]
             event_array["p"] = npz["arr_3"]

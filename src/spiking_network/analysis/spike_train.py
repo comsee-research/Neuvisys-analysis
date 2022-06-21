@@ -22,7 +22,27 @@ from elephant.spike_train_correlation import correlation_coefficient
 from scipy.stats import laplace
 
 
-def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, distribution=None):
+def activity_comparison(spinet1, spinet2):
+    sts_s1 = spike_trains(spinet1.spikes[0])
+    sts_c1 = spike_trains(spinet1.spikes[1])
+
+    sts_s2 = spike_trains(spinet2.spikes[0])
+    sts_c2 = spike_trains(spinet2.spikes[1])
+
+    draw = laplace(0, 1).rvs(size=50)
+    draw = np.round(draw)
+
+    sp_train = spinet1.spikes[0].flatten()
+    sp_train = sp_train[sp_train != 0]
+    t_min = sp_train[0]
+    t_max = sp_train[-1]
+    vbars = np.linspace(0, t_max - t_min, 17)
+
+    time_histogram_comparison(spinet1, sts_s1, sts_s2, 0, draw, vbars)
+    time_histogram_comparison(spinet1, sts_c1, sts_c2, 1, draw, vbars)
+
+
+def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, distribution=None, vbars=None):
     histogram_control = statistics.time_histogram(sts_control, bin_size=100 * pq.ms, output='mean')
     histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=100 * pq.ms, output='mean')
     units = pq.Quantity(1, 's')
@@ -30,19 +50,21 @@ def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, distri
     width = histogram_control.sampling_period.rescale(units).item()
     histogram_diff = histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude
 
-    control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer)
+    control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer, vbars)
     control_experiment_diff(histogram_diff, times, width, units)
     if distribution is not None:
         diff_distribution(histogram_diff, times, distribution)
 
 
-def control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer):
+def control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer, vbars=None):
     plt.figure()
     plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
     plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
     plt.xlabel(f"Time ({units.dimensionality})")
     plt.ylabel("Spike Rate (Hz)")
     plt.title("Time histogram")
+    for vbar in vbars:
+        plt.axvline(x=vbar / 1e6, color='red', linestyle='--')
     plt.legend()
     if not os.path.exists(spinet.path + "figures/"+str(layer)+"/activity_comparison"):
         os.mkdir(spinet.path + "figures/"+str(layer)+"/activity_comparison")
@@ -111,6 +133,26 @@ def time_histogram(sts, layer, bin_size, path):
     if path:
         plt.savefig(path + str(layer) + "/time_histogram", bbox_inches="tight")
     plt.show()
+
+
+def fast_time_histogram(sp_train, bins=50, display=False):
+    sp_train = sp_train.flatten()
+    sp_train = sp_train[sp_train != 0]
+    sp_train = np.sort(sp_train)
+
+    hist_bin = np.arange(0, sp_train[-1], int(1e3 * bins))
+    activity_variation, _ = np.histogram(sp_train, bins=hist_bin)
+
+    if display:
+        plt.figure()
+        plt.title("Hisogram of network activity variation over time")
+        plt.plot(activity_variation, label="activity variation")
+        plt.xlabel("Time (bin of " + str(bins) + "ms)")
+        plt.ylabel("Normalized count")
+        plt.legend()
+        plt.show()
+
+    return activity_variation
 
 
 def spike_rate_histogram(sps, layer, path):

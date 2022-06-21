@@ -17,6 +17,8 @@ import seaborn as sns
 from PIL import Image
 from natsort import natsorted
 from sklearn.metrics import r2_score
+
+from src.spiking_network.analysis.spike_train import fast_time_histogram
 from src.spiking_network.network.neuvisys import SpikingNetwork
 from src.events.Events import Events
 
@@ -26,14 +28,11 @@ def event_vs_network_activity(spinet, event_path, bins=50):
     events.shift_timestamps_to_0()
     events.crop(93, 50, 160, 160)
 
-    sp_train = spinet.spikes[0].flatten()
-    sp_train = sp_train[sp_train != 0]
-    sp_train = np.sort(sp_train)
-
     hist_bin = np.arange(0, events.get_timestamps()[-1], int(1e3 * bins))
     event_variation, _ = np.histogram(events.get_timestamps(), bins=hist_bin)
     event_variation_norm = event_variation / np.max(event_variation)
-    activity_variation, _ = np.histogram(sp_train, bins=hist_bin)
+
+    activity_variation = fast_time_histogram(spinet.spikes[0])
     activity_variation_norm = activity_variation / np.max(activity_variation)
 
     plt.figure()

@@ -95,38 +95,55 @@ class Events:
 
     def add_events(self, event_file, camera=0):
         if isinstance(event_file, np.ndarray):
-            self.load_ndarray(event_file)
+            self.load_ndarray(event_file, camera)
         if isinstance(event_file, str):
             if event_file.endswith(".npz"):
-                self.load_npz(event_file)
+                self.load_npz(event_file, camera)
             elif event_file.endswith(".h5"):
                 self.load_hdf5(event_file, camera)
             elif event_file.endswith(".aedat4"):
                 self.load_aedat4(event_file, camera)
 
-    def load_ndarray(self, events):
+    def load_ndarray(self, events, camera):
+        if self.get_timestamps().size > 0:
+            last_t = self.get_timestamps()[-1]
+        else:
+            last_t = 0
+
         event_array = np.zeros(events.shape[0], self.dtype)
         if self.concatenate:
-            event_array["t"] = self.get_timestamps()[-1] + events[:, 0] - events[:, 0][0]
+            event_array["t"] = last_t + events[:, 0] - events[:, 0][0]
         else:
             event_array["t"] = events[:, 0]
         event_array["x"] = events[:, 1]
         event_array["y"] = events[:, 2]
         event_array["p"] = events[:, 3]
-        try:
-            event_array["c"] = events[:, 4]
-        except IndexError:
-            pass
+        if camera == 1:
+            event_array["c"].fill(camera)
+        else:
+            try:
+                event_array["c"] = events[:, 4]
+            except IndexError:
+                pass
         self.event_array = np.hstack((self.event_array, event_array))
 
     def load_hdf5(self, filepath, camera):
+        if self.get_timestamps().size > 0:
+            last_t = self.get_timestamps()[-1]
+        else:
+            last_t = 0
+
         with h5py.File(str(filepath), "r") as file:
             event_dataset = file["events"]
 
             start = self.event_array["t"].size
             self.event_array = np.hstack((self.event_array, np.zeros(event_dataset["t"].size, self.dtype)))
 
-            self.event_array["t"][start:] = np.asarray(event_dataset["t"])
+            if self.concatenate:
+                self.event_array["t"][start:] = last_t + np.asarray(event_dataset["t"]) - \
+                                                np.asarray(event_dataset["t"])[0]
+            else:
+                self.event_array["t"][start:] = np.asarray(event_dataset["t"])
             self.event_array["x"][start:] = np.asarray(event_dataset["x"])
             self.event_array["y"][start:] = np.asarray(event_dataset["y"])
             self.event_array["p"][start:] = np.asarray(event_dataset["p"])
@@ -138,20 +155,28 @@ class Events:
                 else:
                     self.event_array["c"][start:].fill(camera)
 
-    def load_npz(self, filepath):
+    def load_npz(self, filepath, camera):
+        if self.get_timestamps().size > 0:
+            last_t = self.get_timestamps()[-1]
+        else:
+            last_t = 0
+
         with np.load(filepath) as npz:
             event_array = np.zeros(npz["arr_0"].shape[0], self.dtype)
             if self.concatenate:
-                event_array["t"] = self.get_timestamps()[-1] + npz["arr_0"] - npz["arr_0"][0]
+                event_array["t"] = last_t + npz["arr_0"] - npz["arr_0"][0]
             else:
                 event_array["t"] = npz["arr_0"]
             event_array["x"] = npz["arr_1"]
             event_array["y"] = npz["arr_2"]
             event_array["p"] = npz["arr_3"]
-            try:
-                event_array["c"] = npz["arr_4"]
-            except KeyError:
-                pass
+            if camera == 1:
+                event_array["c"].fill(camera)
+            else:
+                try:
+                    event_array["c"] = npz["arr_4"]
+                except KeyError:
+                    pass
         self.event_array = np.hstack((self.event_array, event_array))
 
     def load_aedat4(self, filepath, camera):
@@ -169,6 +194,10 @@ class Events:
 
     def sort_events(self):
         self.event_array = self.event_array[self.event_array["t"].argsort()]
+
+    def check_timestamp_monotonicity(self):
+        dx = np.diff(self.get_timestamps())
+        return np.all(dx >= 0)
 
     def save_as_file(self, dest):
         if dest.endswith(".npz"):
@@ -332,6 +361,12 @@ class Events:
 
     def get_cameras(self):
         return self.event_array["c"]
+
+    def get_nb_cameras(self):
+        if np.any(self.get_cameras() == 1):
+            return 2
+        else:
+            return 1
 
     def get_nb_events(self):
         return self.event_array["t"].size

@@ -62,7 +62,10 @@ def value_plot(spinet):
 
 def policy_plot(spinet):
     actions = np.array(spinet.state["learning_data"]["action"], dtype=np.int32)
-    colors = ['#e41a1c', '#377eb8', '#4daf4a']
+    rewards = np.array(spinet.state["learning_data"]["reward"])
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+    angle_color = colors[-3]
     actions_colors = np.array(colors)[actions]
 
     nb_actions = np.unique(actions).size
@@ -71,34 +74,74 @@ def policy_plot(spinet):
     for i in range(nb_actions):
         action_values.append(np.array(spinet.state["learning_data"]["action_" + str(i)]))
     exploration = np.array(spinet.state["learning_data"]["exploration"])
-    angles = np.concatenate([np.linspace(0, 180, action_values[0].size // 2), np.linspace(180, 0, action_values[0].size // 2)])
 
-    angle_color = "#69b3a2"
-    t = np.arange(50, action_values[0].size, 50)
-
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
+    bins = 50
+    sp_trains = []
     for i in range(nb_actions):
-        ax1.plot(action_values[i], color=colors[i], label="action " + str(i))
-    ax1.set_xlabel("Time (ms)")
-    ax1.set_ylabel("Actors number of spikes")
-    ax1.vlines(t[:-1], 0, np.max(action_values), color=actions_colors, linestyles="dotted")
-    ax2.plot(angles, color=angle_color, label="rotation angle")
-    ax2.tick_params(axis="y", labelcolor=angle_color)
-    ax2.set_ylabel("Rotation angle (degree)", color=angle_color)
-    plt.show()
+        sp_train = spinet.spikes[-1][i * 50:(i + 1) * 50].flatten()
+        sp_train = sp_train[sp_train != 0]
+        sp_train = np.sort(sp_train)
+        sp_trains.append(sp_train)
 
-    theta = np.linspace(0, 2*np.pi, action_values[0].size)
-    fig, ax1 = plt.subplots(subplot_kw={'projection': 'polar'})
+    hist_bin = np.arange(0, sp_trains[0][-1], int(1e3 * bins))
+    activity_variations = []
+    for i in range(nb_actions):
+        activity_variations.append(np.histogram(sp_trains[i], bins=hist_bin)[0])
+
+    angles = np.concatenate(
+        [np.linspace(0, 180, activity_variations[0].size // 2 + 1),
+         np.linspace(180, 0, activity_variations[0].size // 2)[1:]])
+    t = np.arange(0, activity_variations[0].size)
+
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1bis = ax1.twinx()
+    for i in range(nb_actions):
+        ax1.plot(activity_variations[i], color=colors[i], label="action " + str(i))
+    ax1.set_xlabel("Time (ms)")
+    ax1.set_ylabel("Number of spikes")
+    ax1.vlines(t, 0, np.max(activity_variations), color=actions_colors, linestyles="dotted")
+    ax1bis.plot(angles, color=angle_color, label="rotation angle")
+    ax1bis.tick_params(axis="y", labelcolor=angle_color)
+    ax1bis.set_ylabel("Rotation angle (°)", color=angle_color)
+    ax1.legend(loc="upper right")
+
+    angles = np.concatenate(
+        [np.linspace(0, 180, action_values[0].size // 2), np.linspace(180, 0, action_values[0].size // 2)])
+    t = np.linspace(50, action_values[0].size-15, activity_variations[0].size)
+
+    ax2bis = ax2.twinx()
+    for i in range(nb_actions):
+        ax2.plot(action_values[i], color=colors[i], label="action " + str(i))
+    ax2.set_xlabel("Time (ms)")
+    ax2.set_ylabel("Number of spikes")
+    ax2.vlines(t, 0, np.max(action_values), color=actions_colors, linestyles="dotted")
+    ax2bis.plot(angles, color=angle_color, label="rotation angle")
+    ax2bis.tick_params(axis="y", labelcolor=angle_color)
+    ax2bis.set_ylabel("Rotation angle (°)", color=angle_color)
+
+    angles = np.concatenate(
+        [np.linspace(0, 180, activity_variations[0].size // 2 + 1),
+         np.linspace(180, 0, activity_variations[0].size // 2)[1:]])
+    t = np.arange(0, activity_variations[0].size)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, subplot_kw=dict(projection="polar"))
+    theta = np.linspace(0, 2 * np.pi, activity_variations[0].size)
     ax1.set_theta_zero_location("N")
     ax1.set_theta_direction(-1)
-    # ax2 = ax1.twinx()
     for i in range(nb_actions):
-        ax1.plot(theta, action_values[i], color=colors[i], label="action " + str(i))
+        ax1.plot(theta, activity_variations[i], color=colors[i], label="action " + str(i))
     ax1.set_xlabel("Time (ms)")
-    ax1.set_ylabel("Actors number of spikes")
-    ax1.vlines(t[:-1], 0, np.max(action_values), color=actions_colors, linestyles="dotted")
-    # ax2.plot(angles, color=angle_color, label="rotation angle")
-    ax2.tick_params(axis="y", labelcolor=angle_color)
-    ax2.set_ylabel("Rotation angle (degree)", color=angle_color)
+    ax1.vlines(t, 0, np.max(activity_variations), color=actions_colors, linestyles="dotted")
+
+    angles = np.concatenate(
+        [np.linspace(0, 180, action_values[0].size // 2), np.linspace(180, 0, action_values[0].size // 2)])
+    t = np.arange(50, action_values[0].size, 50)
+
+    theta = np.linspace(0, 2 * np.pi, action_values[0].size)
+    ax2.set_theta_zero_location("N")
+    ax2.set_theta_direction(-1)
+    for i in range(nb_actions):
+        ax2.plot(theta, action_values[i], color=colors[i], label="action " + str(i))
+    ax2.set_xlabel("Time (ms)")
+    ax2.vlines(t, 0, np.max(action_values), color=actions_colors[::-1], linestyles="dotted")
     plt.show()

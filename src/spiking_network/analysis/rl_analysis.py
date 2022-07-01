@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def value_plot(spinet):
+def value_plot(spinet, ):
     reward = np.array(spinet.state["learning_data"]["reward"])
     value = np.array(spinet.state["learning_data"]["value"])
     value_dot = np.array(spinet.state["learning_data"]["valueDot"])
@@ -60,12 +60,13 @@ def value_plot(spinet):
     # plt.show()
 
 
-def policy_plot(spinet, action_bin, action_labels=None):
-    actions = np.array(spinet.state["learning_data"]["action"], dtype=np.int32)
-    rewards = np.array(spinet.state["learning_data"]["reward"])
+def policy_plot(spinet, action_bin, action_labels):
+    # angles = np.rad2deg(np.array(spinet.state["learning_data"]["angle"]))
     prop_cycle = plt.rcParams['axes.prop_cycle']
     colors = prop_cycle.by_key()['color']
     angle_color = colors[-3]
+
+    actions = np.array(spinet.state["learning_data"]["action"], dtype=np.int32)
     actions_colors = np.array(colors)[actions]
 
     nb_actions = np.unique(actions).size
@@ -73,7 +74,6 @@ def policy_plot(spinet, action_bin, action_labels=None):
     action_values = []
     for i in range(nb_actions):
         action_values.append(np.array(spinet.state["learning_data"]["action_" + str(i)]))
-    exploration = np.array(spinet.state["learning_data"]["exploration"])
 
     sp_trains = []
     for i in range(nb_actions):
@@ -87,34 +87,36 @@ def policy_plot(spinet, action_bin, action_labels=None):
     for i in range(nb_actions):
         activity_variations.append(np.histogram(sp_trains[i], bins=hist_bin)[0])
 
-    angles = np.concatenate(
-        [np.linspace(0, 180, activity_variations[0].size // 2 + 1),
-         np.linspace(180, 0, activity_variations[0].size // 2)[1:]])
-    t = np.arange(0, activity_variations[0].size)
+    t = np.linspace(0, activity_variations[0].size, actions_colors.size)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(40, 20))
+    fig, (ax2, ax1) = plt.subplots(2, 1, figsize=(40, 20))
     ax1bis = ax1.twinx()
     for i in range(nb_actions):
         ax1.plot(activity_variations[i], color=colors[i], label=action_labels[i])
     ax1.set_xlabel("Time (ms)")
     ax1.set_ylabel("Number of spikes")
-    ax1.vlines(t, 0, np.max(activity_variations), color=actions_colors, linestyles="dotted")
-    ax1bis.plot(angles, color=angle_color, label="rotation angle")
+    ax1.vlines(t, 0, np.max(activity_variations), color=actions_colors, alpha=0.5)
+    # ax1bis.plot(angles, color=angle_color, label="rotation angle")
     ax1bis.tick_params(axis="y", labelcolor=angle_color)
     ax1bis.set_ylabel("Rotation angle (°)", color=angle_color)
     ax1.legend(loc="upper right")
 
-    angles = np.concatenate(
-        [np.linspace(0, 180, action_values[0].size // 2), np.linspace(180, 0, action_values[0].size // 2)])
-    t = np.linspace(action_bin, action_values[0].size-15, activity_variations[0].size)
+    # angles = angles[:action_values[0].size]
+    t = np.linspace(0, action_values[0].size, actions_colors.size)
 
     ax2bis = ax2.twinx()
     for i in range(nb_actions):
         ax2.plot(action_values[i], color=colors[i], label=action_labels[i])
     ax2.set_xlabel("Time (ms)")
     ax2.set_ylabel("Number of spikes")
-    ax2.vlines(t, 0, np.max(action_values), color=actions_colors, linestyles="dotted")
-    ax2bis.plot(angles, color=angle_color, label="rotation angle")
+    ax2.vlines(t, 0, np.max(action_values), color=actions_colors, alpha=0.5)
+    # ax2bis.plot(angles, color=angle_color, label="rotation angle")
+    ax2bis.set_ylim(0)
     ax2bis.tick_params(axis="y", labelcolor=angle_color)
     ax2bis.set_ylabel("Rotation angle (°)", color=angle_color)
+
+    # boole = angles > 90
+    # ax2.axvspan(0, np.argmax(angles > 90), color="orange", alpha=0.2)
+    # ax2.axvspan(np.argmax(angles > 90), np.where(boole)[0][-1], color="blue", alpha=0.2)
+    # ax2.axvspan(np.where(boole)[0][-1], angles.size, color="orange", alpha=0.2)
     ax2.legend(loc="upper right")

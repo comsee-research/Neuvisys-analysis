@@ -147,11 +147,11 @@ class Events:
         if dest.endswith(".npz"):
             np.savez(
                 dest,
-                self.events["t"].astype("i8"),
-                self.events["x"].astype("i2"),
-                self.events["y"].astype("i2"),
-                self.events["p"].astype("i1"),
-                self.events["c"].astype("i1"),
+                self.event_array["t"].astype("i8"),
+                self.event_array["x"].astype("i2"),
+                self.event_array["y"].astype("i2"),
+                self.event_array["p"].astype("i1"),
+                self.event_array["c"].astype("i1"),
             )
         elif dest.endswith(".h5") or dest.endswith(".hdf5"):
             with h5py.File(dest, "a") as file:

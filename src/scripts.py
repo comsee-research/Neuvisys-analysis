@@ -61,6 +61,8 @@ from src.spiking_network.planning.network_planner import (
 
 # %%
 
+events = Events("/home/thomas/polarization/recordings/04_05_2022/dvSave-2022_05_04_07_31_53.aedat4")
+
 
 # %% Generate Spiking Network
 

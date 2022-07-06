@@ -105,7 +105,7 @@ class SpikingNetwork:
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:
                 self.spikes[i] = np.array(list(itertools.zip_longest(*self.spikes[i], fillvalue=0))).T
-                self.spikes[i][self.spikes[i] != 0] -= np.min(self.spikes[i][self.spikes[i] != 0])
+                # self.spikes[i][self.spikes[i] != 0] -= np.min(self.spikes[i][self.spikes[i] != 0])
 
         if os.path.exists(self.path + "gabors/0/rotation_response.npy"):
             self.directions = []
@@ -208,11 +208,11 @@ class SpikingNetwork:
 
     def generate_weight_mat(self):
         w = self.n_shape[0, 0] * self.n_shape[0, 1]
-        basis = np.zeros((2 * w, len(self.weights)))
+        basis = np.zeros((2 * w, len(self.weights[0])))
         for c in range(self.conf["nbCameras"]):
-            for i, weight in enumerate(self.weights):
+            for i, weight in enumerate(self.weights[0]):
                 basis[c * w: (c + 1) * w, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
-        sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
+        # sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
 
         return basis
 

@@ -13,6 +13,7 @@ import numpy as np
 import skvideo.io
 from dv import AedatFile
 from tqdm import tqdm
+from PIL import Image, ImageDraw
 
 
 def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, height: int, width: int) -> np.ndarray:
@@ -38,7 +39,7 @@ class Events:
     Container for event based data.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args, width=346, height=260):
         """
         Parameters
         ----------
@@ -70,18 +71,23 @@ class Events:
         None.
 
         """
-        self.dtype = np.dtype([("t", "<u4"), ("x", "<u2"), ("y", "<u2"), ("p", "u1"), ("c", "u1")])
+        self.width = width
+        self.height = height
+        self.dtype = np.dtype([("t", "<u4"), ("x", "<i2"), ("y", "<i2"), ("p", "i1"), ("c", "i1")])
         self.event_array = np.zeros(0, self.dtype)
 
         if len(args) > 1:
+            self.concatenate = False
             if isinstance(args[0], list) or isinstance(args[0], tuple):
                 for event_file, camera in zip(args[0], args[1]):
                     self.add_events(event_file, camera)
             else:
                 print("Invalid arguments")
         elif isinstance(args[0], str) or isinstance(args[0], np.ndarray):
+            self.concatenate = True
             self.add_events(args[0])
         elif isinstance(args[0], list) or isinstance(args[0], tuple):
+            self.concatenate = True
             for event_file in args[0]:
                 self.add_events(event_file)
         else:
@@ -89,40 +95,88 @@ class Events:
 
     def add_events(self, event_file, camera=0):
         if isinstance(event_file, np.ndarray):
-            self.event_array = np.hstack((self.event_array, event_file))
+            self.load_ndarray(event_file, camera)
         if isinstance(event_file, str):
             if event_file.endswith(".npz"):
-                self.load_npz(event_file)
+                self.load_npz(event_file, camera)
             elif event_file.endswith(".h5"):
                 self.load_hdf5(event_file, camera)
             elif event_file.endswith(".aedat4"):
                 self.load_aedat4(event_file, camera)
 
+    def load_ndarray(self, events, camera):
+        if self.get_timestamps().size > 0:
+            last_t = self.get_timestamps()[-1]
+        else:
+            last_t = 0
+
+        event_array = np.zeros(events.shape[0], self.dtype)
+        if self.concatenate:
+            event_array["t"] = last_t + events[:, 0] - events[:, 0][0]
+        else:
+            event_array["t"] = events[:, 0]
+        event_array["x"] = events[:, 1]
+        event_array["y"] = events[:, 2]
+        event_array["p"] = events[:, 3]
+        if camera == 1:
+            event_array["c"].fill(camera)
+        else:
+            try:
+                event_array["c"] = events[:, 4]
+            except IndexError:
+                pass
+        self.event_array = np.hstack((self.event_array, event_array))
+
     def load_hdf5(self, filepath, camera):
+        if self.get_timestamps().size > 0:
+            last_t = self.get_timestamps()[-1]
+        else:
+            last_t = 0
+
         with h5py.File(str(filepath), "r") as file:
             event_dataset = file["events"]
 
-            event_array = np.zeros(event_dataset["t"].size, self.dtype)
-            event_array["t"] = np.asarray(event_dataset["t"])
-            event_array["x"] = np.asarray(event_dataset["x"])
-            event_array["y"] = np.asarray(event_dataset["y"])
-            event_array["p"] = np.asarray(event_dataset["p"])
-            if "c" in event_dataset.keys():
-                event_array["c"] = np.asarray(event_dataset["c"])
+            start = self.event_array["t"].size
+            self.event_array = np.hstack((self.event_array, np.zeros(event_dataset["t"].size, self.dtype)))
+
+            if self.concatenate:
+                self.event_array["t"][start:] = last_t + np.asarray(event_dataset["t"]) - \
+                                                np.asarray(event_dataset["t"])[0]
             else:
-                event_array["c"].fill(camera)
+                self.event_array["t"][start:] = np.asarray(event_dataset["t"])
+            self.event_array["x"][start:] = np.asarray(event_dataset["x"])
+            self.event_array["y"][start:] = np.asarray(event_dataset["y"])
+            self.event_array["p"][start:] = np.asarray(event_dataset["p"])
+            if camera == 1:
+                self.event_array["c"][start:].fill(camera)
+            else:
+                if "c" in event_dataset.keys():
+                    self.event_array["c"][start:] = np.asarray(event_dataset["c"])
+                else:
+                    self.event_array["c"][start:].fill(camera)
 
-        self.event_array = np.hstack((self.event_array, event_array))
+    def load_npz(self, filepath, camera):
+        if self.get_timestamps().size > 0:
+            last_t = self.get_timestamps()[-1]
+        else:
+            last_t = 0
 
-    def load_npz(self, filepath):
         with np.load(filepath) as npz:
             event_array = np.zeros(npz["arr_0"].shape[0], self.dtype)
-            event_array["t"] = npz["arr_0"]
+            if self.concatenate:
+                event_array["t"] = last_t + npz["arr_0"] - npz["arr_0"][0]
+            else:
+                event_array["t"] = npz["arr_0"]
             event_array["x"] = npz["arr_1"]
             event_array["y"] = npz["arr_2"]
             event_array["p"] = npz["arr_3"]
-            event_array["c"] = npz["arr_4"]
-
+            if camera == 1:
+                event_array["c"].fill(camera)
+            else:
+                try:
+                    event_array["c"] = npz["arr_4"]
+                except KeyError:
+                    pass
         self.event_array = np.hstack((self.event_array, event_array))
 
     def load_aedat4(self, filepath, camera):
@@ -136,12 +190,14 @@ class Events:
         event_array["p"] = aedat4["polarity"]
         event_array["c"].fill(camera)
 
-        del aedat4
-
         self.event_array = np.hstack((self.event_array, event_array))
 
     def sort_events(self):
         self.event_array = self.event_array[self.event_array["t"].argsort()]
+
+    def check_timestamp_monotonicity(self):
+        dx = np.diff(self.get_timestamps())
+        return np.all(dx >= 0)
 
     def save_as_file(self, dest):
         if dest.endswith(".npz"):
@@ -167,26 +223,126 @@ class Events:
                 group.create_dataset("c", self.event_array["c"].shape, dtype=self.event_array["c"].dtype,
                                      data=self.event_array["c"], compression="gzip")
 
-    def to_video(self, dt_miliseconds, dest, width, height):
-        writer = skvideo.io.FFmpegWriter(Path(dest + ".mp4"))
-        for events in tqdm(EventSlicer(self.get_events(), dt_miliseconds)):
-            img = render(events["x"], events["y"], events["p"], height, width)
-            writer.writeFrame(img)
-        writer.close()
+    def to_video(self, dt_miliseconds, dest, network_vf=None):
+        """
+        Generate a mp4 video from the events.
+        @param dt_miliseconds: bin size for the video.
+        @param dest: path the video will be saved to.
+        @param network_vf: receptive field coordinates of the network, superimposed as rectangles on the video.
+            - Formatted as list of 2 points (x0, y0, x1, y1) that defines a rectangle.
 
-    def remove_events(self, timestamp_starts, timestamp_end):
-        for i, j in zip(timestamp_starts, timestamp_end):
+        Example: events.to_video(50, "/home/thomas/Bureau/video", [[50, 40, 90, 80], [...]])
+        """
+        if len(self.get_events()[self.get_cameras() == 1]) > 0:
+            cameras = [0, 1]
+        else:
+            cameras = [0]
+        for camera in cameras:
+            writer = skvideo.io.FFmpegWriter(Path(dest + "_" + str(camera) + ".mp4"))
+            for events in tqdm(EventSlicer(self.get_events()[self.get_cameras() == camera], dt_miliseconds)):
+                img = render(events["x"], events["y"], events["p"], self.height, self.width)
+                if network_vf is not None:
+                    img_pil = Image.fromarray(img)
+                    draw = ImageDraw.Draw(img_pil)
+                    for rect in network_vf:
+                        draw.rectangle(rect, outline="green")
+                    writer.writeFrame(np.asarray(img_pil))
+                else:
+                    writer.writeFrame(img)
+            writer.close()
+
+    def remove_events(self, timestamp_starts, timestamp_ends):
+        for i, j in zip(timestamp_starts, timestamp_ends):
             self.event_array = np.delete(
                 self.event_array, (self.event_array["t"] >= i) & (self.event_array["t"] <= j)
             )
 
-    def resize_events(self, w_start, h_start, width, height):
+    def shift_timestamps_to_0(self):
+        self.event_array["t"] -= self.event_array["t"][0]
+
+    def crop(self, w_start, h_start, width, height):
         self.event_array = np.delete(self.event_array,
                                      (self.event_array["x"] < w_start) | (self.event_array["x"] >= w_start + width) |
                                      (self.event_array["y"] < h_start) | (self.event_array["y"] >= h_start + height),
                                      axis=0)
         self.event_array["x"] -= np.min(self.event_array["x"])
         self.event_array["y"] -= np.min(self.event_array["y"])
+
+        self.width = width
+        self.height = height
+
+    def rotate(self, radians, origin=(0, 0)):
+        ox, oy = origin
+
+        qx = ox + np.cos(radians) * (self.event_array["x"] - ox) + np.sin(radians) * (self.event_array["y"] - oy)
+        qy = oy + -np.sin(radians) * (self.event_array["x"] - ox) + np.cos(radians) * (self.event_array["y"] - oy)
+
+        self.event_array["x"] = qx
+        self.event_array["y"] = qy
+
+    def rectify_events(self, lx, ly, rx, ry):
+        left = self.event_array[self.event_array["c"] == 0]
+        right = self.event_array[self.event_array["c"] == 1]
+        left["x"] += lx
+        left["y"] += ly
+        right["x"] += rx
+        right["y"] += ry
+
+        self.event_array[self.event_array["c"] == 0] = left
+        self.event_array[self.event_array["c"] == 1] = right
+
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["x"] < 0) | (self.event_array["x"] >= 346) |
+                                     (self.event_array["y"] < 0) | (self.event_array["y"] >= 260),
+                                     axis=0)
+
+    def create_disparity(self, patches: [], width, height):
+        for patch in patches:
+            x, y, left_disp, right_disp = patch
+            left = self.event_array[
+                (self.event_array["c"] == 0) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)]
+            right = self.event_array[
+                (self.event_array["c"] == 1) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)]
+            left["x"] += left_disp
+            right["x"] += right_disp
+
+            self.event_array[
+                (self.event_array["c"] == 0) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)] = left
+            self.event_array[
+                (self.event_array["c"] == 1) & (self.event_array["x"] >= x) & (self.event_array["x"] < x + width) & (
+                        self.event_array["y"] >= y) & (self.event_array["y"] < y + height)] = right
+
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["x"] < 0) | (self.event_array["x"] >= 346) |
+                                     (self.event_array["y"] < 0) | (self.event_array["y"] >= 260),
+                                     axis=0)
+
+    def resize(self, width, height):
+        self.event_array["x"] = self.event_array["x"].astype(np.float)
+        self.event_array["y"] = self.event_array["y"].astype(np.float)
+
+        self.event_array["x"] = (self.event_array["x"] / self.width) * width
+        self.event_array["y"] = (self.event_array["y"] / self.height) * height
+
+        self.event_array["x"] = self.event_array["x"].astype("<i2")
+        self.event_array["y"] = self.event_array["y"].astype("<i2")
+
+        self.width = width
+        self.height = height
+
+    def downsample(self):
+        self.event_array = np.delete(self.event_array,
+                                     (self.event_array["x"] % 2 == 0) | (self.event_array["y"] % 2 == 0))
+        self.event_array["x"] -= 1
+        self.event_array["x"] //= 2
+        self.event_array["y"] -= 1
+        self.event_array["y"] //= 2
+
+        self.width //= 2
+        self.height //= 2
 
     def get_events(self):
         return self.event_array
@@ -202,6 +358,18 @@ class Events:
 
     def get_polarities(self):
         return self.event_array["p"]
+
+    def get_cameras(self):
+        return self.event_array["c"]
+
+    def get_nb_cameras(self):
+        if np.any(self.get_cameras() == 1):
+            return 2
+        else:
+            return 1
+
+    def get_nb_events(self):
+        return self.event_array["t"].size
 
     def __enter__(self):
         return self

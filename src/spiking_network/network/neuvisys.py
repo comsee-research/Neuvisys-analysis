@@ -14,7 +14,6 @@ import re
 import shutil
 
 import numpy as np
-import scipy.io as sio
 from PIL import Image
 from natsort import natsorted
 
@@ -68,6 +67,8 @@ class SpikingNetwork:
         try:
             with open(path + "configs/network_config.json") as file:
                 self.conf = json.load(file)
+            with open(path + "configs/rl_config.json") as file:
+                self.rl_conf = json.load(file)
             with open(path + "configs/simple_cell_config.json") as file:
                 self.simple_conf = json.load(file)
             with open(path + "configs/complex_cell_config.json") as file:
@@ -92,10 +93,10 @@ class SpikingNetwork:
 
         self.p_shape = np.array(self.conf["layerPatches"], dtype=object)
         self.l_shape = np.array(self.conf["layerSizes"])
-        self.n_shape = np.array(self.conf["neuronSizes"])
+        self.n_shape = np.array(self.conf["neuronSizes"][0])
 
         if loading:
-            for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
+            for layer, neuron_type in enumerate(self.conf["neuronType"]):
                 neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
                 self.neurons.append(neurons)
                 self.spikes.append(spikes)
@@ -110,7 +111,7 @@ class SpikingNetwork:
         if os.path.exists(self.path + "gabors/0/rotation_response.npy"):
             self.directions = []
             self.orientations = []
-            for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
+            for layer, neuron_type in enumerate(self.conf["neuronType"]):
                 if layer < 2:
                     self.directions.append(np.load(self.path + "gabors/" + str(layer) + "/rotation_response.npy"))
                     self.orientations.append(self.directions[layer][0:8] + self.directions[layer][8:16])
@@ -165,6 +166,10 @@ class SpikingNetwork:
             for i, weight in enumerate(weights):
                 for shared in self.shared_id[i]:
                     self.neurons[layer][shared].link_weights(weight)
+        elif neuron_type == "CriticCell" or neuron_type == "ActorCell":
+            for neuron in self.neurons[layer]:
+                neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + "_0.npy"))
+                weights.append(neuron.weights)
         else:
             for neuron in self.neurons[layer]:
                 neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + ".npy"))

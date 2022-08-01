@@ -10,13 +10,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def value_plot(spinet, ):
+def value_plot(spinet, display_score=False):
     reward = np.array(spinet.state["learning_data"]["reward"])
     value = np.array(spinet.state["learning_data"]["value"])
     value_dot = np.array(spinet.state["learning_data"]["valueDot"])
     td_error = np.array(spinet.state["learning_data"]["tdError"])
-    # score = np.array(spinet.state["learning_data"]["score"])
-    # t = np.linspace(0, np.max(spinet.spikes[0]), reward.size) * 1e-6
+    if display_score:
+        score = np.array(spinet.state["learning_data"]["score"])
+    actions = []
+    for i in range(len(spinet.rl_conf["actionMapping"])):
+        actions.append(np.array(spinet.state["learning_data"]["action_"+str(i)]))
     t = np.arange(0, reward.size) * 1e-3
 
     plt.figure(figsize=(40, 8))
@@ -24,6 +27,15 @@ def value_plot(spinet, ):
     plt.xlabel("time (s)")
     plt.plot(t, reward, label="reward")
     plt.plot(t, value, label="value")
+    plt.hlines(0, 0, t[-1], linestyles="dashed")
+    plt.legend()
+    plt.show()
+
+    plt.figure(figsize=(40, 8))
+    plt.title("Reward and value curves")
+    plt.xlabel("time (s)")
+    for i, action in enumerate(actions):
+        plt.plot(t, action, label="action " + str(i))
     plt.hlines(0, 0, t[-1], linestyles="dashed")
     plt.legend()
     plt.show()
@@ -53,11 +65,12 @@ def value_plot(spinet, ):
     plt.hlines(0, 0, i / 10, linestyles="dashed")
     plt.show()
 
-    # plt.figure(figsize=(40, 8))
-    # plt.title("Score")
-    # plt.xlabel("time (s)")
-    # plt.plot(10 * np.arange(0, score.shape[0]), score, color="red", label="td_error")
-    # plt.show()
+    if display_score:
+        plt.figure(figsize=(40, 8))
+        plt.title("Score")
+        plt.xlabel("time (s)")
+        plt.plot(10 * np.arange(0, score.shape[0]), score, color="red", label="td_error")
+        plt.show()
 
 
 def policy_plot(spinet, action_bin, action_labels):

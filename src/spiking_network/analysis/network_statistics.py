@@ -390,6 +390,48 @@ def compute_disparity_0(spinet, disparity, residuals, xs, ys, mat):
     plt.savefig("/home/thomas/Desktop/test", bbox_inches="tight")
 
 
+def weight_variation(spinet, network_path):
+    ws = []
+    cs = []
+    for i in range(1000):
+        weights = []
+        confs = []
+        if os.path.exists(network_path + "weights/intermediate_" + str(i) + "/0/0.npy"):
+            for j in range(spinet.l_shape[0][2]):
+                w = np.load(network_path + "weights/intermediate_" + str(i) + "/0/" + str(j) + ".npy")
+                # with open(network_path + "weights/intermediate_" + str(i) + "/0/" + str(j) + ".json") as file:
+                #     confs.append(json.load(file)["count_spike"])
+                weights.append(w)
+            ws.append(weights)
+            cs.append(confs)
+        else:
+            break
+
+        # spinet.weights[0] = np.array(weights)
+        # display_network([spinet])
+        # shutil.copy(network_path + "figures/0/weight_sharing_combined.pdf", "/home/thomas/Bureau/weights/" + str(i) + ".pdf")
+
+        # disparities, residuals = rf_matching(spinet)
+        # plt.figure()
+        # plt.hist(disparities[:, 0], bins=np.arange(-8, 9), align="left")
+        # plt.title("Histogram of simple cell disparities")
+        # plt.xlabel("Disparity (px)")
+        # plt.ylabel("Count")
+        # plt.savefig("/home/thomas/Bureau/disparities/" + str(i), bbox_inches="tight")
+
+    ws = np.array(ws)
+    cs = np.array(cs)
+    total_sum = np.sum(ws, axis=tuple(np.arange(1, ws.ndim)))
+    weight_diff = np.abs(np.diff(ws, axis=0))
+    sum_diff = np.sum(weight_diff, axis=tuple(np.arange(1, weight_diff.ndim)))
+
+    plt.figure()
+    plt.title("Weight change percentage over time")
+    plt.ylabel("Weight change in %")
+    plt.xlabel("Time (s)")
+    plt.plot(100 * sum_diff / total_sum[:-1])
+
+
 def compute_disparity(
         spinet, disparity, theta, error, residual, epsi_theta, epsi_error, epsi_residual
 ):

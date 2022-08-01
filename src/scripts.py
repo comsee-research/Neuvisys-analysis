@@ -28,9 +28,6 @@ from src.events.tools.generation.stimuli_gen import (
     moving_lines,
     disparity_bars
 )
-from src.events.tools.modification.event_modification import (
-    concatenate_npz,
-)
 from src.frames.frame_analysis import (
     load_frames,
     rectify_frames,

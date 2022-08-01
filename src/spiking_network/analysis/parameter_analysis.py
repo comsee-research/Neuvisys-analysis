@@ -13,7 +13,7 @@ from pandas.plotting import scatter_matrix
 import seaborn as sns
 
 
-#%% Correlation matrix
+# %% Correlation matrix
 
 def correlation_matrix(df):
     corr = df.corr()
@@ -33,29 +33,30 @@ def correlation_matrix(df):
     sns.pairplot(df[["mean_sr", "std_sr"]])
 
 
-#%%
+# %%
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+
 
 def PCA(df):
     # x = df.loc[:, features].values
     # y = df.loc[:, ["Mark"]].values
     # x = StandardScaler().fit_transform(x)
-    
+
     # pca = PCA(n_components=2)
     # principalComponents = pca.fit_transform(x)
     # principalDf = pd.DataFrame(
     #     data=principalComponents, columns=["principal component 1", "principal component 2"]
     # )
     # finalDf = pd.concat([principalDf, df[["Mark"]]], axis=1)
-    
+
     # fig = plt.figure(figsize=(8, 8))
     # ax = fig.add_subplot(1, 1, 1)
     # ax.set_xlabel("Principal Component 1", fontsize=15)
     # ax.set_ylabel("Principal Component 2", fontsize=15)
     # ax.set_title("2 component PCA", fontsize=20)
-    
+
     # targets = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     # for target in targets:
     #     indicesToKeep = finalDf["Mark"] == target
@@ -69,7 +70,7 @@ def PCA(df):
     pass
 
 
-#%%
+# %%
 
 def scatter_mat(df):
     scatter_matrix(df, alpha=0.5, figsize=(6, 6), diagonal='kde')

@@ -19,57 +19,70 @@ from viziphant.spike_train_correlation import plot_corrcoef
 from elephant.conversion import BinnedSpikeTrain
 from elephant.spike_train_correlation import correlation_coefficient
 
-from scipy.stats import laplace
 
-
-def activity_comparison(spinet1, spinet2):
+def activity_comparison(spinet1, spinet2, bin_size=50, nb_stimulus=None, distribution=None):
     sts_s1 = spike_trains(spinet1.spikes[0])
     sts_c1 = spike_trains(spinet1.spikes[1])
 
     sts_s2 = spike_trains(spinet2.spikes[0])
     sts_c2 = spike_trains(spinet2.spikes[1])
 
-    draw = laplace(0, 1).rvs(size=50)
-    draw = np.round(draw)
-
     sp_train = spinet1.spikes[0].flatten()
     sp_train = sp_train[sp_train != 0]
-    t_min = sp_train[0]
-    t_max = sp_train[-1]
-    vbars = np.linspace(0, t_max - t_min, 17)
 
-    time_histogram_comparison(spinet1, sts_s1, sts_s2, 0, draw, vbars)
-    time_histogram_comparison(spinet1, sts_c1, sts_c2, 1, draw, vbars)
+    vbars = None
+    if nb_stimulus is not None:
+        vbars = np.linspace(0, np.max(sp_train), nb_stimulus) / 1e6
+
+    time_histogram_comparison(spinet1, sts_s1, sts_s2, 0, bin_size, distribution, vbars)
+    time_histogram_comparison(spinet1, sts_c1, sts_c2, 1, bin_size, distribution, vbars)
 
 
-def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, distribution=None, vbars=None):
-    histogram_control = statistics.time_histogram(sts_control, bin_size=100 * pq.ms, output='mean')
-    histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=100 * pq.ms, output='mean')
+def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, bin_size, distribution=None, vbars=None):
+    histogram_control = statistics.time_histogram(sts_control, bin_size=bin_size * pq.ms, output='mean')
+    histogram_experiment = statistics.time_histogram(sts_experiment, bin_size=bin_size * pq.ms, output='mean')
     units = pq.Quantity(1, 's')
     times = histogram_control.times.rescale(units).magnitude
     width = histogram_control.sampling_period.rescale(units).item()
     histogram_diff = histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude
 
-    control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer, vbars)
-    control_experiment_diff(histogram_diff, times, width, units)
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(40, 20), sharex=True)
+    control_vs_experiment(spinet, ax1, histogram_control, histogram_experiment, times, width, units, layer, vbars)
     if distribution is not None:
-        diff_distribution(histogram_diff, times, distribution)
-
-
-def control_vs_experiment(spinet, histogram_control, histogram_experiment, times, width, units, layer, vbars=None):
-    plt.figure()
-    plt.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='control')
-    plt.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='experiment', alpha=0.6)
-    plt.xlabel(f"Time ({units.dimensionality})")
-    plt.ylabel("Spike Rate (Hz)")
-    plt.title("Time histogram")
-    for vbar in vbars:
-        plt.axvline(x=vbar / 1e6, color='red', linestyle='--')
-    plt.legend()
-    if not os.path.exists(spinet.path + "figures/"+str(layer)+"/activity_comparison"):
-        os.mkdir(spinet.path + "figures/"+str(layer)+"/activity_comparison")
-    plt.savefig(spinet.path + "figures/"+str(layer)+"/activity_comparison/control_vs_experiment", bbox_inches="tight")
+        diff_distribution(ax2, histogram_diff, times, width, distribution, vbars)
     plt.show()
+    # control_experiment_diff(histogram_diff, times, width, units)
+
+
+def control_vs_experiment(spinet, ax, histogram_control, histogram_experiment, times, width, units, layer, vbars=None):
+    ax.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='Control', color="#5DA9E9")
+    ax.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='Experiment', alpha=1,
+           color="#6D326D")
+    ax.set_xlabel(f"Time ({units.dimensionality})")
+    ax.set_ylabel("Spike Rate (Hz)")
+    ax.set_title("Time histogram function of grating orientation")
+    for vbar in vbars:
+        ax.axvline(x=vbar, color="#4C3B4D", linestyle='--')
+    ax.legend()
+    if not os.path.exists(spinet.path + "figures/" + str(layer) + "/activity_comparison"):
+        os.mkdir(spinet.path + "figures/" + str(layer) + "/activity_comparison")
+    plt.savefig(spinet.path + "figures/" + str(layer) + "/activity_comparison/control_vs_experiment",
+                bbox_inches="tight")
+
+
+def diff_distribution(ax, histogram_diff, times, width, distribution, vbars):
+    axbis = ax.twinx()
+    ax.set_title("Time histogram difference and learning distribution")
+    hist = np.histogram(distribution, bins=np.arange(-9.5, 8.5), density=True)
+    axbis.plot(vbars, np.roll(hist[0], 8), color="#A53860", linewidth=4, label="Learning distribution")
+    axbis.set_ylabel("Density")
+
+    ax.bar(times, histogram_diff, align='edge', width=width, label="Activity difference", color="#5DA9E9")
+    ax.set_xlabel("Input orientation in degree(°)")
+    ax.set_ylabel("Spike Rate (Hz)")
+    ax.set_xticks(vbars, np.arange(0, 361, 22.5), rotation=45)
+    ax.legend(loc="upper left")
+    axbis.legend()
 
 
 def control_experiment_diff(histogram_diff, times, width, units):
@@ -80,22 +93,6 @@ def control_experiment_diff(histogram_diff, times, width, units):
     plt.title("Time histogram difference (control - experiment)")
     plt.legend()
     plt.show()
-
-
-def diff_distribution(histogram_diff, times, distribution):
-    fig = plt.figure()
-    plt.suptitle("Time histogram difference in relation to learning distribution")
-    gs = fig.add_gridspec(2, hspace=0)
-    axes = gs.subplots(sharex=True)
-    axes[0].bar(11.25*times[:len(times)//2], histogram_diff[:len(histogram_diff)//2])
-    axes[0].set_xlabel("Distribution")
-    axes[0].set_ylabel("Spike Rate (Hz)")
-
-    rotations = [0, 23, 45, 68, 90, 113, 135, 158, 180, 203, 225, 248, 270, 293, 315, 338]
-    hist = np.histogram(distribution, bins=np.arange(-8.5, 8.5), density=True)
-    axes[1].bar(rotations, np.roll(hist[0], 8), width=22.5, align='edge')
-    axes[1].set_ylabel("Density")
-    axes[1].set_xlabel("Input orientation in degree(°)")
 
 
 def spike_trains(strains: np.array):

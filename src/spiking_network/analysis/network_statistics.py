@@ -23,41 +23,58 @@ from src.spiking_network.network.neuvisys import SpikingNetwork
 from src.events.Events import Events
 
 
-def event_vs_network_activity(spinet, event_path, bins=50):
+def event_vs_network_activity(spinet, event_path, bins=50, thresh=0):
+    av = fast_time_histogram(spinet.spikes[0], bins)
+    av_norm = av / np.max(av)
+
+    av_cc = fast_time_histogram(spinet.spikes[1], bins)
+    av_cc_norm = av_cc / np.max(av_cc)
+
     events = Events(event_path)
     events.shift_timestamps_to_0()
     events.crop(93, 50, 160, 160)
-
     hist_bin = np.arange(0, events.get_timestamps()[-1], int(1e3 * bins))
-    event_variation, _ = np.histogram(events.get_timestamps(), bins=hist_bin)
-    event_variation_norm = event_variation / np.max(event_variation)
+    ev, _ = np.histogram(events.get_timestamps(), bins=hist_bin)
+    ev_norm = ev / np.max(ev)
 
-    activity_variation = fast_time_histogram(spinet.spikes[0])
-    activity_variation_norm = activity_variation / np.max(activity_variation)
+    # mask = ev_norm > thresh
 
-    plt.figure()
-    plt.title("Hisogram of event activity vs network activity variation over time")
-    plt.plot(event_variation_norm, label="event variation")
-    plt.plot(activity_variation_norm, label="activity variation")
-    plt.xlabel("Time (bin of 50ms)")
-    plt.ylabel("Normalized count")
-    plt.legend()
-    plt.show()
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(40, 20))
+    ax1.set_title("Hisogram of event activity vs network activity variation over time")
+    ax1.plot(ev_norm, label="event variation", color="#5DA9E9")
+    ax1.plot(av_norm, label="simple cell variation", color="#6D326D")
+    ax1.plot(av_cc_norm, label="complex cell variation", color="#BFD7B5")
+    ax1.set_xlabel("Time (bin of "+str(bins)+"ms)")
+    ax1.set_ylabel("Normalized count")
+    ax1.legend()
 
-    plt.figure()
-    plt.title("Event activity variation against network activity variation")
-    plt.xlabel("Event activity variation (number of events)")
-    plt.ylabel("Network activity variation (number of spikes)")
-    plt.scatter(event_variation, activity_variation)
+    ax2.set_title("Event activity variation against network activity variation")
+    ax2.set_xlabel("Event activity variation (number of events)")
+    ax2.set_ylabel("Network activity variation (number of spikes)")
+    ax2.scatter(ev_norm[:av_norm.size], av_norm, color="#6D326D", label="simple cells")
+    ax2.scatter(ev_norm[:av_cc_norm.size], av_cc_norm, color="#BFD7B5", label="complex cells")
+    ax2.legend()
 
-    xseq = np.linspace(0, event_variation.max(), 1000)
-    coeffs = np.polyfit(event_variation, activity_variation, deg=1)
+    xseq = np.linspace(0, np.max(ev_norm[:av_norm.size]), 1000)
+    coeffs = np.polyfit(ev_norm[:av_norm.size], av_norm, deg=1)
     p = np.poly1d(coeffs)
-    r2 = r2_score(activity_variation, p(event_variation))
-    plt.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="k", lw=2.5)
-    plt.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 100),
-                 xycoords="figure points")
+    r2 = r2_score(av_norm, p(ev_norm[:av_norm.size]))
+    ax2.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="#6D326D", lw=2.5)
+    # ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 100),
+    #              xycoords="figure points")
+
+    coeffs = np.polyfit(ev_norm[:av_cc_norm.size], av_cc_norm, deg=1)
+    p = np.poly1d(coeffs)
+    r2 = r2_score(av_cc_norm, p(ev_norm[:av_cc_norm.size]))
+    ax2.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="#BFD7B5", lw=2.5)
+    # ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (700, 100),
+    #              xycoords="figure points")
+
     plt.show()
+
+    print(events.get_nb_events())
+    print(spinet.spikes[0][spinet.spikes[0] != 0].size)
+    print(spinet.spikes[1][spinet.spikes[1] != 1].size)
 
 
 def inhibition_weight_against_orientation(spinet):

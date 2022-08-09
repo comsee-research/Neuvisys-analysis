@@ -1,3 +1,7 @@
+import numpy as np
+from scipy.linalg import norm
+
+
 def base_learning_params(params=None):
     if params is None:
         params = {}
@@ -163,3 +167,22 @@ def inhibition_disparity():
                                 'ETA_LTP': 0.000077,
                                 'ETA_LTD': -0.000021}
          })
+
+
+def create_rf_basis(spinet):
+    disps = np.linspace(-4.99, 4.99, 144)
+    disps = disps.astype(int)
+    # for i in range(144):
+    #     n_weight = vertical_disparity_rf(spinet.neurons[0][0].weights.shape, 4, disps[i])
+    #     np.save(spinet.path + "weights/0/" + str(i) + ".npy", n_weight)
+
+
+def vertical_disparity_rf(rf_shape, norm_factor, disparity):
+    weights = np.zeros(rf_shape)
+    weights[0, 0, :, 3:5, :] = 1
+    weights[1, 0, :, 5:7, :] = 1
+    weights[0, 1, :, 3+disparity:5+disparity, :] = 1
+    weights[1, 1, :, 5+disparity:7+disparity, :] = 1
+    w_norm = norm(weights)
+    weights = weights * norm_factor / w_norm
+    return weights

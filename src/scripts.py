@@ -20,44 +20,6 @@ import numpy as np
 from scipy.stats import laplace
 import matplotlib.pyplot as plt
 
-from src.events.Events import (
-    Events,
-)
-from src.events.tools.generation.pix2nvs import Pix2Eve
-from src.events.tools.generation.stimuli_gen import (
-    moving_lines,
-    disparity_bars
-)
-from src.frames.frame_analysis import (
-    load_frames,
-    rectify_frames,
-    write_frames,
-    stereo_matching,
-)
-from src.spiking_network.network.network_params import (
-    reinforcement_learning,
-    inhibition_orientation,
-    inhibition_disparity,
-    inhibition_orientation_9regions,
-)
-from src.spiking_network.network.neuvisys import (
-    SpikingNetwork,
-    delete_files,
-    clean_network,
-    shuffle_weights,
-)
-from src.spiking_network.planning.network_planner import (
-    create_networks,
-    random_params,
-    launch_neuvisys_multi_pass,
-    change_param,
-    divide_visual_field,
-)
-
-
-# %%
-
-
 # %% Generate Spiking Network
 
 # exec_path = home + "neuvisys-dv/cmake-build-release/neuvisys-exe"

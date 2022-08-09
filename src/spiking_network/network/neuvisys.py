@@ -166,10 +166,10 @@ class SpikingNetwork:
             for i, weight in enumerate(weights):
                 for shared in self.shared_id[i]:
                     self.neurons[layer][shared].link_weights(weight)
-        # elif neuron_type == "CriticCell" or neuron_type == "ActorCell":
-        #     for neuron in self.neurons[layer]:
-        #         neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + "_0.npy"))
-        #         weights.append(neuron.weights)
+        elif neuron_type == "CriticCell" or neuron_type == "ActorCell":
+            for neuron in self.neurons[layer]:
+                neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + "_0.npy"))
+                weights.append(neuron.weights)
         else:
             for neuron in self.neurons[layer]:
                 neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + ".npy"))

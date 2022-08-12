@@ -62,7 +62,7 @@ def clean_network(path, layers):
 class SpikingNetwork:
     """Spiking Neural Network class"""
 
-    def __init__(self, path, loading=True):
+    def __init__(self, path, loading=None):
         self.path = path
         try:
             with open(path + "configs/network_config.json") as file:
@@ -95,13 +95,18 @@ class SpikingNetwork:
         self.l_shape = np.array(self.conf["layerSizes"])
         self.n_shape = np.array(self.conf["neuronSizes"][0])
 
-        if loading:
-            for layer, neuron_type in enumerate(self.conf["neuronType"]):
-                neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
+        for layer, neuron_type in enumerate(self.conf["neuronType"]):
+            if loading is not None:
+                if loading[layer]:
+                    neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
+                else:
+                    neurons = []
+                    spikes = []
                 self.neurons.append(neurons)
                 self.spikes.append(spikes)
                 self.layout.append(np.load(path + "weights/layout_" + str(layer) + ".npy"))
-                self.weights.append(self.load_weights(layer, neuron_type))
+                if loading[layer]:
+                    self.weights.append(self.load_weights(layer, neuron_type))
 
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:

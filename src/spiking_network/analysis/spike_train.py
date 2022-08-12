@@ -104,7 +104,7 @@ def spike_trains(strains: np.array):
 
 
 def raster_plot(sts, layer, path):
-    fig, axes = plt.subplots()
+    fig, axes = plt.subplots(figsize=(20, 35))
     rasterplot_rates(sts, pophistbins=250, histscale=0.1, ax=axes, markerargs={"marker": '.', "markersize": 1})
     axes.set_title("Raster plot")
     if path:
@@ -183,15 +183,16 @@ def instantaneous_rates(sts, layer, path):
     plt.show()
 
 
-def instantaneous_rates_subset(sts, path, id):
-    fig, axes = plt.subplots()
-    kernel = kernels.GaussianKernel(sigma=100 * pq.ms)
-    rates = statistics.instantaneous_rate(sts, sampling_period=100 * pq.ms, kernel=kernel)
+def instantaneous_rates_subset(sts, path, binsize, id):
+    fig, axes = plt.subplots(figsize=(25, 60))
+    kernel = kernels.GaussianKernel(sigma=binsize * pq.ms)
+    rates = statistics.instantaneous_rate(sts, sampling_period=binsize * pq.ms, kernel=kernel)
     plot_instantaneous_rates_colormesh(rates, axes=axes)
     axes.set_title("Instantaneous rates")
     if path:
-        plt.savefig(path + "/" + id, bbox_inches="tight")
+        plt.savefig(path + "/isr" + id, bbox_inches="tight")
     plt.show()
+    return rates
 
 
 def correlation_coeficient_matrix(sts, layer, bin_size, path):

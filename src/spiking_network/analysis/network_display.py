@@ -363,7 +363,7 @@ def display_network(spinets):
                 pdf = pdf_simple_cell_left_right_combined(spinet, layer)
                 pdf.output(spinet.path + "figures/0/" + str(layer) + "_combined.pdf", "F")
 
-        if len(spinet.neurons[1]) > 0:
+        if len(spinet.neurons) > 1:
             for z in range(spinet.l_shape[1, 2]):
                 pdf = pdf_complex_cell(spinet, z)
                 pdf.output(spinet.path + "figures/1/complex_weights_depth_" + str(z) + ".pdf", "F")

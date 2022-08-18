@@ -6,12 +6,13 @@ Created on Thu Mar 12 10:11:17 2020
 @author: thomas
 """
 
+import shutil
 from sklearn.model_selection import ParameterSampler, ParameterGrid
 import json
 import os
 import subprocess
-import numpy as np
-
+import re
+from natsort import natsorted
 
 def create_networks(exec_path, network_path, n_iter, params):
     for i in range(n_iter):
@@ -54,6 +55,23 @@ def random_params(exec_path, network_path, nb_networks):
     create_networks(exec_path, network_path, nb_networks, params)
 
 
+def launch_validation_sim(network_path):
+    folders = os.listdir(network_path + "weights/")
+    reg = re.compile(r"intermediate")
+    folders = list(filter(reg.search, folders))
+    folders = natsorted(folders)
+    for folder in folders:
+        copy_weights(network_path + "weights/" + folder + "/2/", network_path + "weights/2/")
+        copy_weights(network_path + "weights/" + folder + "/3/", network_path + "weights/3/")
+        launch_neuvisys_sim("/home/thomas/neuvisys-dv/cmake-build-release/libs/apps/simulator/neuvisys-simulator",
+                            network_path)
+
+
+def copy_weights(src, dest):
+    for weight in os.listdir(src):
+        shutil.copy(src + weight, dest + weight)
+
+
 def open_config_files(config_path):
     conf = {}
     for file in os.listdir(config_path):
@@ -92,6 +110,11 @@ def launch_neuvisys_multi_pass(exec_path, network_path, event_file, nb_pass):
 
 def launch_neuvisys_ros(exec_path, network_path):
     for path in execute([exec_path, network_path]):
+        print(path, end="")
+
+
+def launch_neuvisys_sim(exec_path, network_path):
+    for path in execute([exec_path, "single", network_path]):
         print(path, end="")
 
 

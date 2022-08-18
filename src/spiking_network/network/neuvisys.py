@@ -14,7 +14,6 @@ import re
 import shutil
 
 import numpy as np
-import scipy.io as sio
 from PIL import Image
 from natsort import natsorted
 
@@ -63,11 +62,13 @@ def clean_network(path, layers):
 class SpikingNetwork:
     """Spiking Neural Network class"""
 
-    def __init__(self, path, loading=True):
+    def __init__(self, path, loading=None):
         self.path = path
         try:
             with open(path + "configs/network_config.json") as file:
                 self.conf = json.load(file)
+            with open(path + "configs/rl_config.json") as file:
+                self.rl_conf = json.load(file)
             with open(path + "configs/simple_cell_config.json") as file:
                 self.simple_conf = json.load(file)
             with open(path + "configs/complex_cell_config.json") as file:
@@ -90,6 +91,7 @@ class SpikingNetwork:
         type_to_config = {"SimpleCell": "simple_cell_config.json", "ComplexCell": "complex_cell_config.json",
                           "CriticCell": "critic_cell_config.json", "ActorCell": "actor_cell_config.json"}
 
+<<<<<<< HEAD
         self.p_shape = np.array(self.conf["patches"], dtype=object)
         self.l_shape = np.array(self.conf["size"])
         self.n_shape = np.array(self.conf["neuronSizes"])
@@ -97,10 +99,24 @@ class SpikingNetwork:
         if loading:
             for layer, neuron_type in enumerate(self.conf["neuronType"]):
                 neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
+=======
+        self.p_shape = np.array(self.conf["layerPatches"], dtype=object)
+        self.l_shape = np.array(self.conf["layerSizes"])
+        self.n_shape = np.array(self.conf["neuronSizes"][0])
+
+        for layer, neuron_type in enumerate(self.conf["neuronType"]):
+            if loading is not None:
+                if loading[layer]:
+                    neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
+                else:
+                    neurons = []
+                    spikes = []
+>>>>>>> 545191f1627060ca9711c33a4700f53d0e41fc58
                 self.neurons.append(neurons)
                 self.spikes.append(spikes)
                 self.layout.append(np.load(path + "weights/layout_" + str(layer) + ".npy"))
-                self.weights.append(self.load_weights(layer, neuron_type))
+                if loading[layer]:
+                    self.weights.append(self.load_weights(layer, neuron_type))
 
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:
@@ -165,6 +181,10 @@ class SpikingNetwork:
             for i, weight in enumerate(weights):
                 for shared in self.shared_id[i]:
                     self.neurons[layer][shared].link_weights(weight)
+        elif neuron_type == "CriticCell" or neuron_type == "ActorCell":
+            for neuron in self.neurons[layer]:
+                neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + "_0.npy"))
+                weights.append(neuron.weights)
         else:
             for neuron in self.neurons[layer]:
                 neuron.link_weights(np.load(self.path + "weights/" + str(layer) + "/" + str(neuron.id) + ".npy"))

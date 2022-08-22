@@ -91,6 +91,15 @@ class SpikingNetwork:
         type_to_config = {"SimpleCell": "simple_cell_config.json", "ComplexCell": "complex_cell_config.json",
                           "CriticCell": "critic_cell_config.json", "ActorCell": "actor_cell_config.json"}
 
+<<<<<<< HEAD
+        self.p_shape = np.array(self.conf["patches"], dtype=object)
+        self.l_shape = np.array(self.conf["size"])
+        self.n_shape = np.array(self.conf["neuronSizes"])
+
+        if loading:
+            for layer, neuron_type in enumerate(self.conf["neuronType"]):
+                neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
+=======
         self.p_shape = np.array(self.conf["layerPatches"], dtype=object)
         self.l_shape = np.array(self.conf["layerSizes"])
         self.n_shape = np.array(self.conf["neuronSizes"][0])
@@ -102,6 +111,7 @@ class SpikingNetwork:
                 else:
                     neurons = []
                     spikes = []
+>>>>>>> 545191f1627060ca9711c33a4700f53d0e41fc58
                 self.neurons.append(neurons)
                 self.spikes.append(spikes)
                 self.layout.append(np.load(path + "weights/layout_" + str(layer) + ".npy"))
@@ -190,7 +200,7 @@ class SpikingNetwork:
                     for synapse in range(self.conf["neuron1Synapses"]):
                         for camera in range(self.conf["nbCameras"]):
                             n_weight = reshape_weights(
-                                weights[:, camera, synapse], self.n_shape[layer, 0], self.n_shape[layer, 1],
+                                weights[:, camera, synapse], self.n_shape[layer, 0, 0], self.n_shape[layer, 0, 1],
                             )
                             path = (self.path + "images/0/" + str(i) + "_syn" + str(synapse) + "_cam" + str(
                                 camera) + ".png")

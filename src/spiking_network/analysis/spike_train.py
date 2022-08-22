@@ -183,16 +183,21 @@ def instantaneous_rates(sts, layer, path):
     plt.show()
 
 
-def instantaneous_rates_subset(sts, path, binsize, id):
+def instantaneous_rates_subset(sts, path, kernel_size, sampling_size):
     fig, axes = plt.subplots(figsize=(25, 60))
-    kernel = kernels.GaussianKernel(sigma=binsize * pq.ms)
-    rates = statistics.instantaneous_rate(sts, sampling_period=binsize * pq.ms, kernel=kernel)
+    kernel = kernels.GaussianKernel(sigma=kernel_size * pq.ms)
+    rates = statistics.instantaneous_rate(sts, sampling_period=sampling_size * pq.ms, kernel=kernel)
     plot_instantaneous_rates_colormesh(rates, axes=axes)
     axes.set_title("Instantaneous rates")
     if path:
         plt.savefig(path + "/isr" + id, bbox_inches="tight")
     plt.show()
     return rates
+
+
+def kernel_convolution(sts, kernel_size, sampling_size):
+    kernel = kernels.GaussianKernel(sigma=kernel_size * pq.ms)
+    return statistics.instantaneous_rate(sts, sampling_period=sampling_size * pq.ms, kernel=kernel)
 
 
 def correlation_coeficient_matrix(sts, layer, bin_size, path):

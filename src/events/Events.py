@@ -13,6 +13,7 @@ import numpy as np
 import skvideo.io
 from dv import AedatFile
 from tqdm import tqdm
+import cv2 as cv
 
 
 def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, height: int, width: int) -> np.ndarray:
@@ -27,7 +28,7 @@ def render(x: np.ndarray, y: np.ndarray, pol: np.ndarray, height: int, width: in
     pol[pol == 0] = -1
     mask1 = (x >= 0) & (y >= 0) & (width > x) & (height > y)
     mask[y[mask1], x[mask1]] = pol[mask1]
-    img[mask == 0] = [255, 255, 255]
+    img[mask == 0] = [0, 0, 0]
     img[mask == -1] = [255, 0, 0]
     img[mask == 1] = [0, 0, 255]
     return img
@@ -147,11 +148,11 @@ class Events:
         if dest.endswith(".npz"):
             np.savez(
                 dest,
-                self.events["t"].astype("i8"),
-                self.events["x"].astype("i2"),
-                self.events["y"].astype("i2"),
-                self.events["p"].astype("i1"),
-                self.events["c"].astype("i1"),
+                self.event_array["t"].astype("i8"),
+                self.event_array["x"].astype("i2"),
+                self.event_array["y"].astype("i2"),
+                self.event_array["p"].astype("i1"),
+                self.event_array["c"].astype("i1"),
             )
         elif dest.endswith(".h5") or dest.endswith(".hdf5"):
             with h5py.File(dest, "a") as file:
@@ -171,6 +172,7 @@ class Events:
         writer = skvideo.io.FFmpegWriter(Path(dest + ".mp4"))
         for events in tqdm(EventSlicer(self.get_events(), dt_miliseconds)):
             img = render(events["x"], events["y"], events["p"], height, width)
+            img = cv.rectangle(img,(150,100),(216,166),(0,255,0),1)
             writer.writeFrame(img)
         writer.close()
 

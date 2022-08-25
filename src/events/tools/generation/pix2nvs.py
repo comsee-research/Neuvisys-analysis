@@ -42,7 +42,10 @@ class Pix2Eve:
         self.event_file = "/home/alphat/Desktop/events.npy"
 
     def write_event(self, events, delta_b, thresh, frame_id, x, y, polarity):
-        moddiff = int(delta_b / thresh)
+        if( (delta_b/thresh)==float("inf")):
+            moddiff = self.n_max +1
+        else:
+            moddiff = int(delta_b / thresh)
         if moddiff > self.n_max:
             nb_event = self.n_max
         else:

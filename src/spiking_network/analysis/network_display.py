@@ -13,6 +13,12 @@ import numpy as np
 from fpdf import FPDF
 from natsort import natsorted
 from PIL import Image
+from src.spiking_network.network.neuvisys import SpikingNetwork
+from src.spiking_network.network.neuvisys import compress_weight
+import matplotlib
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 
 def pdf_simple_cell(spinet, layer, camera):
@@ -114,6 +120,34 @@ def pdf_weight_sharing(spinet, nb_cameras, camera):
             else:
                 pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
                 pdf.image(neuron.weight_images[1], x=pos_x, y=pos_y + 11, w=10, h=10)
+    return pdf
+
+
+def pdf_weight_sharing_full(spinet, nb_cameras, camera):
+    side = int(np.sqrt(spinet.l_shape[0, 2]))
+    if nb_cameras == 1:
+        pad = 11
+    else:
+        pad = 24
+    pdf = FPDF("P", "mm", (11 * side, pad * side))
+    pdf.add_page()
+
+    shift = np.arange(spinet.l_shape[0, 2]).reshape((side, side))
+    for neuron in spinet.neurons[0][0:spinet.l_shape[0, 2]]:
+        x, y, z = neuron.params["position"]
+        pos_x = (
+                (x // spinet.l_shape[0, 0]) * side * 11
+                + np.where(shift == z)[0][0] * 11
+        )  # patch size + weight sharing shift
+        pos_y = (
+                (y // spinet.l_shape[0, 1]) * side * pad
+                + np.where(shift == z)[1][0] * pad
+        )
+        if nb_cameras == 1:
+            pdf.image(neuron.weight_images[camera], x=pos_x, y=pos_y, w=10, h=10)
+        else:
+            pdf.image(neuron.weight_images[0], x=pos_x, y=pos_y, w=10, h=10)
+            pdf.image(neuron.weight_images[1], x=pos_x, y=pos_y + 11, w=10, h=10)
     return pdf
 
 
@@ -320,6 +354,13 @@ def display_network(spinets):
             if spinet.conf["nbCameras"] == 2:
                 pdf = pdf_weight_sharing(spinet, spinet.conf["nbCameras"], 0)
                 pdf.output(spinet.path + "figures/0/weight_sharing_combined.pdf", "F")
+        elif spinet.conf["sharingType"] == "full":
+            for i in range(spinet.conf["nbCameras"]):
+                pdf = pdf_weight_sharing_full(spinet, 1, i)
+                pdf.output(spinet.path + "figures/0/weight_sharing_" + str(i) + ".pdf", "F")
+            if spinet.conf["nbCameras"] == 2:
+                pdf = pdf_weight_sharing_full(spinet, spinet.conf["nbCameras"], 0)
+                pdf.output(spinet.path + "figures/0/weight_sharing_combined.pdf", "F")
         elif spinet.conf["sharingType"] == "none":
             for layer in range(spinet.l_shape[0, 2]):
                 for i in range(spinet.conf["nbCameras"]):
@@ -337,3 +378,65 @@ def display_network(spinets):
                 # pdf = pdf_complex_to_simple_cell_orientations(spinet, z, 1)
                 # pdf.output(spinet.path + "figures/1/complex_weights" + str(z) + ".pdf", "F")
                 # shutil.rmtree(spinet.path + "figures/1/tmp/")
+
+def display_sum_weights(spinet: SpikingNetwork, layer_id, neuron_id):
+    number_of_bars = len(spinet.lengths_potentials[layer_id][neuron_id])
+    if(not(os.path.isdir(spinet.path + "bar_weights/"))):
+        os.mkdir(spinet.path + "bar_weights/")
+    if(not(os.path.isdir(spinet.path + "bar_weights/concat/"))):
+        os.mkdir(spinet.path + "bar_weights/concat/")
+    max_val = 500
+    Blues = plt.get_cmap('Blues')
+    for i in range(number_of_bars):
+        if(not(os.path.isdir(spinet.path + "bar_weights/" + str(i)))):
+            os.mkdir( spinet.path + "bar_weights/" + str(i) )            
+        values = np.array(spinet.sum_lateral_weights[layer_id][neuron_id][i])# / np.linalg.norm(spinet.sum_lateral_weights[layer_id][neuron_id][i])
+        pdf = FPDF(
+            "P", "mm", (15*3, 15*3))
+        pdf.add_page()
+        for j in range(len(values)):
+            path = spinet.path + "bar_weights/" + str(i) + "/" + str(j) + ".png"
+            #print(values[j])
+            #print(values.max())
+            #max_val = values.max()
+            new_w = np.kron(values[j], np.ones((49,49))) 
+            img = Image.fromarray( np.array(255 * (new_w / max_val), dtype=np.uint8) )
+            img = img.convert('RGB')
+            img.save(path)
+            if(j==0):
+                pos_x = 0
+                pos_y = 0
+            if(j==1):
+                pos_x = 0
+                pos_y = 1
+            if(j==2):
+                pos_x = 0
+                pos_y = 2
+            if(j==3):
+                pos_x = 1
+                pos_y = 0
+            if(j==4):
+                path2 = spinet.path + "bar_weights/" + str(i) + "/" + str(4) + "a.png"
+                new_w = np.kron(0, np.ones((49,49))) 
+                img2 = Image.fromarray( np.array(255 * (new_w / max_val), dtype=np.uint8) )
+                img2 = img2.convert('RGB')
+                img2.save(path2)
+                pdf.image(path2, x = 15*1, y=15*1, w=40, h=40)
+                
+                pos_x = 1
+                pos_y = 2
+            if(j==5):
+                pos_x = 2
+                pos_y = 0
+            if(j==6):
+                pos_x = 2
+                pos_y = 1
+            if(j==7):
+                pos_x = 2
+                pos_y = 2
+            pos_x = pos_x*15
+            pos_y = pos_y *15
+            pdf.image(path, x=pos_x, y=pos_y, w=40, h=40)
+        
+        pdf.output(spinet.path + "bar_weights/concat/" + str(i) + "_bar" + ".pdf", "F")
+        

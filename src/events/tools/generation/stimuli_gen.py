@@ -120,25 +120,90 @@ def moving_bars(folder, framerate=1000, speeds=None):
         frame += 1
 
 
-def disparity_bars(folder, framerate=1000, speeds=None, disparities=None):
+def disparity_bars(folder, framerate=1000, speeds=None, disparities=None, rotation=None, y=None, z=None,thness=4,color=True, frame_ref = 0):
     if disparities is None:
         disparities = [8, 6, 4, 2]
+    if y is None:
+        y = np.array([0,85,195,130])
+    if z is None: 
+        z = np.array([65,100,130,230])
     if speeds is None:
         speeds = [400, 200, 100, 50]
+        
     frame = 0
     x = np.array(disparities, dtype=np.uint16)
-    y = np.linspace(0, 260, len(disparities) + 1, dtype=np.uint16)
+    #y = np.linspace(0, 260, len(disparities) + 1, dtype=np.uint16)
     shift = 0
-
-    while shift < 350:
-        img = np.full((260, 346, 3), 0, np.uint8)
-
+    speeds = np.array(speeds)
+    lim = np.where(speeds>0)
+    ok = lim[0][speeds[lim].argmin()]
+    speed_ok = frame * (speeds[ok]/ framerate)
+    while x[ok]+speed_ok < 231 + 5: #346 + 5:
+        img = np.full((260, 346, 3), 128, np.uint8)
         for i, speed in enumerate(speeds):
             shift = int(frame * (speed / framerate))
-            cv.line(img, (x[i] + shift, y[i]), (x[i] + shift, y[i + 1]), (255, 255, 255), 4)
-
-        # img = ndimage.rotate(img, rotation, reshape=False, order=0)
-
+            if(type(thness)==list):
+                if(color[i]):
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (255, 255, 255), thness[i])  
+                else:
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (0, 0, 0), thness[i])  
+            else:
+                if(color[i]):
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (255, 255, 255), thness)    
+                else:
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (0, 0, 0), thness)
+        speed_ok = frame * (speeds[ok]/ framerate)
+        if rotation is not None:
+            img = ndimage.rotate(img, rotation, reshape=False, order=0)
         image = Image.fromarray(img)
-        image.save(folder + "img" + str(frame) + ".png")
+        if(frame_ref!=0):
+            image.save(folder + "img" + str(frame_ref) + ".png")
+            frame_ref+=1
+        else:
+            image.save(folder + "img" + str(frame) + ".png")
         frame += 1
+    return frame
+
+def disparity_bars_2(folder, framerate=1000, speeds=None, disparities=None, rotation=None, y=None, z=None, thness = 4,color=True, frame_ref = 0):
+    if disparities is None:
+        disparities = [334, 340, 342, 344]
+    if y is None:
+        y = np.array([0,85,195,130])
+    if z is None: 
+        z = np.array([65,100,130,230])
+    if speeds is None:
+        speeds = [-400, -200, -100, -50]
+        
+    frame = 0
+    x = np.array(disparities, dtype=np.uint16)
+    #y = np.linspace(0, 260, len(disparities) + 1, dtype=np.uint16)
+    shift = 0
+    speeds = np.array(speeds)
+    lim = np.where(speeds<0)
+    ok = lim[0][speeds[lim].argmax()]
+    speed_ok = frame * (speeds[ok]/ framerate)
+    while x[ok] + speed_ok > -(231+5):#-(346+5):
+        img = np.full((260, 346, 3), 128, np.uint8)        
+        for i, speed in enumerate(speeds):
+            shift = int(frame * (speed / framerate))
+            if(type(thness)==list):
+                if(color[i]):
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (255, 255, 255), thness[i])    
+                else:
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (0, 0, 0), thness[i])    
+            else:
+                if(color):
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (255, 255, 255), thness) 
+                else:
+                    cv.line(img, (x[i]+shift, y[i]), (x[i]+shift, z[i]), (0, 0, 0), thness) 
+        speed_ok = frame * (speeds[ok]/ framerate)
+        if rotation is not None:
+            img = ndimage.rotate(img, rotation, reshape=False, order=0)
+        image = Image.fromarray(img)
+        if(frame_ref!=0):
+            image.save(folder + "img" + str(frame_ref) + ".png")
+            frame_ref+=1
+        else:
+            image.save(folder + "img" + str(frame) + ".png")
+        frame += 1
+    return frame

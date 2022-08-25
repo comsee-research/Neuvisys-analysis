@@ -87,6 +87,11 @@ class SpikingNetwork:
         self.spikes = []
         self.layout = []
         self.shared_id = []
+        self.stats = []
+        self.changes_sc = []
+        self.changes_cc = []
+        self.changes_li = []
+        self.changes_tdi = []
         type_to_config = {"SimpleCell": "simple_cell_config.json", "ComplexCell": "complex_cell_config.json",
                           "CriticCell": "critic_cell_config.json", "ActorCell": "actor_cell_config.json"}
 
@@ -95,7 +100,7 @@ class SpikingNetwork:
         self.n_shape = np.array(self.conf["neuronSizes"])
 
         if loading:
-            for layer, neuron_type in enumerate(self.conf["layerCellTypes"]):
+            for layer, neuron_type in enumerate(self.conf["neuronType"]):
                 neurons, spikes = self.load_neurons(layer, neuron_type, type_to_config[neuron_type])
                 self.neurons.append(neurons)
                 self.spikes.append(spikes)
@@ -105,7 +110,10 @@ class SpikingNetwork:
         for i in range(len(self.spikes)):
             if np.array(self.spikes[i], dtype=object).size > 0:
                 self.spikes[i] = np.array(list(itertools.zip_longest(*self.spikes[i], fillvalue=0))).T
-                self.spikes[i][self.spikes[i] != 0] -= np.min(self.spikes[i][self.spikes[i] != 0])
+                try:
+                    self.spikes[i][self.spikes[i] != 0] -= np.min(self.spikes[i][self.spikes[i] != 0])
+                except ValueError:
+                    pass
 
         if os.path.exists(self.path + "gabors/0/rotation_response.npy"):
             self.directions = []
@@ -121,7 +129,6 @@ class SpikingNetwork:
     def load_neurons(self, layer, neuron_type, config):
         neurons = []
         spike_train = []
-
         neurons_paths = natsorted(os.listdir(self.path + "weights/" + str(layer) + "/"))
         config_files = list(filter(re.compile(".*json").match, neurons_paths))
         for index in range(len(config_files)):
@@ -131,7 +138,10 @@ class SpikingNetwork:
                             )
             neurons.append(neuron)
             if neuron.conf["TRACKING"] == "partial":
-                spike_train.append(neuron.params["spike_train"])
+                if(len(neuron.params["spike_train"])!=0):
+                    spike_train.append(neuron.params["spike_train"])
+                else:
+                    spike_train.append([0])
         self.nb_neurons += len(neurons)
         return neurons, spike_train
 
@@ -164,7 +174,7 @@ class SpikingNetwork:
                     for synapse in range(self.conf["neuron1Synapses"]):
                         for camera in range(self.conf["nbCameras"]):
                             n_weight = reshape_weights(
-                                weights[:, camera, synapse], self.n_shape[layer, 0], self.n_shape[layer, 1],
+                                weights[:, camera, synapse], self.n_shape[layer, 0, 0], self.n_shape[layer, 0, 1],
                             )
                             path = (self.path + "images/0/" + str(i) + "_syn" + str(synapse) + "_cam" + str(
                                 camera) + ".png")
@@ -192,9 +202,9 @@ class SpikingNetwork:
 
     def generate_weight_mat(self):
         w = self.n_shape[0, 0] * self.n_shape[0, 1]
-        basis = np.zeros((2 * w, len(self.weights)))
+        basis = np.zeros((w, len(self.weights[0])))
         for c in range(self.conf["nbCameras"]):
-            for i, weight in enumerate(self.weights):
+            for i, weight in enumerate(self.weights[0]):
                 basis[c * w: (c + 1) * w, i] = (weight[0, c, 0] - weight[1, c, 0]).flatten("F")
         sio.savemat(self.path + "gabors/data/weights.mat", {"basis": basis})
 
@@ -226,7 +236,138 @@ class SpikingNetwork:
         srates = np.count_nonzero(self.spikes, axis=1) / (time * 1e-6)
         return np.mean(srates), np.std(srates)
 
+    def neurons_spike_rate(self):
+        neuron_spikes=[]
+        time_1 = np.max(self.spikes[0])
+        time_2 = np.max(self.spikes[1])
+        time = max([time_1,time_2])
+        
+        for layer, _ in enumerate(self.conf["layerCellTypes"]):
+            srates = []
+            neuron_count=len(self.spikes[layer])
+            for i in range(0,neuron_count):
+                if(time!=0):
+                    value = np.count_nonzero(self.spikes[layer][i]) / (time * 1e-6)
+                else:
+                    value = 0
+                srates.append(value)
+            neuron_spikes.append(srates)
+        return neuron_spikes
+    
+    def load_statistics(self, layer_id = 0, simulation = 0):
+        
+        layers = [ f.path for f in os.scandir(self.path + "statistics/") if f.is_dir() ]
+        layers = natsorted(layers)
+        number_of_sequences = len([ f.path for f in os.scandir(layers[0] + "/" + "/" + str(simulation) + "/") if f.is_dir() ])
+        if(len(self.stats)!=0):
+            self.stats=[]
+        limit_neurs = 608
+        cter=0
+        for sequence in range(number_of_sequences):
+            layer_ = []
+            for counter, layer in enumerate(layers):
+                dir_exists = os.path.isdir(layer + "/" + "/" + str(simulation) + "/" + str(sequence))
+                if(dir_exists):
+                    list_of_neurons = natsorted([ f.path for f in os.scandir(layer + "/" + "/"  + str(simulation) + "/" + str(sequence)) ])
+                    temp_neurons=[[]]
+                    for counter_2, neuron in enumerate(list_of_neurons):
+                        cter+=1
+                        if(cter>limit_neurs):
+                            cter=0
+                            break
+                        with open(neuron) as file:
+                            params = json.load(file)
+                        temp_neurons[counter_2].append({"amount_of_events":params["amount_of_events"]})
+                        temp_neurons[counter_2].append({"potential_train":params["potential_train"]})
+                        temp_neurons[counter_2].append({"sum_inhib_weights":params["sum_inhib_weights"]})
+                        temp_neurons[counter_2].append({"timing_of_inhibition":params["timing_of_inhibition"]})
+                        temp_neurons[counter_2].append({"potentials_thresholds":params["potentials_thresholds"]})
+                        temp_neurons[counter_2].append({"excitatory_events":params["excitatory_ev"]})
+                        temp_neurons[counter_2].append({"top_down_weights":params["sum_topdown_weights"]})
+                        if(counter_2!=len(list_of_neurons)-1 and cter+1<=limit_neurs):
+                            temp_neurons.append([])
 
+                    layer_.append({"{}".format(str(counter)):temp_neurons})
+                    cter=0
+                    #layer_.append(temp_neurons)
+            if(len(layer_)>1):
+                self.stats.append({"{}".format(str(sequence)):layer_})
+                #self.stats.append(layer_)
+        #self.load_orientations()
+
+            
+    def load_statistics_2(self, thickness, angle, direction, layer_id=0, simulation=0, separate_speed = False, speed = 0):
+        if(direction==0):
+            sign = ""
+        else:
+            sign = "-"
+        layers = [ f.path for f in os.scandir(self.path + "statistics/") if f.is_dir() ]
+        layers = natsorted(layers)
+        if(not separate_speed):
+            number_of_sequences = len([ f.path for f in os.scandir(layers[0] + "/" + str(thickness) + "/" + sign + str(angle) + "/" + str(simulation) + "/") if f.is_dir() ])
+        else:
+            number_of_sequences = len([ f.path for f in os.scandir(layers[0] + "/" + str(thickness) + "/speeds/" + str(speed) + "/" + sign + str(angle) + "/" + str(simulation) + "/") if f.is_dir() ])
+        if(len(self.stats)!=0):
+            self.stats=[]
+        for sequence in range(number_of_sequences):
+            layer_ = []
+            for counter, layer in enumerate(layers):
+                if(not separate_speed):
+                    dir_exists = os.path.isdir(layer + "/" + str(thickness) + "/" + sign + str(angle) + "/" + str(simulation) + "/" + str(sequence))
+                else:
+                    dir_exists = os.path.isdir(layer + "/" + str(thickness) + "/speeds/" + str(speed) + "/" + sign + str(angle) + "/" + str(simulation) + "/" + str(sequence))
+                if(dir_exists):
+                    if(not separate_speed):
+                        list_of_neurons = natsorted([ f.path for f in os.scandir(layer + "/" + str(thickness) + "/" + sign + str(angle) + "/" + str(simulation) + "/" + str(sequence)) ])
+                    else:
+                        list_of_neurons = natsorted([ f.path for f in os.scandir(layer + "/" + str(thickness) + "/speeds/" + str(speed) + "/" + sign + str(angle) + "/" + str(simulation) + "/" + str(sequence)) ])
+                    temp_neurons=[[]]
+                    for counter_2, neuron in enumerate(list_of_neurons):
+                        with open(neuron) as file:
+                            params = json.load(file)
+                        temp_neurons[counter_2].append({"amount_of_events":params["amount_of_events"]})
+                        temp_neurons[counter_2].append({"potential_train":params["potential_train"]})
+                        temp_neurons[counter_2].append({"sum_inhib_weights":params["sum_inhib_weights"]})
+                        temp_neurons[counter_2].append({"timing_of_inhibition":params["timing_of_inhibition"]})
+                        temp_neurons[counter_2].append({"potentials_thresholds":params["potentials_thresholds"]})
+                        temp_neurons[counter_2].append({"excitatory_events":params["excitatory_ev"]})
+                        temp_neurons[counter_2].append({"top_down_weights":params["sum_topdown_weights"]})
+                        if(counter_2!=len(list_of_neurons)-1):
+                            temp_neurons.append([])
+
+                    layer_.append({"{}".format(str(counter)):temp_neurons})
+            if(len(layer_)>1):
+                self.stats.append({"{}".format(str(sequence)):layer_})
+                #self.stats.append(layer_)
+        
+        self.load_orientations()
+   
+    def load_orientations(self):
+        with open(self.path + "statistics/orientations/orientations.json") as file:
+            params = json.load(file)
+        cter = 0
+        for neuron in self.neurons[0]:
+            neuron.theta = params["orientations"][cter]
+            if(len(neuron.theta[1])==0 and len(neuron.theta[2])==0):
+                neuron.theta[1].append(-1)
+                neuron.theta[2].append(-1)
+            cter+=1
+            if(cter==self.l_shape[0][2]):
+                cter = 0
+        cter = 0
+        for i, neuron in enumerate(self.neurons[1]):
+            neuron.theta = params["complex_orientations"][i]
+            if(len(neuron.theta[1])==0 and len(neuron.theta[2])==0):
+                neuron.theta[1].append(-1)
+                neuron.theta[2].append(-1)
+
+    def load_weightchanges(self):
+        with open(self.path + "weights/weightsChanges.json") as file:
+            params = json.load(file)
+        self.changes_sc = params['weights_changes'][0]
+        self.changes_cc = params['weights_changes'][1]
+        self.changes_li = params['weights_changes'][2]
+        self.changes_tdi = params['weights_changes'][3]
 class Neuron:
     """Spiking Neuron class"""
 
@@ -252,6 +393,8 @@ class Neuron:
         self.mu = None
         self.orientation = None
         self.disparity = 0
+        self.out_connections = np.array(self.params["out_connections"])
+        self.in_connections = np.array(self.params["in_connections"])
 
     def link_weights(self, weights):
         self.weights = weights

@@ -172,27 +172,15 @@ def isi_histogram(sts, layer, path):
     plt.show()
 
 
-def instantaneous_rates(sts, layer, path):
-    fig, axes = plt.subplots()
-    kernel = kernels.GaussianKernel(sigma=100 * pq.ms)
-    rates = statistics.instantaneous_rate(sts, sampling_period=100 * pq.ms, kernel=kernel)
-    plot_instantaneous_rates_colormesh(rates, axes=axes)
-    axes.set_title("Instantaneous rates")
-    if path:
-        plt.savefig(path + str(layer) + "/instantaneous_rates", bbox_inches="tight")
-    plt.show()
-
-
-def instantaneous_rates_subset(sts, path, kernel_size, sampling_size):
+def instantaneous_rates(sts, layer, path, kernel_size, sampling_size):
     fig, axes = plt.subplots(figsize=(25, 60))
     kernel = kernels.GaussianKernel(sigma=kernel_size * pq.ms)
     rates = statistics.instantaneous_rate(sts, sampling_period=sampling_size * pq.ms, kernel=kernel)
     plot_instantaneous_rates_colormesh(rates, axes=axes)
     axes.set_title("Instantaneous rates")
     if path:
-        plt.savefig(path + "/isr" + id, bbox_inches="tight")
+        plt.savefig(path + str(layer) + "/instantaneous_rates", bbox_inches="tight")
     plt.show()
-    return rates
 
 
 def kernel_convolution(sts, kernel_size, sampling_size):

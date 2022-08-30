@@ -93,7 +93,7 @@ class SpikingNetwork:
 
         self.p_shape = np.array(self.conf["layerPatches"], dtype=object)
         self.l_shape = np.array(self.conf["layerSizes"])
-        self.n_shape = np.array(self.conf["neuronSizes"][0])
+        self.n_shape = np.array(self.conf["neuronSizes"], dtype=object)
 
         for layer, neuron_type in enumerate(self.conf["neuronType"]):
             if loading is not None:

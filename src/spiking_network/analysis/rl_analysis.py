@@ -163,7 +163,6 @@ def score_stabilisation(spinet):
 
 
 def policy_plot_multiple(spinet, j, action_bin, action_labels, action_colors, ax):
-    rewards = np.array(spinet.state["learning_data"]["reward"])
     actions = np.array(spinet.state["learning_data"]["action"], dtype=np.int32)
     nb_actions = np.unique(actions).size
 
@@ -179,18 +178,16 @@ def policy_plot_multiple(spinet, j, action_bin, action_labels, action_colors, ax
     for i in range(nb_actions):
         activity_variations.append(np.histogram(sp_trains[i], bins=hist_bin)[0])
 
-    m = rewards.size // activity_variations[0].size + 1
-    rewards = rewards[::m]
-
+    t = np.arange(activity_variations[0].size)
     if j == 0:
         for i in range(nb_actions):
-            ax.plot(activity_variations[i], color=action_colors[i], label=action_labels[i])
+            ax.plot(t, activity_variations[i], color=action_colors[i], label=action_labels[i])
         ax.set_ylabel("Number of spikes")
 
     else:
         for i in range(nb_actions):
-            ax.plot(activity_variations[i], color=action_colors[i], label="_")
-    return rewards.size
+            ax.plot(t, activity_variations[i], color=action_colors[i], label="_")
+    return activity_variations[0].size
 
 
 def value_plot_multiple(spinet, i, color, ax):
@@ -219,20 +216,26 @@ def validation_tracking_plot(folder):
     scores = []
     for i, network_path in enumerate(natsorted(os.listdir(folder))):
         spinet = SpikingNetwork(folder + network_path + "/", loading=[False, False, True, True])
+        if i == 0:
+            rewards = np.array(spinet.state["learning_data"]["reward"])
         size = policy_plot_multiple(spinet, i, 50, ["Left", "Right"], [action1_colors[i], action2_colors[i]], ax)
         value_plot_multiple(spinet, i, colors[i], ax2)
         scores.append(score_tracking(spinet))
 
-    ax.axvspan(0, size // 2, color=action1_colors[-1], alpha=0.1)
-    ax.axvspan(size // 2, size - 1, color=action2_colors[-1], alpha=0.1)
+    nb_ticks = 30
+    idx = np.round(np.linspace(0, len(rewards) - 1, nb_ticks)).astype(int)
+    rewards = rewards[idx]
 
-    xlabels = np.linspace(-173, 173, 9)
-    ax.set_xticks(np.linspace(0, 48, 9), xlabels)
+    ax.axvspan(0, 23, color=action1_colors[-1], alpha=0.1)
+    ax.axvspan(23, 85, color=action2_colors[-1], alpha=0.1)
+    ax.axvspan(85, size, color=action1_colors[-1], alpha=0.1)
+
+    ax.set_xticks(np.linspace(0, size, nb_ticks), np.round(rewards, decimals=1))
     ax.set_xlabel("Distance to visual center (px)")
     ax.legend(loc='best')
 
-    xlabels = np.linspace(-173, 173, 9)
-    ax2.set_xticks(np.linspace(0, 2.6, 9), xlabels)
+    # xlabels = [np.linspace(-173, 173, 9), np.linspace(-173, 173, 9)]
+    # ax2.set_xticks(np.linspace(0, 6, 18), xlabels)
     ax2.set_xlabel("Distance to visual center (m)")
     ax2.legend(loc='best')
     plt.show()

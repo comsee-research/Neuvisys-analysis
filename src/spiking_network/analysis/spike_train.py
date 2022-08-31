@@ -47,6 +47,12 @@ def time_histogram_comparison(spinet, sts_control, sts_experiment, layer, bin_si
     histogram_diff = histogram_control.squeeze().magnitude - histogram_experiment.squeeze().magnitude
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(40, 20), sharex=True)
+    plt.subplots_adjust(left=0.1,
+                        bottom=0.1,
+                        right=0.9,
+                        top=0.9,
+                        wspace=0.4,
+                        hspace=0.4)
     control_vs_experiment(spinet, ax1, histogram_control, histogram_experiment, times, width, units, layer, vbars)
     if distribution is not None:
         diff_distribution(ax2, histogram_diff, times, width, distribution, vbars)
@@ -58,11 +64,12 @@ def control_vs_experiment(spinet, ax, histogram_control, histogram_experiment, t
     ax.bar(times, histogram_control.squeeze().magnitude, align='edge', width=width, label='Control', color="#5DA9E9")
     ax.bar(times, histogram_experiment.squeeze().magnitude, align='edge', width=width, label='Experiment', alpha=1,
            color="#6D326D")
-    ax.set_xlabel(f"Time ({units.dimensionality})")
+    # ax.set_xlabel(f"Orientation over time ({units.dimensionality})")
     ax.set_ylabel("Spike Rate (Hz)")
-    ax.set_title("Time histogram function of grating orientation")
-    for vbar in vbars:
-        ax.axvline(x=vbar, color="#4C3B4D", linestyle='--')
+    # ax.set_title("Time histogram function of grating orientation")
+    ax.set_title("Time histogram function of ball position")
+    # for vbar in vbars:
+    #     ax.axvline(x=vbar, color="#4C3B4D", linestyle='--')
     ax.legend()
     if not os.path.exists(spinet.path + "figures/" + str(layer) + "/activity_comparison"):
         os.mkdir(spinet.path + "figures/" + str(layer) + "/activity_comparison")
@@ -73,14 +80,15 @@ def control_vs_experiment(spinet, ax, histogram_control, histogram_experiment, t
 def diff_distribution(ax, histogram_diff, times, width, distribution, vbars):
     axbis = ax.twinx()
     ax.set_title("Time histogram difference and learning distribution")
-    hist = np.histogram(distribution, bins=np.arange(-9.5, 8.5), density=True)
-    axbis.plot(vbars, np.roll(hist[0], 8), color="#A53860", linewidth=4, label="Learning distribution")
+    axbis.plot(vbars, distribution, color="#A53860", linewidth=4, label="Learning distribution")
     axbis.set_ylabel("Density")
 
     ax.bar(times, histogram_diff, align='edge', width=width, label="Activity difference", color="#5DA9E9")
-    ax.set_xlabel("Input orientation in degree(°)")
+    # ax.set_xlabel("Input orientation in degree(°)")
+    ax.set_xlabel(f"Ball position over time (s)")
     ax.set_ylabel("Spike Rate (Hz)")
-    ax.set_xticks(vbars, np.arange(0, 361, 22.5), rotation=45)
+    # ax.set_xticks(vbars, np.arange(0, 361, 22.5), rotation=45)
+    ax.set_xticks([])
     ax.legend(loc="upper left")
     axbis.legend()
 

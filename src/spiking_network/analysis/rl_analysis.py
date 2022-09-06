@@ -162,10 +162,7 @@ def score_stabilisation(spinet):
     return np.sum(np.abs(perfect - actions_selections))
 
 
-def policy_plot_multiple(spinet, j, action_bin, action_labels, action_colors, ax):
-    actions = np.array(spinet.state["learning_data"]["action"], dtype=np.int32)
-    nb_actions = np.unique(actions).size
-
+def policy_plot_multiple(spinet, action_bin, nb_actions):
     sp_trains = []
     for i in range(nb_actions):
         sp_train = spinet.spikes[-1][i * 50:(i + 1) * 50].flatten()
@@ -177,78 +174,88 @@ def policy_plot_multiple(spinet, j, action_bin, action_labels, action_colors, ax
     activity_variations = []
     for i in range(nb_actions):
         activity_variations.append(np.histogram(sp_trains[i], bins=hist_bin)[0])
-
-    t = np.arange(activity_variations[0].size)
-    if j == 0:
-        for i in range(nb_actions):
-            ax.plot(t, activity_variations[i], color=action_colors[i], label=action_labels[i])
-        ax.set_ylabel("Number of spikes")
-
-    else:
-        for i in range(nb_actions):
-            ax.plot(t, activity_variations[i], color=action_colors[i], label="_")
-    return activity_variations[0].size
+    return activity_variations
 
 
-def value_plot_multiple(spinet, i, color, ax):
-    reward = np.array(spinet.state["learning_data"]["reward"])
-    value = np.array(spinet.state["learning_data"]["value"])
-    t = np.arange(0, reward.size) * 1e-3
-
-    if i == 0:
-        ax.set_title("Reward and value curves")
-        ax.plot(t, reward, color="black", linewidth=5, label="Reward")
-        ax.plot(t, value, color=color, label="Value")
-    else:
-        ax.plot(t, value, color=color, label="")
+def value_plot_multiple(spinet, value_bin):
+    sp_train = spinet.spikes[-2].flatten()
+    sp_train = sp_train[sp_train != 0]
+    sp_train = np.sort(sp_train)
+    hist_bin = np.arange(0, sp_train[-1], int(1e3 * value_bin))
+    return np.histogram(sp_train, bins=hist_bin)[0]
 
 
-def validation_tracking_plot(folder):
+def validation_plot(values, policies, scores, action_labels, task):
     fig, ax = plt.subplots(1, 1, figsize=(40, 20))
     fig2, ax2 = plt.subplots(1, 1, figsize=(40, 20))
 
-    nb_curves = len(natsorted(os.listdir(folder)))
-    colors = pl.cm.jet(np.linspace(0, 1, nb_curves))
+    nb_curves = len(values)
+    value_colors = pl.cm.jet(np.linspace(0, 1, nb_curves))
+    action_colors = [pl.cm.Blues(np.linspace(0.2, 1, nb_curves)), pl.cm.Reds(np.linspace(0.2, 1, nb_curves))]
 
-    action1_colors = pl.cm.Blues(np.linspace(0.2, 1, nb_curves))
-    action2_colors = pl.cm.Reds(np.linspace(0.2, 1, nb_curves))
+    t = np.arange(values[0].size)
+    for i in range(nb_curves):
+        if i == nb_curves-1:
+            ax2.plot(t, values[i], color=value_colors[i], label="Value")
+        else:
+            ax2.plot(t, values[i], color=value_colors[i])
+        ax2.set_ylabel("Number of spikes")
 
+        if i == nb_curves - 1:
+            for j in range(2):
+                ax.plot(t, policies[i][j], color=action_colors[j][i], label=action_labels[j])
+        else:
+            for j in range(2):
+                ax.plot(t, policies[i][j], color=action_colors[j][i])
+            ax.set_ylabel("Number of spikes")
+
+    print(t.size)
+
+    if task == "tracking":
+        ax.axvspan(0, 4.5, color=action_colors[0][-1], alpha=0.1)
+        ax.axvspan(4.5, 9, color=action_colors[1][-1], alpha=0.1)
+    elif task == "orientation":
+        ax.axvspan(0, 5, color=action_colors[0][-1], alpha=0.1)
+        ax.axvspan(5, 10.5, color=action_colors[1][-1], alpha=0.1)
+        ax.axvspan(10.5, 16, color=action_colors[0][-1], alpha=0.1)
+        ax.axvspan(16, 21, color=action_colors[1][-1], alpha=0.1)
+
+    if task == "tracking":
+        ax.set_xticks(t, np.round(np.linspace(-173, 173, t.size), 1))
+        ax2.set_xticks(t, np.round(np.linspace(-173, 173, t.size), 1))
+        ax.set_xlabel("Distance to visual center (px)")
+        ax2.set_xlabel("Distance to visual center (px)")
+    elif task == "orientation":
+        ax.set_xticks(t, np.round(np.linspace(0, 360, t.size), 1))
+        ax2.set_xticks(t, np.round(np.linspace(0, 360, t.size), 1))
+        ax2.set_xlabel("Orientation (°)")
+        ax2.set_xlabel("Orientation (°)")
+
+    ax.legend(loc='best')
+    ax2.legend(loc='best')
+    plt.show()
+
+    plt.figure(figsize=(40, 20))
+    plt.title("Evolution of the policy error during training")
+    plt.xlabel("Trials")
+    plt.ylabel("Error from perfect policy")
+    plt.plot(scores, color="#6D326D", label="Policy error")
+    plt.legend()
+
+
+def value_policy_evaluation(folder, binsize, nb_action):
     scores = []
+    values, policies = [], []
     for i, network_path in enumerate(natsorted(os.listdir(folder))):
         spinet = SpikingNetwork(folder + network_path + "/", loading=[False, False, True, True])
-        if i == 0:
-            rewards = np.array(spinet.state["learning_data"]["reward"])
-        size = policy_plot_multiple(spinet, i, 50, ["Left", "Right"], [action1_colors[i], action2_colors[i]], ax)
-        value_plot_multiple(spinet, i, colors[i], ax2)
+
+        values.append(value_plot_multiple(spinet, binsize))
+        policies.append(policy_plot_multiple(spinet, binsize, nb_action))
         scores.append(score_tracking(spinet))
-
-    nb_ticks = 30
-    idx = np.round(np.linspace(0, len(rewards) - 1, nb_ticks)).astype(int)
-    rewards = rewards[idx]
-
-    ax.axvspan(0, 23, color=action1_colors[-1], alpha=0.1)
-    ax.axvspan(23, 85, color=action2_colors[-1], alpha=0.1)
-    ax.axvspan(85, size, color=action1_colors[-1], alpha=0.1)
-
-    ax.set_xticks(np.linspace(0, size, nb_ticks), np.round(rewards, decimals=1))
-    ax.set_xlabel("Distance to visual center (px)")
-    ax.legend(loc='best')
-
-    # xlabels = [np.linspace(-173, 173, 9), np.linspace(-173, 173, 9)]
-    # ax2.set_xticks(np.linspace(0, 6, 18), xlabels)
-    ax2.set_xlabel("Distance to visual center (m)")
-    ax2.legend(loc='best')
-    plt.show()
-
-    plt.figure(figsize=(40, 20))
-    plt.title("Evolution of the policy error during training")
-    plt.xlabel("Trials")
-    plt.ylabel("Error from perfect policy")
-    plt.plot(scores, color="#6D326D", label="Policy error")
-    plt.legend()
+    return values, policies, scores
 
 
-def validation_stabilisation_plot(folder):
+def test_validation(folder):
     fig, ax = plt.subplots(1, 1, figsize=(40, 20))
     fig2, ax2 = plt.subplots(1, 1, figsize=(40, 20))
 
@@ -258,32 +265,44 @@ def validation_stabilisation_plot(folder):
     action1_colors = pl.cm.Blues(np.linspace(0.2, 1, nb_curves))
     action2_colors = pl.cm.Reds(np.linspace(0.2, 1, nb_curves))
 
-    scores = []
+    x = np.linspace(0, 346, 9)
+
     for i, network_path in enumerate(natsorted(os.listdir(folder))):
         spinet = SpikingNetwork(folder + network_path + "/", loading=[False, False, True, True])
-        size = policy_plot_multiple(spinet, i, 50, ["Clockwise", "Counter-clockwise"], [action1_colors[i],
-                                                                                        action2_colors[i]], ax)
-        value_plot_multiple(spinet, i, colors[i], ax2)
-        scores.append(score_stabilisation(spinet))
 
-    ax.axvspan(0, size // 4, color=action1_colors[-1], alpha=0.1)
-    ax.axvspan(size // 4, 3 * (size // 4), color=action2_colors[-1], alpha=0.1)
-    ax.axvspan(3 * (size // 4), size - 1, color=action1_colors[-1], alpha=0.1)
+        critic_sum = critic_validation(spinet)
+        value_1_sum, value_2_sum = value_validation(spinet)
 
-    xlabels = np.concatenate((np.linspace(0, 180, 5), np.linspace(135, 0, 4)))
-    ax.set_xticks(np.linspace(0, 24, 9), xlabels)
-    ax.set_xlabel("Orientation (°)")
-    ax.legend(loc='best')
+        ax.plot(x, critic_sum, color=colors[i])
+        ax2.plot(x, value_1_sum, color=action1_colors[i])
+        ax2.plot(x, value_2_sum, color=action2_colors[i])
 
-    xlabels = np.concatenate((np.linspace(0, 180, 5), np.linspace(135, 0, 4)))
-    ax2.set_xticks(np.linspace(0, 1.25, 9), xlabels)
-    ax2.set_xlabel("Orientation (°)")
-    ax2.legend(loc='best')
-    plt.show()
 
-    plt.figure(figsize=(40, 20))
-    plt.title("Evolution of the policy error during training")
-    plt.xlabel("Trials")
-    plt.ylabel("Error from perfect policy")
-    plt.plot(scores, color="#6D326D", label="Policy error")
-    plt.legend()
+def critic_validation(spinet):
+    spikes = spinet.spikes[2]
+    spikes = spikes[spikes > 0]
+    spikes = np.sort(spikes)
+
+    intervals = np.arange(0, 4500001, 500000)
+    sum = []
+    for i in range(intervals.size-1):
+        sum.append(np.sum(spikes[(spikes >= intervals[i]) & (spikes <= intervals[i + 1])]))
+    return sum
+
+
+def value_validation(spinet):
+    spikes_0 = spinet.spikes[3][0:50]
+    spikes_0 = spikes_0[spikes_0 > 0]
+    spikes_0 = np.sort(spikes_0)
+
+    spikes_1 = spinet.spikes[3][50:100]
+    spikes_1 = spikes_1[spikes_1 > 0]
+    spikes_1 = np.sort(spikes_1)
+
+    intervals = np.arange(0, 4500001, 500000)
+    sum_0 = []
+    sum_1 = []
+    for i in range(intervals.size-1):
+        sum_0.append(np.sum(spikes_0[(spikes_0 >= intervals[i]) & (spikes_0 <= intervals[i + 1])]))
+        sum_1.append(np.sum(spikes_1[(spikes_1 >= intervals[i]) & (spikes_1 <= intervals[i + 1])]))
+    return sum_0, sum_1

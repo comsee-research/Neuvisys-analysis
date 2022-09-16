@@ -14,10 +14,6 @@ import os
 
 from src.events.Events import Events
 
-receptive_field = (346, 260)  # px
-file_name = "/home/thomas/Vidéos/DVS_Recordings/test/hand_slow.aedat4"
-folder = "/home/thomas/neuvisys-report/data/"
-
 
 def quantity_variation(events: Events, binsize):
     bins = np.arange(events.get_timestamps()[0], events.get_timestamps()[-1], int(1e3 * binsize))
@@ -26,7 +22,7 @@ def quantity_variation(events: Events, binsize):
 
 
 def spatial_correlation(x, y, polarity, timestamp, spat_corr, timestamps, tau, l, rf_size):
-    if x >= l and x <= rf_size[0] - l - 1 and y >= l and y <= rf_size[1] - l - 1:
+    if l <= x <= rf_size[0] - l - 1 and l <= y <= rf_size[1] - l - 1:
         if polarity:
             spat_corr[0] += 1 * (
                     timestamp - timestamps[1, y - l: y + l + 1, x - l: x + l + 1] <= tau
@@ -91,7 +87,7 @@ def compute_spatial_correlation():
         # np.save(folder + "spat_corr_" + str(tau) + "_" + str(l), spat_corr)
 
 
-def compute_temporal_correaltion():
+def compute_temporal_correlation(file_name, folder):
     bins = [100, 500, 1000, 5000, 10000]  # us
     rf_size = (346, 260)
     tau_max = 500000
@@ -114,7 +110,7 @@ def compute_temporal_correaltion():
         np.save(folder + "temp_corr_" + str(tau), temp_corr)
 
 
-def compute_cross_correlation():
+def compute_cross_correlation(file_name, folder):
     bins = [500]  # µs
     buf = 1000000
 
@@ -153,7 +149,7 @@ def compute_cross_correlation():
         np.save(folder + "cross_corr_" + str(tau), cross_corr)
 
 
-def compute_entripy_metric():
+def compute_entropy_metric():
     directory = "/home/thomas/neuvisys-analysis/results/metric/"
 
     for i in range(5):

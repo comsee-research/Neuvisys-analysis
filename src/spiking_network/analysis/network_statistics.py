@@ -60,15 +60,15 @@ def event_vs_network_activity(spinet, event_path, bins=50, thresh=0):
     p = np.poly1d(coeffs)
     r2 = r2_score(av_norm, p(ev_norm[:av_norm.size]))
     ax2.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="#6D326D", lw=2.5)
-    # ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 100),
-    #              xycoords="figure points")
+    ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 100),
+                 xycoords="figure points")
 
     coeffs = np.polyfit(ev_norm[:av_cc_norm.size], av_cc_norm, deg=1)
     p = np.poly1d(coeffs)
     r2 = r2_score(av_cc_norm, p(ev_norm[:av_cc_norm.size]))
     ax2.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="#BFD7B5", lw=2.5)
-    # ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (700, 100),
-    #              xycoords="figure points")
+    ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (800, 100),
+                 xycoords="figure points")
 
     plt.show()
 

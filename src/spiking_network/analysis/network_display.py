@@ -237,7 +237,7 @@ def sort_connections(cell, depth):
 
 
 def load_array_param(spinet, param):
-    simple_array = np.zeros(spinet.nb_simple_cells)
+    simple_array = np.zeros(len(spinet.neurons[0]))
     for i, simple_cell in enumerate(spinet.neurons[0]):
         simple_array[i] = simple_cell.params[param]
     return simple_array, 0

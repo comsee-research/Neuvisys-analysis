@@ -193,14 +193,15 @@ def validation_plot(values, policies, scores, action_labels, task):
     value_colors = pl.cm.jet(np.linspace(0, 1, nb_curves))
     action_colors = [pl.cm.Blues(np.linspace(0.2, 1, nb_curves)), pl.cm.Reds(np.linspace(0.2, 1, nb_curves))]
 
-    t = np.arange(values[0].size)
     for i in range(nb_curves):
+        t = np.arange(values[i].size)
         if i == nb_curves-1:
             ax2.plot(t, values[i], color=value_colors[i], label="Value")
         else:
             ax2.plot(t, values[i], color=value_colors[i])
         ax2.set_ylabel("Number of spikes")
 
+        t = np.arange(policies[i][0].size)
         if i == nb_curves - 1:
             for j in range(2):
                 ax.plot(t, policies[i][j], color=action_colors[j][i], label=action_labels[j])
@@ -212,8 +213,8 @@ def validation_plot(values, policies, scores, action_labels, task):
     print(t.size)
 
     if task == "tracking":
-        ax.axvspan(0, 4.5, color=action_colors[0][-1], alpha=0.1)
-        ax.axvspan(4.5, 9, color=action_colors[1][-1], alpha=0.1)
+        ax.axvspan(0, 4, color=action_colors[0][-1], alpha=0.1)
+        ax.axvspan(4, 8, color=action_colors[1][-1], alpha=0.1)
     elif task == "orientation":
         ax.axvspan(0, 5, color=action_colors[0][-1], alpha=0.1)
         ax.axvspan(5, 10.5, color=action_colors[1][-1], alpha=0.1)

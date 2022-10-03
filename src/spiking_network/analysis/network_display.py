@@ -174,13 +174,13 @@ def pdf_complex_receptive_fields(spinet, layer):
                         sc_weight_image = Image.open(simple_cell.weight_images[0])
                         heatmap_rf[30 * (ys - oy): 30 * (ys - oy + 1), 30 * (xs - ox): 30 * (xs - ox + 1)] = np.array(
                             sc_weight_image) * weight_sc
-        fig = plt.figure()
-        plt.matshow(heatmap)
-        plt.savefig(spinet.path + "figures/1/" + str(c), bbox_inches="tight")
+        # fig = plt.figure()
+        # plt.matshow(heatmap)
+        # plt.savefig(spinet.path + "figures/1/" + str(c), bbox_inches="tight")
+        # plt.close(fig)
         Image.fromarray(heatmap_rf.astype("uint8")).save(
             spinet.path + "figures/1/" + str(c) + "_rf.png"
         )
-        plt.close(fig)
 
 
 def pdf_complex_to_simple_cell_orientations(spinet, zcell, layer):

@@ -14,38 +14,43 @@ from src.spiking_network.network.neuvisys import SpikingNetwork
 
 
 def value_plot(spinet, display_score=False):
-    reward = np.array(spinet.state["learning_data"]["reward"])
-    value = np.array(spinet.state["learning_data"]["value"])
-    value_dot = np.array(spinet.state["learning_data"]["valueDot"])
-    td_error = np.array(spinet.state["learning_data"]["tdError"])
+    subset = slice(0, 100000)
+    reward = np.array(spinet.state["learning_data"]["reward"][subset])
+    value = np.array(spinet.state["learning_data"]["value"][subset])
+    value_dot = np.array(spinet.state["learning_data"]["valueDot"][subset])
+    td_error = np.array(spinet.state["learning_data"]["tdError"][subset])
     if display_score:
-        score = np.array(spinet.state["learning_data"]["score"])
+        score = np.array(spinet.state["learning_data"]["score"][subset])
     actions = []
     for i in range(len(spinet.rl_conf["actionMapping"])):
-        actions.append(np.array(spinet.state["learning_data"]["action_" + str(i)]))
+        actions.append(np.array(spinet.state["learning_data"]["action_" + str(i)][subset]))
     t = np.arange(0, reward.size) * 1e-3
 
     plt.figure(figsize=(40, 8))
     plt.title("Reward and value curves")
     plt.xlabel("time (s)")
+    plt.ylabel("Reward / Value")
     plt.plot(t, reward, label="reward")
     plt.plot(t, value, label="value")
-    plt.hlines(0, 0, t[-1], linestyles="dashed")
+    # plt.hlines(0, 0, t[-1], linestyles="dashed")
     plt.legend()
     plt.show()
 
     plt.figure(figsize=(40, 8))
     plt.title("Action decisions")
     plt.xlabel("time (s)")
+    plt.ylabel("Number of spikes")
+    actions_label = ["left", "stop", "right"]
     for i, action in enumerate(actions):
-        plt.plot(t, action, label="action " + str(i))
-    plt.hlines(0, 0, t[-1], linestyles="dashed")
+        # plt.plot(t, action, label="action " + str(i))
+        plt.plot(t, action, label=actions_label[i])
     plt.legend()
     plt.show()
 
     plt.figure(figsize=(40, 8))
     plt.title("Value derivative")
     plt.xlabel("time (s)")
+    plt.ylabel("Value derivative")
     plt.plot(t, value_dot, color="green", label="value_dot")
     plt.hlines(0, 0, t[-1], linestyles="dashed")
     plt.show()
@@ -53,19 +58,9 @@ def value_plot(spinet, display_score=False):
     plt.figure(figsize=(40, 8))
     plt.title("TD error")
     plt.xlabel("time (s)")
+    plt.ylabel("TD error")
     plt.plot(t, td_error, color="red", label="td_error")
     plt.hlines(0, 0, t[-1], linestyles="dashed")
-    plt.show()
-
-    td_actions = []
-    for i in range(0, td_error.shape[0], 10):
-        td_actions.append(np.mean(td_error[i:i + 10]))
-
-    plt.figure(figsize=(40, 8))
-    plt.title("mean TD error at action choice")
-    plt.xlabel("time (s)")
-    plt.plot(td_actions, color="cyan", label="td_error")
-    plt.hlines(0, 0, i / 10, linestyles="dashed")
     plt.show()
 
     if display_score:
@@ -195,7 +190,7 @@ def validation_plot(values, policies, scores, action_labels, task):
 
     for i in range(nb_curves):
         t = np.arange(values[i].size)
-        if i == nb_curves-1:
+        if i == nb_curves - 1:
             ax2.plot(t, values[i], color=value_colors[i], label="Value")
         else:
             ax2.plot(t, values[i], color=value_colors[i])
@@ -286,7 +281,7 @@ def critic_validation(spinet):
 
     intervals = np.arange(0, 4500001, 500000)
     sum = []
-    for i in range(intervals.size-1):
+    for i in range(intervals.size - 1):
         sum.append(np.sum(spikes[(spikes >= intervals[i]) & (spikes <= intervals[i + 1])]))
     return sum
 
@@ -303,7 +298,7 @@ def value_validation(spinet):
     intervals = np.arange(0, 4500001, 500000)
     sum_0 = []
     sum_1 = []
-    for i in range(intervals.size-1):
+    for i in range(intervals.size - 1):
         sum_0.append(np.sum(spikes_0[(spikes_0 >= intervals[i]) & (spikes_0 <= intervals[i + 1])]))
         sum_1.append(np.sum(spikes_1[(spikes_1 >= intervals[i]) & (spikes_1 <= intervals[i + 1])]))
     return sum_0, sum_1

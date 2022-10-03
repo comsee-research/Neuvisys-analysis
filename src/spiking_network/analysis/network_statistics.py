@@ -8,6 +8,7 @@ Created on Tue May 26 16:39:25 2020
 
 import json
 import os
+import shutil
 from itertools import combinations
 
 import matplotlib.pyplot as plt
@@ -18,6 +19,7 @@ from PIL import Image
 from natsort import natsorted
 from sklearn.metrics import r2_score
 
+from src.spiking_network.analysis.network_display import display_network
 from src.spiking_network.analysis.spike_train import fast_time_histogram
 from src.spiking_network.network.neuvisys import SpikingNetwork
 from src.events.Events import Events
@@ -40,6 +42,7 @@ def event_vs_network_activity(spinet, event_path, bins=50, thresh=0):
     # mask = ev_norm > thresh
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(40, 20))
+    fig.tight_layout(pad=3)
     ax1.set_title("Hisogram of event activity vs network activity variation over time")
     ax1.plot(ev_norm, label="event variation", color="#5DA9E9")
     ax1.plot(av_norm, label="simple cell variation", color="#6D326D")
@@ -49,8 +52,8 @@ def event_vs_network_activity(spinet, event_path, bins=50, thresh=0):
     ax1.legend()
 
     ax2.set_title("Event activity variation against network activity variation")
-    ax2.set_xlabel("Event activity variation (number of events)")
-    ax2.set_ylabel("Network activity variation (number of spikes)")
+    ax2.set_xlabel("Event activity variation")
+    ax2.set_ylabel("Network activity variation")
     ax2.scatter(ev_norm[:av_norm.size], av_norm, color="#6D326D", label="simple cells")
     ax2.scatter(ev_norm[:av_cc_norm.size], av_cc_norm, color="#BFD7B5", label="complex cells")
     ax2.legend()
@@ -60,16 +63,8 @@ def event_vs_network_activity(spinet, event_path, bins=50, thresh=0):
     p = np.poly1d(coeffs)
     r2 = r2_score(av_norm, p(ev_norm[:av_norm.size]))
     ax2.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="#6D326D", lw=2.5)
-    ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 100),
+    ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (600, 0),
                  xycoords="figure points")
-
-    coeffs = np.polyfit(ev_norm[:av_cc_norm.size], av_cc_norm, deg=1)
-    p = np.poly1d(coeffs)
-    r2 = r2_score(av_cc_norm, p(ev_norm[:av_cc_norm.size]))
-    ax2.plot(xseq, coeffs[1] + coeffs[0] * xseq, color="#BFD7B5", lw=2.5)
-    ax2.annotate("fitting equation: " + "{:.3f}x + {:.3f}\nR² = {:.2f}".format(coeffs[1], coeffs[0], r2), (800, 100),
-                 xycoords="figure points")
-
     plt.show()
 
     print(events.get_nb_events())
@@ -424,9 +419,11 @@ def weight_variation(spinet, network_path):
         else:
             break
 
-        # spinet.weights[0] = np.array(weights)
-        # display_network([spinet])
-        # shutil.copy(network_path + "figures/0/weight_sharing_combined.pdf", "/home/thomas/Bureau/weights/" + str(i) + ".pdf")
+        spinet.weights[0] = np.array(weights)
+        display_network([spinet])
+
+        print("Simple cells weights")
+        shutil.copy(network_path + "figures/0/weight_sharing_0.pdf", "/home/thomas/Bureau/weights/" + str(i) + ".pdf")
 
         # disparities, residuals = rf_matching(spinet)
         # plt.figure()

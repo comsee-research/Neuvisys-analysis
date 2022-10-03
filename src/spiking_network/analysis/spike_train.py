@@ -121,10 +121,10 @@ def raster_plot(sts, layer, path):
 
 
 def event_plot(sts, layer, path):
-    fig, axes = plt.subplots()
+    fig, axes = plt.subplots(figsize=(20, 35))
     eventplot(sts, axes=axes)
     axes.set_ylabel('Neurons')
-    axes.set_title("Eventplot")
+    axes.set_title("Event plot")
     if path:
         plt.savefig(path + str(layer) + "/eventplot", bbox_inches="tight")
     plt.show()

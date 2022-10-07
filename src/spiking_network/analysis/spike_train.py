@@ -145,8 +145,8 @@ def fast_time_histogram(sp_train, bins=50, display=False):
     sp_train = sp_train[sp_train != 0]
     sp_train = np.sort(sp_train)
 
-    hist_bin = np.arange(0, sp_train[-1], int(1e3 * bins))
-    activity_variation, _ = np.histogram(sp_train, bins=hist_bin)
+    # hist_bin = np.arange(0, sp_train[-1], int(1e3 * bins))
+    activity_variation, _ = np.histogram(sp_train, bins=bins)
 
     if display:
         plt.figure()

@@ -10,7 +10,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 from natsort import natsorted
+
+from src.spiking_network.analysis.spike_train import fast_time_histogram
 from src.spiking_network.network.neuvisys import SpikingNetwork
+
+
+def gaussian(a, b, c, x):
+    return a * np.exp(-0.5 * (x - b) ** 2 / c ** 2)
 
 
 def value_plot(spinet, display_score=False):
@@ -302,3 +308,127 @@ def value_validation(spinet):
         sum_0.append(np.sum(spikes_0[(spikes_0 >= intervals[i]) & (spikes_0 <= intervals[i + 1])]))
         sum_1.append(np.sum(spikes_1[(spikes_1 >= intervals[i]) & (spikes_1 <= intervals[i + 1])]))
     return sum_0, sum_1
+
+
+def validation_critic_actor(spinet):
+    reward = np.array(spinet.state["learning_data"]["reward"])
+    time = np.array(spinet.state["learning_data"]["time"])
+    bins = 100
+
+    middle = np.argwhere(np.diff(reward) < 0)[0][0]
+    reward1 = reward[:middle]
+    reward2 = reward[middle:]
+    time1 = time[:middle]
+    time2 = time[middle:]
+
+    idx1 = np.round(np.linspace(0, len(time1) - 1, bins)).astype(int)
+    time1 = time1[idx1]
+    # time1 = np.concatenate(([0], time1))
+    reward1 = reward1[idx1]
+
+    hist_left1 = fast_time_histogram(spinet.spikes[3][0:50], time1)
+    hist_stop1 = fast_time_histogram(spinet.spikes[3][50:100], time1)
+    hist_right1 = fast_time_histogram(spinet.spikes[3][100:150], time1)
+
+    # plt.figure()
+    # plt.plot(reward1[1:], hist_left1)
+    # plt.plot(reward1[1:], hist_stop1)
+    # plt.plot(reward1[1:], hist_right1)
+
+    idx2 = np.round(np.linspace(0, len(time2) - 1, bins)).astype(int)
+    time2 = time2[idx2]
+    reward2 = reward2[idx2]
+
+    hist_left2 = fast_time_histogram(spinet.spikes[3][0:50], time2)
+    hist_stop2 = fast_time_histogram(spinet.spikes[3][50:100], time2)
+    hist_right2 = fast_time_histogram(spinet.spikes[3][100:150], time2)
+
+    # plt.figure()
+    # plt.plot(reward2[1:], hist_left2)
+    # plt.plot(reward2[1:], hist_stop2)
+    # plt.plot(reward2[1:], hist_right2)
+
+    hist_left = (hist_left1 + hist_left2[::-1]) / 2
+    hist_stop = (hist_stop1 + hist_stop2[::-1]) / 2
+    hist_right = (hist_right1 + hist_right2[::-1]) / 2
+
+    hist_value1 = fast_time_histogram(spinet.spikes[2], time1)
+    hist_value2 = fast_time_histogram(spinet.spikes[2], time2)
+    hist_value = (hist_value1 + hist_value2[::-1]) / 2
+    hist_value = 80 * hist_value / np.max(hist_value)
+
+    plt.figure()
+    plt.xlabel("Ball angular error (degree)")
+    plt.ylabel("Value / Reward")
+    plt.vlines(0, 0, np.max(hist_value), colors="red", linestyles="dashed", alpha=0.5)
+    plt.plot(reward1[:-1], hist_value, label="value", color="#5DA9E9")
+    plt.plot(reward1[:-1], gaussian(80, 0, 0.4, 4 * reward1[:-1]), label="reward", color="#6D326D")
+    plt.legend()
+
+    plt.figure()
+    plt.xlabel("Ball angular error (degree)")
+    plt.ylabel("Number of spikes")
+    plt.vlines(0, 0, np.max(hist_right), colors="red", linestyles="dashed", alpha=0.5)
+    plt.plot(reward1[:-1], hist_left, label="left")
+    plt.plot(reward1[:-1], hist_stop, label="stop")
+    plt.plot(reward1[:-1], hist_right, label="right")
+    plt.legend()
+
+
+def validation_critic_actor2(spinet):
+    reward = np.array(spinet.state["learning_data"]["reward"])
+    time = np.array(spinet.state["learning_data"]["time"])
+    bins = 100
+
+    middle = np.argwhere(np.diff(reward) < 0)[0][0]
+    reward1 = reward[:middle]
+    reward2 = reward[middle:]
+    time1 = time[:middle]
+    time2 = time[middle:]
+
+    idx1 = np.round(np.linspace(0, len(time1) - 1, bins)).astype(int)
+    time1 = time1[idx1]
+    # time1 = np.concatenate(([0], time1))
+    reward1 = reward1[idx1]
+
+    hist_left1 = fast_time_histogram(spinet.spikes[3][0:50], time1)
+    hist_right1 = fast_time_histogram(spinet.spikes[3][50:100], time1)
+
+    plt.figure()
+    plt.plot(reward1[1:], hist_left1)
+    plt.plot(reward1[1:], hist_right1)
+
+    idx2 = np.round(np.linspace(0, len(time2) - 1, bins)).astype(int)
+    time2 = time2[idx2]
+    reward2 = reward2[idx2]
+
+    hist_left2 = fast_time_histogram(spinet.spikes[3][0:50], time2)
+    hist_right2 = fast_time_histogram(spinet.spikes[3][50:100], time2)
+
+    plt.figure()
+    plt.plot(reward2[1:], hist_left2)
+    plt.plot(reward2[1:], hist_right2)
+
+    hist_left = (hist_left1 + hist_left2[::-1]) / 2
+    hist_right = (hist_right1 + hist_right2[::-1]) / 2
+
+    hist_value1 = fast_time_histogram(spinet.spikes[2], time1)
+    hist_value2 = fast_time_histogram(spinet.spikes[2], time2)
+    hist_value = (hist_value1 + hist_value2[::-1]) / 2
+    hist_value = 80 * hist_value / np.max(hist_value)
+
+    plt.figure()
+    plt.xlabel("Ball angular error (degree)")
+    plt.ylabel("Value / Reward")
+    plt.vlines(0, 0, np.max(hist_value), colors="red", linestyles="dashed", alpha=0.5)
+    plt.plot(reward1[:-1], hist_value, label="value", color="#5DA9E9")
+    plt.plot(reward1[:-1], gaussian(80, 0, 0.4, 4 * reward1[:-1]), label="reward", color="#6D326D")
+    plt.legend()
+
+    plt.figure()
+    plt.xlabel("Ball angular error (degree)")
+    plt.ylabel("Number of spikes")
+    plt.vlines(0, 0, np.max(hist_right), colors="red", linestyles="dashed", alpha=0.5)
+    plt.plot(reward1[:-1], hist_left, label="left")
+    plt.plot(reward1[:-1], hist_right, label="right")
+    plt.legend()

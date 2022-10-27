@@ -20,7 +20,7 @@ def gaussian(a, b, c, x):
 
 
 def value_plot(spinet, display_score=False):
-    subset = slice(0, 100000)
+    subset = slice(0, 200000)
     reward = np.array(spinet.state["learning_data"]["reward"][subset])
     value = np.array(spinet.state["learning_data"]["value"][subset])
     value_dot = np.array(spinet.state["learning_data"]["valueDot"][subset])
@@ -310,8 +310,55 @@ def value_validation(spinet):
     return sum_0, sum_1
 
 
-def validation_critic_actor(spinet):
-    reward = np.array(spinet.state["learning_data"]["reward"])
+def full_validation(folder):
+    values = []
+    actions = []
+    for net in os.listdir(folder):
+        network_path = folder + net + "/"
+        spinet = SpikingNetwork(network_path, loading=[True, True, True, True])
+        reward, hist_value, hist_action = validation_critic_actor2(spinet, display=False)
+        values.append(hist_value)
+        actions.append(hist_action)
+
+    values = np.array(values)
+    actions = np.array(actions)
+    mean_values = np.mean(values, axis=0)
+    std_values = np.std(values, axis=0)
+    mean_actions = np.mean(actions, axis=0)
+    # mean_actions[1] += gaussian(35, 0, 0.4, 4 * reward[:-1])
+    std_actions = np.std(actions, axis=0)
+    low_values = mean_values - std_values
+    high_values = mean_values + std_values
+    low_actions = []
+    high_actions = []
+    for i in range(mean_actions.shape[0]):
+        low_actions.append(mean_actions[i] - std_actions[i])
+        high_actions.append(mean_actions[i] + std_actions[i])
+
+    plt.figure()
+    plt.xlabel("Ball angular error (degree)")
+    plt.ylabel("Value / Reward")
+    plt.vlines(0, 0, 80, colors="red", linestyles="dashed", alpha=0.5)
+    plt.plot(reward[:-1], mean_values, label="value", color="#5DA9E9")
+    plt.plot(reward[:-1], gaussian(80, 0, 0.4, 4 * reward[:-1]), label="reward", color="#6D326D")
+    plt.fill_between(reward[:-1], low_values, high_values, alpha=0.5)
+    plt.legend()
+
+    plt.figure()
+    plt.xlabel("Ball angular error (degree)")
+    plt.ylabel("Number of spikes")
+    plt.vlines(0, 0, 600, colors="red", linestyles="dashed", alpha=0.5)
+    plt.plot(reward[:-1], mean_actions[0], label="left")
+    plt.plot(reward[:-1], mean_actions[1], label="right")
+    # plt.plot(reward[:-1], mean_actions[2], label="right")
+    plt.fill_between(reward[:-1], low_actions[0], high_actions[0], alpha=0.5)
+    plt.fill_between(reward[:-1], low_actions[1], high_actions[1], alpha=0.5)
+    # plt.fill_between(reward[:-1], low_actions[2], high_actions[2], alpha=0.5)
+    plt.legend()
+
+
+def validation_critic_actor(spinet, display=True):
+    reward = np.array(spinet.state["learning_data"]["error"])
     time = np.array(spinet.state["learning_data"]["time"])
     bins = 100
 
@@ -330,10 +377,11 @@ def validation_critic_actor(spinet):
     hist_stop1 = fast_time_histogram(spinet.spikes[3][50:100], time1)
     hist_right1 = fast_time_histogram(spinet.spikes[3][100:150], time1)
 
-    # plt.figure()
-    # plt.plot(reward1[1:], hist_left1)
-    # plt.plot(reward1[1:], hist_stop1)
-    # plt.plot(reward1[1:], hist_right1)
+    if display:
+        plt.figure()
+        plt.plot(reward1[1:], hist_left1)
+        plt.plot(reward1[1:], hist_stop1)
+        plt.plot(reward1[1:], hist_right1)
 
     idx2 = np.round(np.linspace(0, len(time2) - 1, bins)).astype(int)
     time2 = time2[idx2]
@@ -343,10 +391,11 @@ def validation_critic_actor(spinet):
     hist_stop2 = fast_time_histogram(spinet.spikes[3][50:100], time2)
     hist_right2 = fast_time_histogram(spinet.spikes[3][100:150], time2)
 
-    # plt.figure()
-    # plt.plot(reward2[1:], hist_left2)
-    # plt.plot(reward2[1:], hist_stop2)
-    # plt.plot(reward2[1:], hist_right2)
+    if display:
+        plt.figure()
+        plt.plot(reward2[1:], hist_left2)
+        plt.plot(reward2[1:], hist_stop2)
+        plt.plot(reward2[1:], hist_right2)
 
     hist_left = (hist_left1 + hist_left2[::-1]) / 2
     hist_stop = (hist_stop1 + hist_stop2[::-1]) / 2
@@ -357,26 +406,29 @@ def validation_critic_actor(spinet):
     hist_value = (hist_value1 + hist_value2[::-1]) / 2
     hist_value = 80 * hist_value / np.max(hist_value)
 
-    plt.figure()
-    plt.xlabel("Ball angular error (degree)")
-    plt.ylabel("Value / Reward")
-    plt.vlines(0, 0, np.max(hist_value), colors="red", linestyles="dashed", alpha=0.5)
-    plt.plot(reward1[:-1], hist_value, label="value", color="#5DA9E9")
-    plt.plot(reward1[:-1], gaussian(80, 0, 0.4, 4 * reward1[:-1]), label="reward", color="#6D326D")
-    plt.legend()
+    if display:
+        plt.figure()
+        plt.xlabel("Ball angular error (degree)")
+        plt.ylabel("Value / Reward")
+        plt.vlines(0, 0, np.max(hist_value), colors="red", linestyles="dashed", alpha=0.5)
+        plt.plot(reward1[:-1], hist_value, label="value", color="#5DA9E9")
+        plt.plot(reward1[:-1], gaussian(80, 0, 0.4, 4 * reward1[:-1]), label="reward", color="#6D326D")
+        plt.legend()
 
-    plt.figure()
-    plt.xlabel("Ball angular error (degree)")
-    plt.ylabel("Number of spikes")
-    plt.vlines(0, 0, np.max(hist_right), colors="red", linestyles="dashed", alpha=0.5)
-    plt.plot(reward1[:-1], hist_left, label="left")
-    plt.plot(reward1[:-1], hist_stop, label="stop")
-    plt.plot(reward1[:-1], hist_right, label="right")
-    plt.legend()
+        plt.figure()
+        plt.xlabel("Ball angular error (degree)")
+        plt.ylabel("Number of spikes")
+        plt.vlines(0, 0, np.max(hist_right), colors="red", linestyles="dashed", alpha=0.5)
+        plt.plot(reward1[:-1], hist_left, label="left")
+        plt.plot(reward1[:-1], hist_stop, label="stop")
+        plt.plot(reward1[:-1], hist_right, label="right")
+        plt.legend()
+
+    return reward1, hist_value, [hist_left, hist_stop, hist_right]
 
 
-def validation_critic_actor2(spinet):
-    reward = np.array(spinet.state["learning_data"]["reward"])
+def validation_critic_actor2(spinet, display=True):
+    reward = np.array(spinet.state["learning_data"]["error"])
     time = np.array(spinet.state["learning_data"]["time"])
     bins = 100
 
@@ -394,9 +446,10 @@ def validation_critic_actor2(spinet):
     hist_left1 = fast_time_histogram(spinet.spikes[3][0:50], time1)
     hist_right1 = fast_time_histogram(spinet.spikes[3][50:100], time1)
 
-    plt.figure()
-    plt.plot(reward1[1:], hist_left1)
-    plt.plot(reward1[1:], hist_right1)
+    if display:
+        plt.figure()
+        plt.plot(reward1[1:], hist_left1)
+        plt.plot(reward1[1:], hist_right1)
 
     idx2 = np.round(np.linspace(0, len(time2) - 1, bins)).astype(int)
     time2 = time2[idx2]
@@ -405,9 +458,10 @@ def validation_critic_actor2(spinet):
     hist_left2 = fast_time_histogram(spinet.spikes[3][0:50], time2)
     hist_right2 = fast_time_histogram(spinet.spikes[3][50:100], time2)
 
-    plt.figure()
-    plt.plot(reward2[1:], hist_left2)
-    plt.plot(reward2[1:], hist_right2)
+    if display:
+        plt.figure()
+        plt.plot(reward2[1:], hist_left2)
+        plt.plot(reward2[1:], hist_right2)
 
     hist_left = (hist_left1 + hist_left2[::-1]) / 2
     hist_right = (hist_right1 + hist_right2[::-1]) / 2
@@ -417,18 +471,21 @@ def validation_critic_actor2(spinet):
     hist_value = (hist_value1 + hist_value2[::-1]) / 2
     hist_value = 80 * hist_value / np.max(hist_value)
 
-    plt.figure()
-    plt.xlabel("Ball angular error (degree)")
-    plt.ylabel("Value / Reward")
-    plt.vlines(0, 0, np.max(hist_value), colors="red", linestyles="dashed", alpha=0.5)
-    plt.plot(reward1[:-1], hist_value, label="value", color="#5DA9E9")
-    plt.plot(reward1[:-1], gaussian(80, 0, 0.4, 4 * reward1[:-1]), label="reward", color="#6D326D")
-    plt.legend()
+    if display:
+        plt.figure()
+        plt.xlabel("Ball angular error (degree)")
+        plt.ylabel("Value / Reward")
+        plt.vlines(0, 0, np.max(hist_value), colors="red", linestyles="dashed", alpha=0.5)
+        plt.plot(reward1[:-1], hist_value, label="value", color="#5DA9E9")
+        plt.plot(reward1[:-1], gaussian(80, 0, 0.4, 4 * reward1[:-1]), label="reward", color="#6D326D")
+        plt.legend()
 
-    plt.figure()
-    plt.xlabel("Ball angular error (degree)")
-    plt.ylabel("Number of spikes")
-    plt.vlines(0, 0, np.max(hist_right), colors="red", linestyles="dashed", alpha=0.5)
-    plt.plot(reward1[:-1], hist_left, label="left")
-    plt.plot(reward1[:-1], hist_right, label="right")
-    plt.legend()
+        plt.figure()
+        plt.xlabel("Ball angular error (degree)")
+        plt.ylabel("Number of spikes")
+        plt.vlines(0, 0, np.max(hist_right), colors="red", linestyles="dashed", alpha=0.5)
+        plt.plot(reward1[:-1], hist_left, label="left")
+        plt.plot(reward1[:-1], hist_right, label="right")
+        plt.legend()
+
+    return reward1, hist_value, [hist_left, hist_right]

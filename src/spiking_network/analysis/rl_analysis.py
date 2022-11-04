@@ -279,13 +279,11 @@ def plot_validation_critic_actor(spinet, actions, task):
 
 
 def validation_critic_actor(spinet, actions, display):
-    # sp = SpikingNetwork("/home/thomas/Networks/simulation/rl/orientation_task/5_exp/validation/validation_1/")
-    sp = SpikingNetwork("/home/thomas/Networks/simulation/rl/tracking_task/1D/3_actions/validation/validation_1/")
+    sp = SpikingNetwork("/home/thomas/Networks/simulation/rl/orientation_task/5_exp/validation/validation_1/")
+
     reward = np.array(sp.state["learning_data"]["error"])
     time = np.array(sp.state["learning_data"]["time"])
-
-    # time = np.arange(0, 1000*len(reward), 1000)
-    bins = 50
+    bins = 110
 
     middle = np.argwhere(np.diff(reward) < 0)[0][0]
     reward = reward[:middle]
@@ -325,33 +323,10 @@ def validation_critic_actor(spinet, actions, display):
 def validation_actor_critic_evolution(folder, actions):
     rewards, values, policies = [], [], []
     for i, network_path in enumerate(natsorted(os.listdir(folder))):
-        print(network_path)
         spinet = SpikingNetwork(folder + network_path + "/", loading=[False, False, True, True])
         reward, hist_value, hists_actions = validation_critic_actor(spinet, actions, False)
         rewards.append(reward)
         values.append(hist_value)
         policies.append(hists_actions)
 
-    fig, ax = plt.subplots(1, 1, figsize=(40, 20))
-    fig2, ax2 = plt.subplots(1, 1, figsize=(40, 20))
-
-    nb_curves = len(values)
-    value_colors = pl.cm.jet(np.linspace(0, 1, nb_curves))
-    action_colors = [pl.cm.Blues(np.linspace(0.2, 1, nb_curves)), pl.cm.Reds(np.linspace(0.2, 1, nb_curves))]
-
-    for i in range(nb_curves):
-        t = np.arange(values[i].size)
-        if i == nb_curves - 1:
-            ax2.plot(t, values[i], color=value_colors[i], label="Value")
-        else:
-            ax2.plot(t, values[i], color=value_colors[i])
-        ax2.set_ylabel("Number of spikes")
-
-        t = np.arange(policies[i][0].size)
-        if i == nb_curves - 1:
-            for j in range(2):
-                ax.plot(t, policies[i][j], color=action_colors[j][i], label=actions[j])
-        else:
-            for j in range(2):
-                ax.plot(t, policies[i][j], color=action_colors[j][i])
-            ax.set_ylabel("Number of spikes")
+    return rewards, values, policies

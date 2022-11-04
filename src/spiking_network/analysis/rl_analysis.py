@@ -206,7 +206,6 @@ def full_validation_orientation(folder):
     mean_values = np.mean(values, axis=0)
     std_values = np.std(values, axis=0)
     mean_actions = np.mean(actions, axis=0)
-    # mean_actions[1] += gaussian(35, 0, 0.4, 4 * reward[:-1])
     std_actions = np.std(actions, axis=0)
     low_values = mean_values - std_values
     high_values = mean_values + std_values
@@ -330,3 +329,51 @@ def validation_actor_critic_evolution(folder, actions):
         policies.append(hists_actions)
 
     return rewards, values, policies
+
+
+def plot_validation_actor_critic_evolution(network_path, actions, task):
+    rewards, values, policies = validation_actor_critic_evolution(network_path, actions)
+
+    fig, ax = plt.subplots(1, 1)
+    fig2, ax2 = plt.subplots(1, 1)
+    nb_curves = len(values)
+    value_colors = pl.cm.jet(np.linspace(0, 1, nb_curves))
+    action_colors = [pl.cm.Blues(np.linspace(0.3, 1, nb_curves)), pl.cm.Oranges(np.linspace(0.3, 1, nb_curves))]
+
+    for i in range(nb_curves):
+        if i == nb_curves - 1:
+            ax2.plot(rewards[0][:-1], values[i], color=value_colors[i], label="Value")
+        else:
+            ax2.plot(rewards[0][:-1], values[i], color=value_colors[i])
+
+        if i == nb_curves - 1:
+            for j in range(2):
+                ax.plot(rewards[0][:-1], policies[i][j], color=action_colors[j][i], label=actions[j])
+        else:
+            for j in range(2):
+                ax.plot(rewards[0][:-1], policies[i][j], color=action_colors[j][i])
+
+    def gaussian(a, b, c, x):
+        return a * np.exp(-0.5 * (x - b) ** 2 / c ** 2)
+
+    if task == "tracking":
+        ax.vlines(0, 0, 160, colors="red", linestyles="dashed", linewidth=4, alpha=0.5)
+        ax.legend()
+        ax.set_ylabel("Number of spikes")
+        ax.set_xlabel("Angular error")
+        ax2.vlines(0, 0, 80, colors="red", linestyles="dashed", linewidth=4, alpha=0.5)
+        ax2.set_ylabel("Number of spikes")
+        ax2.set_xlabel("Angular error")
+        ax2.plot(rewards[0][:-1], gaussian(80, 0, 0.4, 4 * rewards[0][:-1]), linewidth=5, label="reward", color="#6D326D")
+        ax2.legend()
+    elif task == "orientation":
+        ax.vlines(0, 0, 580, colors="red", linestyles="dashed", linewidth=4, alpha=0.5)
+        ax.legend()
+        ax.set_ylabel("Number of spikes")
+        ax.set_xlabel("Angular error (degree)")
+        ax2.vlines(0, 0, 80, colors="red", linestyles="dashed", linewidth=4, alpha=0.5)
+        ax2.legend()
+        ax2.set_ylabel("Number of spikes")
+        ax2.set_xlabel("Angular error (degree)")
+        perfect_reward = 50 * np.abs(np.abs(rewards[0][:-1]) - (np.pi / 2))
+        ax2.plot(np.degrees(rewards[0][:-1]), perfect_reward, linewidth=5, label="reward", color="#6D326D")
